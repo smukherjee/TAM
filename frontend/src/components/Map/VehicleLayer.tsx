@@ -19,13 +19,17 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Vehicle {
-    vehicleNo: string;
-    type: string;
-    latitude: number;
-    longitude: number;
-    speed: number;
-    altitude: number;
+    vehicle_no: string;
+    vehicletype: string;
+    latitude: string;
+    longitude: string;
+    speed: string;
     status: string;
+    vehicle_name: string;
+    company: string;
+    location: string;
+    gpsactualtime: string;
+    ign: string;
 }
 
 const busIcon = L.divIcon({
@@ -43,15 +47,21 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
     return (
         <>
             {vehicles.map(vehicle => (
-                <Marker key={vehicle.vehicleNo} position={[vehicle.latitude, vehicle.longitude]} icon={busIcon}>
+                <Marker 
+                    key={vehicle.vehicle_no} 
+                    position={[parseFloat(vehicle.latitude), parseFloat(vehicle.longitude)]} 
+                    icon={busIcon}
+                >
                     <Popup>
                         <div>
-                            <h3>{vehicle.vehicleNo}</h3>
-                            <p><strong>Type:</strong> {vehicle.type}</p>
-                            <p><strong>Lat/Lon:</strong> {vehicle.latitude.toFixed(4)}, {vehicle.longitude.toFixed(4)}</p>
-                            <p><strong>Altitude:</strong> {vehicle.altitude?.toFixed(0)} ft</p>
-                            <p><strong>Speed:</strong> {vehicle.speed.toFixed(0)} km/h</p>
+                            <h3>{vehicle.vehicle_name} ({vehicle.vehicle_no})</h3>
+                            <p><strong>Type:</strong> {vehicle.vehicletype}</p>
+                            <p><strong>Company:</strong> {vehicle.company}</p>
                             <p><strong>Status:</strong> {vehicle.status}</p>
+                            <p><strong>Speed:</strong> {vehicle.speed} km/h</p>
+                            <p><strong>Ignition:</strong> {vehicle.ign}</p>
+                            <p><strong>Location:</strong> {vehicle.location}</p>
+                            <p><strong>Last Update:</strong> {vehicle.gpsactualtime}</p>
                         </div>
                     </Popup>
                 </Marker>

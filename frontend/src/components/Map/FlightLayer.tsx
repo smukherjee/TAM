@@ -16,14 +16,24 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Flight {
-    livePlotId: string;
-    callsign: string;
-    latitude: number;
-    longitude: number;
-    speed: number;
-    heading: number;
-    altitude: number;
-    status: string;
+    LivePlotId: string;
+    CallSign: string;
+    Lat: number;
+    Lon: number;
+    Speed: number;
+    Heading: number;
+    Altitude: number;
+    Status: string;
+    TrackId: string;
+    ModeSId: string;
+    FlightLevel: number;
+    ROC: number;
+    SSR: string;
+    SafetyAlert: boolean;
+    SystemStatus: string;
+    Spi: boolean;
+    UpdateType: string;
+    Time: string;
 }
 
 const planeIcon = L.divIcon({
@@ -41,15 +51,17 @@ const FlightLayer: React.FC<FlightLayerProps> = ({ flights }) => {
     return (
         <>
             {flights.map(flight => (
-                <Marker key={flight.livePlotId} position={[flight.latitude, flight.longitude]} icon={planeIcon}>
+                <Marker key={flight.LivePlotId} position={[flight.Lat, flight.Lon]} icon={planeIcon}>
                     <Popup>
                         <div>
-                            <h3>{flight.callsign}</h3>
-                            <p><strong>Lat/Lon:</strong> {flight.latitude.toFixed(4)}, {flight.longitude.toFixed(4)}</p>
-                            <p><strong>Altitude:</strong> {flight.altitude?.toFixed(0)} ft</p>
-                            <p><strong>Speed:</strong> {flight.speed.toFixed(0)} kts</p>
-                            <p><strong>Heading:</strong> {flight.heading.toFixed(0)}°</p>
-                            <p><strong>Status:</strong> {flight.status}</p>
+                            <h3>{flight.CallSign}</h3>
+                            <p><strong>Track ID:</strong> {flight.TrackId}</p>
+                            <p><strong>Lat/Lon:</strong> {flight.Lat.toFixed(4)}, {flight.Lon.toFixed(4)}</p>
+                            <p><strong>Altitude:</strong> {flight.Altitude?.toFixed(0)} ft</p>
+                            <p><strong>Speed:</strong> {flight.Speed.toFixed(0)} kts</p>
+                            <p><strong>Heading:</strong> {flight.Heading.toFixed(0)}°</p>
+                            <p><strong>Mode S:</strong> {flight.ModeSId}</p>
+                            <p><strong>SSR:</strong> {flight.SSR}</p>
                         </div>
                     </Popup>
                 </Marker>

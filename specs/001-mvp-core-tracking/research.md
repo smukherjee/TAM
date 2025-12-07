@@ -8,6 +8,7 @@
 **Problem**: Need to simulate ADS-B (Flight) and TelIT (Vehicle) data streams for the MVP.
 **Decision**: Implement as internal components within the Spring Boot Backend.
 **Rationale**:
+
 - Reduces operational complexity (fewer containers to manage).
 - Easier to control simulation state (start/stop/reset) via the same API.
 - Sufficient for MVP scale (10 entities).
@@ -20,6 +21,7 @@
 **Problem**: Need a lightweight map component for the React frontend.
 **Decision**: Leaflet (via `react-leaflet`).
 **Rationale**:
+
 - Lightweight and easy to integrate with React.
 - Good support for custom icons (needed for Flight/Vehicle distinction).
 - Free tile providers available.
@@ -32,6 +34,7 @@
 **Problem**: Frontend needs to show moving entities.
 **Decision**: HTTP Polling (2-3s interval).
 **Rationale**:
+
 - Simple to implement and debug.
 - Meets the latency requirement (< 5s).
 - Avoids complexity of WebSockets for the initial MVP.
@@ -44,6 +47,7 @@
 **Problem**: Need to store time-series data for tracking.
 **Decision**: PostgreSQL 16 with TimescaleDB extension.
 **Rationale**:
+
 - Mandated by Constitution.
 - Efficient for time-series data (positions).
 - Standard SQL interface.
@@ -53,6 +57,7 @@
 **Problem**: Decouple ingestion from processing.
 **Decision**: Apache Kafka (Single Node).
 **Rationale**:
+
 - Mandated by Constitution.
 - Handles high throughput if we scale later.
 - "Single Node" configuration sufficient for MVP local dev.

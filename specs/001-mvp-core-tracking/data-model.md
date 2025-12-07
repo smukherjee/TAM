@@ -3,6 +3,7 @@
 ## Entities
 
 ### 1. Flight
+
 Represents an aircraft tracked via ADS-B.
 
 | Field | Type | Description | Constraints |
@@ -17,6 +18,7 @@ Represents an aircraft tracked via ADS-B.
 | `status` | String | Flight status (AIRBORNE, LANDED) | Enum |
 
 ### 2. Vehicle
+
 Represents a ground vehicle tracked via TelIT.
 
 | Field | Type | Description | Constraints |
@@ -30,6 +32,7 @@ Represents a ground vehicle tracked via TelIT.
 | `timestamp` | DateTime | Time of observation | UTC |
 
 ### 3. Alert
+
 Represents a safety violation or event.
 
 | Field | Type | Description | Constraints |

@@ -1,5 +1,6 @@
 package com.utam.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -11,12 +12,25 @@ import java.util.UUID;
 public class Alert {
 
     @Id
+    @Column(name = "alert_id")
     private UUID alertId;
+
+    @Column(name = "type")
     private String type;
+
+    @Column(name = "entity_id")
     private String entityId;
+
+    @Column(name = "value")
     private Double value;
+
+    @Column(name = "timestamp")
     private LocalDateTime timestamp;
+
+    @Column(name = "latitude")
     private Double latitude;
+
+    @Column(name = "longitude")
     private Double longitude;
 
     public Alert() {

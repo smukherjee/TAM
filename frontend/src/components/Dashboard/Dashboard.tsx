@@ -7,24 +7,38 @@ import AlertList from '../Alerts/AlertList';
 import api from '../../services/api';
 
 interface Flight {
-    livePlotId: string;
-    callsign: string;
-    latitude: number;
-    longitude: number;
-    speed: number;
-    heading: number;
-    altitude: number;
-    status: string;
+    LivePlotId: string;
+    CallSign: string;
+    Lat: number;
+    Lon: number;
+    Speed: number;
+    Heading: number;
+    Altitude: number;
+    Status: string;
+    TrackId: string;
+    ModeSId: string;
+    FlightLevel: number;
+    ROC: number;
+    SSR: string;
+    SafetyAlert: boolean;
+    SystemStatus: string;
+    Spi: boolean;
+    UpdateType: string;
+    Time: string;
 }
 
 interface Vehicle {
-    vehicleNo: string;
-    type: string;
-    latitude: number;
-    longitude: number;
-    speed: number;
-    altitude: number;
+    vehicle_no: string;
+    vehicletype: string;
+    latitude: string;
+    longitude: string;
+    speed: string;
     status: string;
+    vehicle_name: string;
+    company: string;
+    location: string;
+    gpsactualtime: string;
+    ign: string;
 }
 
 interface Alert {

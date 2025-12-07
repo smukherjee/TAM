@@ -60,14 +60,15 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ### Implementation for User Story 1
 
-- [x] T014 [P] [US1] Create Flight entity in `backend/src/main/java/com/utam/model/Flight.java`
-- [x] T015 [P] [US1] Create Flight repository in `backend/src/main/java/com/utam/repository/FlightRepository.java`
-- [x] T016 [US1] Implement Flight Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/FlightService.java`
-- [x] T017 [US1] Implement Flight Controller (API endpoints) in `backend/src/main/java/com/utam/controller/FlightController.java`
-- [x] T018 [P] [US1] Implement Mock ADSB Generator in `backend/src/main/java/com/utam/simulation/MockAdsbGenerator.java`
-- [x] T019 [P] [US1] Create Map Component in `frontend/src/components/Map/MapComponent.tsx`
-- [x] T020 [P] [US1] Implement Flight Layer in `frontend/src/components/Map/FlightLayer.tsx`
-- [x] T021 [US1] Integrate Flight API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
+- [x] T014 [P] [US1] Update Flight entity with full ADS-B fields (LivePlotId, TrackId, FlightLevel, ROC, etc.) in `backend/src/main/java/com/utam/model/Flight.java`
+- [x] T015 [P] [US1] Update Flight repository in `backend/src/main/java/com/utam/repository/FlightRepository.java`
+- [x] T016 [US1] Update Flight Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/FlightService.java`
+- [x] T017 [US1] Update Flight Controller (API endpoints) in `backend/src/main/java/com/utam/controller/FlightController.java`
+- [x] T018 [P] [US1] Implement Mock ADSB Generator with specific JSON signature in `backend/src/main/java/com/utam/simulation/MockAdsbGenerator.java`
+- [x] T019 [P] [US1] Update Database Schema for new Flight fields in `backend/src/main/resources/schema.sql`
+- [x] T020 [P] [US1] Create Map Component in `frontend/src/components/Map/MapComponent.tsx`
+- [x] T021 [P] [US1] Implement Flight Layer in `frontend/src/components/Map/FlightLayer.tsx`
+- [x] T022 [US1] Integrate Flight API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -81,13 +82,13 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ### Implementation for User Story 2
 
-- [x] T022 [P] [US2] Create Vehicle entity in `backend/src/main/java/com/utam/model/Vehicle.java`
-- [x] T023 [P] [US2] Create Vehicle repository in `backend/src/main/java/com/utam/repository/VehicleRepository.java`
-- [x] T024 [US2] Implement Vehicle Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/VehicleService.java`
-- [x] T025 [US2] Implement Vehicle Controller (API endpoints) in `backend/src/main/java/com/utam/controller/VehicleController.java`
-- [x] T026 [P] [US2] Implement Mock TelIT Generator in `backend/src/main/java/com/utam/simulation/MockTelitGenerator.java`
-- [x] T027 [P] [US2] Implement Vehicle Layer in `frontend/src/components/Map/VehicleLayer.tsx`
-- [x] T028 [US2] Integrate Vehicle API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
+- [x] T023 [P] [US2] Update Vehicle entity with full TelIT fields in `backend/src/main/java/com/utam/model/Vehicle.java`
+- [x] T024 [P] [US2] Update Vehicle repository in `backend/src/main/java/com/utam/repository/VehicleRepository.java`
+- [x] T025 [US2] Update Vehicle Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/VehicleService.java`
+- [x] T026 [US2] Update Vehicle Controller (API endpoints) in `backend/src/main/java/com/utam/controller/VehicleController.java`
+- [x] T027 [P] [US2] Implement Mock TelIT Generator with specific JSON signature in `backend/src/main/java/com/utam/simulation/MockTelitGenerator.java`
+- [x] T028 [P] [US2] Update Vehicle Layer in `frontend/src/components/Map/VehicleLayer.tsx`
+- [x] T029 [US2] Integrate Vehicle API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -101,12 +102,12 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ### Implementation for User Story 3
 
-- [x] T029 [P] [US3] Create Alert entity in `backend/src/main/java/com/utam/model/Alert.java`
-- [x] T030 [P] [US3] Create Alert repository in `backend/src/main/java/com/utam/repository/AlertRepository.java`
-- [x] T031 [US3] Implement Alert Service (Detection Logic) in `backend/src/main/java/com/utam/service/AlertService.java`
-- [x] T032 [US3] Implement Alert Controller (API endpoints) in `backend/src/main/java/com/utam/controller/AlertController.java`
-- [x] T033 [P] [US3] Create Alert List Component in `frontend/src/components/Alerts/AlertList.tsx`
-- [x] T034 [US3] Integrate Alert API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
+- [x] T030 [P] [US3] Create Alert entity in `backend/src/main/java/com/utam/model/Alert.java`
+- [x] T031 [P] [US3] Create Alert repository in `backend/src/main/java/com/utam/repository/AlertRepository.java`
+- [x] T032 [US3] Implement Alert Service (Detection Logic) in `backend/src/main/java/com/utam/service/AlertService.java`
+- [x] T033 [US3] Implement Alert Controller (API endpoints) in `backend/src/main/java/com/utam/controller/AlertController.java`
+- [x] T034 [P] [US3] Create Alert List Component in `frontend/src/components/Alerts/AlertList.tsx`
+- [x] T035 [US3] Integrate Alert API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -120,6 +121,7 @@ description: "Task list for Core MVP Tracking & Alerting"
 - [ ] T037 Verify end-to-end latency (< 5s)
 - [ ] T038 Verify load handling (10 flights, 10 vehicles)
 - [ ] T039 Ensure Basic Auth is applied to all endpoints
+- [x] T040 Update Map Center to IGIA and add Range Rings (10, 40, 70 NM)
 
 ---
 

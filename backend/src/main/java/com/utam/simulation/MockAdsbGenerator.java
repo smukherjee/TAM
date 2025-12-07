@@ -49,6 +49,17 @@ public class MockAdsbGenerator {
         flight.setAltitude(10000.0 + random.nextDouble() * 30000); // 10000-40000 ft
         flight.setStatus("AIRBORNE");
 
+        // New fields per JSON signature
+        flight.setTrackId("TRK" + Math.abs(callsign.hashCode() % 1000));
+        flight.setModeSId(Integer.toHexString(callsign.hashCode()).toUpperCase());
+        flight.setFlightLevel(flight.getAltitude() / 100.0);
+        flight.setRoc(random.nextDouble() * 2000 - 1000); // +/- 1000 fpm
+        flight.setSsr(String.format("%04d", random.nextInt(10000)));
+        flight.setSafetyAlert(false);
+        flight.setSystemStatus("OK");
+        flight.setSpi(false);
+        flight.setUpdateType("TRACK_UPDATE");
+
         log.info("Generated flight data: {}", flight);
         kafkaTemplate.send("flight-events", flight.getCallsign(), flight);
     }

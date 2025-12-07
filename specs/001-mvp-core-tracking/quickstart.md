@@ -9,20 +9,23 @@
 ## Running the System
 
 1. **Clone the repository**
+
    ```bash
    git clone <repo-url>
    cd tam-mvp
    ```
 
 2. **Start the Environment**
+
    Run the full stack (Backend, Frontend, Kafka, DB) using Docker Compose:
+
    ```bash
    docker-compose up --build
    ```
 
 3. **Access the Dashboard**
    Open your browser to: [http://localhost:3000](http://localhost:3000)
-   
+
    **Credentials**:
    - Username: `admin`
    - Password: `admin`
@@ -35,12 +38,14 @@
 ## Development Commands
 
 ### Backend (Spring Boot)
+
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
 ### Frontend (React)
+
 ```bash
 cd frontend
 npm install
