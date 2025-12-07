@@ -3,7 +3,7 @@ package com.utam.simulation;
 import com.utam.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ public class MockTelitGenerator {
     private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
-    private final KafkaTemplate<String, Vehicle> kafkaTemplate;
+    private final RestTemplate restTemplate;
     private final Random random = new Random();
 
     private static class VehicleConfig {
@@ -42,8 +42,8 @@ public class MockTelitGenerator {
         new VehicleConfig("TRUCK-55", "HR55X9999", "TRUCK")
     );
 
-    public MockTelitGenerator(KafkaTemplate<String, Vehicle> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
+    public MockTelitGenerator(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     @Scheduled(fixedRate = 3000) // Every 3 seconds
@@ -101,7 +101,12 @@ public class MockTelitGenerator {
         vehicle.setAltitude(0.0);
         vehicle.setLocation("IGIA, New Delhi");
 
-        log.info("Generated Vehicle Data: {}", vehicle.getVehicleNo());
-        kafkaTemplate.send("vehicle-events", vehicle.getVehicleNo(), vehicle);
+        log.info("Generated vehicle data: {}", vehicle);
+        
+        try {
+            restTemplate.postForObject("http://localhost:8080/api/veh_live_data_con", Collections.singletonList(vehicle), Void.class);
+        } catch (Exception e) {
+            log.error("Failed to send vehicle data to ingestion layer: {}", e.getMessage());
+        }
     }
 }

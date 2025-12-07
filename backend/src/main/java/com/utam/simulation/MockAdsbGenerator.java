@@ -3,12 +3,13 @@ package com.utam.simulation;
 import com.utam.model.Flight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -18,14 +19,14 @@ public class MockAdsbGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(MockAdsbGenerator.class);
 
-    private final KafkaTemplate<String, Flight> kafkaTemplate;
+    private final RestTemplate restTemplate;
     private final Random random = new Random();
     
     // Simulated flights
     private final List<String> callsigns = Arrays.asList("AI101", "BA249", "LH760", "EK500", "QF1");
 
-    public MockAdsbGenerator(KafkaTemplate<String, Flight> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
+    public MockAdsbGenerator(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     @Scheduled(fixedRate = 2000) // Every 2 seconds
@@ -61,6 +62,11 @@ public class MockAdsbGenerator {
         flight.setUpdateType("TRACK_UPDATE");
 
         log.info("Generated flight data: {}", flight);
-        kafkaTemplate.send("flight-events", flight.getCallsign(), flight);
+        
+        try {
+            restTemplate.postForObject("http://localhost:8080/api/adsblivedata", Collections.singletonList(flight), Void.class);
+        } catch (Exception e) {
+            log.error("Failed to send flight data to ingestion layer: {}", e.getMessage());
+        }
     }
 }
