@@ -1,0 +1,200 @@
+openapi: 3.1.0
+info:
+  title: UTAM Core MVP API
+  description: API for Flight/Vehicle Tracking and Alerting
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local Development Server
+
+paths:
+  /api/adsblivedata:
+    post:
+      summary: Ingest ADS-B Flight Data
+      operationId: ingestFlightData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FlightData'
+      responses:
+        '200':
+          description: Data ingested successfully
+        '400':
+          description: Invalid data format
+
+  /veh_live_data_con:
+    post:
+      summary: Ingest TelIT Vehicle Data
+      operationId: ingestVehicleData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/VehicleData'
+      responses:
+        '200':
+          description: Data ingested successfully
+        '400':
+          description: Invalid data format
+
+  /api/flights:
+    get:
+      summary: Get Active Flights
+      operationId: getActiveFlights
+      responses:
+        '200':
+          description: List of active flights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flight'
+
+  /api/vehicles:
+    get:
+      summary: Get Active Vehicles
+      operationId: getActiveVehicles
+      responses:
+        '200':
+          description: List of active vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+
+  /api/alerts:
+    get:
+      summary: Get Active Alerts
+      operationId: getActiveAlerts
+      responses:
+        '200':
+          description: List of active alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+
+components:
+  schemas:
+    FlightData:
+      type: object
+      properties:
+        LivePlotId:
+          type: string
+          format: uuid
+        Callsign:
+          type: string
+        Latitude:
+          type: number
+          format: double
+        Longitude:
+          type: number
+          format: double
+        Speed:
+          type: number
+          format: double
+        Heading:
+          type: number
+          format: double
+        Time:
+          type: integer
+          format: int64
+          description: Unix timestamp
+
+    VehicleData:
+      type: object
+      properties:
+        Vehicle_No:
+          type: string
+        Vehicletype:
+          type: string
+        Latitude:
+          type: number
+          format: double
+        Longitude:
+          type: number
+          format: double
+        Speed:
+          type: number
+          format: double
+        Status:
+          type: string
+          enum: [RUNNING, STOP, IDLE]
+        GPSActualTime:
+          type: string
+          format: date-time
+
+    Flight:
+      type: object
+      properties:
+        livePlotId:
+          type: string
+          format: uuid
+        callsign:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        speed:
+          type: number
+        heading:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+
+    Vehicle:
+      type: object
+      properties:
+        vehicleNo:
+          type: string
+        type:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        speed:
+          type: number
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    Alert:
+      type: object
+      properties:
+        alertId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [SPEED_VIOLATION]
+        entityId:
+          type: string
+        value:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
