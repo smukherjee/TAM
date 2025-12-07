@@ -18,7 +18,7 @@ public class FlightService {
         this.flightRepository = flightRepository;
     }
 
-    @KafkaListener(topics = "flight-events", groupId = "utam-group")
+    @KafkaListener(topics = "flight-raw-json", groupId = "utam-group")
     public void consumeFlightEvent(Flight flight) {
         flightRepository.save(flight);
     }

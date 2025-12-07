@@ -17,7 +17,7 @@ public class VehicleService {
         this.vehicleRepository = vehicleRepository;
     }
 
-    @KafkaListener(topics = "vehicle-events", groupId = "utam-group")
+    @KafkaListener(topics = "vehicle-raw-json", groupId = "utam-group")
     public void consumeVehicleEvent(Vehicle vehicle) {
         vehicleRepository.save(vehicle);
     }

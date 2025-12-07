@@ -10,7 +10,7 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic flightTopic() {
-        return TopicBuilder.name("flight-events")
+        return TopicBuilder.name("flight-raw-json")
                 .partitions(1)
                 .replicas(1)
                 .build();
@@ -18,7 +18,7 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic vehicleTopic() {
-        return TopicBuilder.name("vehicle-events")
+        return TopicBuilder.name("vehicle-raw-json")
                 .partitions(1)
                 .replicas(1)
                 .build();
@@ -26,7 +26,7 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic alertTopic() {
-        return TopicBuilder.name("alert-events")
+        return TopicBuilder.name("alerts-json")
                 .partitions(1)
                 .replicas(1)
                 .build();

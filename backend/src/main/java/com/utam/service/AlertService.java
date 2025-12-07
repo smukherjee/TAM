@@ -22,7 +22,7 @@ public class AlertService {
         this.alertRepository = alertRepository;
     }
 
-    @KafkaListener(topics = "vehicle-events", groupId = "utam-alert-group")
+    @KafkaListener(topics = "vehicle-raw-json", groupId = "utam-alert-group")
     public void checkVehicleAlert(Vehicle vehicle) {
         // Simple rule: Speed > 70 km/h is a violation
         if (vehicle.getSpeed() > 70.0) {

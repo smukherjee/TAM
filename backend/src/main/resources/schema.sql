@@ -115,3 +115,14 @@ CREATE TABLE IF NOT EXISTS alerts (
     latitude    DOUBLE PRECISION,
     longitude   DOUBLE PRECISION
 );
+
+-- Turnaround Events Table
+CREATE TABLE IF NOT EXISTS turnaround_events (
+    event_unique_id VARCHAR(255) PRIMARY KEY,
+    camera_id VARCHAR(50),
+    camera_name VARCHAR(100),
+    activity_type VARCHAR(100),
+    event_type INTEGER,
+    event_time_stamp TIMESTAMPTZ,
+    stand VARCHAR(50)
+);

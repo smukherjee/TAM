@@ -5,6 +5,7 @@ import FlightLayer from '../Map/FlightLayer';
 import VehicleLayer from '../Map/VehicleLayer';
 import AlertList from '../Alerts/AlertList';
 import api from '../../services/api';
+import TurnaroundGantt from '../Turnaround/TurnaroundGantt';
 
 interface Flight {
     LivePlotId: string;
@@ -97,13 +98,18 @@ const Dashboard: React.FC = () => {
 
     return (
         <DashboardLayout>
-            <div style={{ position: 'relative', flex: 1, height: '100%', width: '100%' }}>
-                <MapComponent>
-                    <FlightLayer flights={flights} />
-                    <VehicleLayer vehicles={vehicles} />
-                </MapComponent>
-                <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1000, width: '300px' }}>
-                    <AlertList alerts={alerts} />
+            <div className="flex flex-col h-full">
+                <div className="relative flex-1 w-full min-h-[50%]">
+                    <MapComponent>
+                        <FlightLayer flights={flights} />
+                        <VehicleLayer vehicles={vehicles} />
+                    </MapComponent>
+                    <div className="absolute top-2 right-2 z-[1000] w-[300px]">
+                        <AlertList alerts={alerts} />
+                    </div>
+                </div>
+                <div className="h-1/2 overflow-auto border-t-4 border-gray-200 bg-white">
+                    <TurnaroundGantt />
                 </div>
             </div>
         </DashboardLayout>

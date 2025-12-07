@@ -59,8 +59,8 @@ graph TB
         KAFKA[Apache Kafka<br/>Single Node]
         
         subgraph "Topics"
-            TOPIC_FLIGHT[flight-raw-avro]
-            TOPIC_VEHICLE[vehicle-raw-avro]
+            TOPIC_FLIGHT[flight-raw-json]
+            TOPIC_VEHICLE[vehicle-raw-json]
             TOPIC_ALERTS[alerts-json]
         end
     end

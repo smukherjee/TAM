@@ -212,6 +212,7 @@ public class Vehicle {
         this.vehicleNo = vehicleNo;
     }
 
+    @JsonProperty("vehicletype")
     public String getType() {
         return type;
     }

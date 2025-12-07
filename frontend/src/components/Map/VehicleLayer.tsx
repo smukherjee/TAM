@@ -39,6 +39,55 @@ const busIcon = L.divIcon({
     iconAnchor: [15, 15]
 });
 
+const truckIcon = L.divIcon({
+    html: '<div style="font-size: 24px; line-height: 1;">🚛</div>',
+    className: 'custom-truck-icon',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+});
+
+const carIcon = L.divIcon({
+    html: '<div style="font-size: 24px; line-height: 1;">🚗</div>',
+    className: 'custom-car-icon',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+});
+
+const suvIcon = L.divIcon({
+    html: '<div style="font-size: 24px; line-height: 1;">🚙</div>',
+    className: 'custom-suv-icon',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+});
+
+const gseIcon = L.divIcon({
+    html: '<div style="font-size: 24px; line-height: 1;">🚜</div>',
+    className: 'custom-gse-icon',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+});
+
+const cateringIcon = L.divIcon({
+    html: '<div style="font-size: 24px; line-height: 1;">🍱</div>',
+    className: 'custom-catering-icon',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+});
+
+const getIconForType = (type: string) => {
+    if (!type) return carIcon;
+    const lowerType = type.toLowerCase();
+    
+    if (lowerType.includes('bus')) return busIcon;
+    if (lowerType.includes('truck')) return truckIcon;
+    if (lowerType.includes('suv')) return suvIcon;
+    if (lowerType.includes('compactor')) return gseIcon;
+    if (lowerType.includes('headunit')) return cateringIcon; // TajSats
+    if (lowerType.includes('catering')) return cateringIcon;
+    
+    return carIcon; // Default
+};
+
 interface VehicleLayerProps {
     vehicles: Vehicle[];
 }
@@ -50,7 +99,7 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
                 <Marker 
                     key={vehicle.vehicle_no} 
                     position={[parseFloat(vehicle.latitude), parseFloat(vehicle.longitude)]} 
-                    icon={busIcon}
+                    icon={getIconForType(vehicle.vehicletype)}
                 >
                     <Popup>
                         <div>

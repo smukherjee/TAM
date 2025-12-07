@@ -9,4 +9,9 @@ const api = axios.create({
   },
 });
 
+export const getTurnaroundEvents = async () => {
+  const response = await api.get('/turnaround/events');
+  return response.data;
+};
+
 export default api;
