@@ -1,40 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-
-// Fix for default marker icon
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
-
-interface Flight {
-    LivePlotId: string;
-    CallSign: string;
-    Lat: number;
-    Lon: number;
-    Speed: number;
-    Heading: number;
-    Altitude: number;
-    Status: string;
-    TrackId: string;
-    ModeSId: string;
-    FlightLevel: number;
-    ROC: number;
-    SSR: string;
-    SafetyAlert: boolean;
-    SystemStatus: string;
-    Spi: boolean;
-    UpdateType: string;
-    Time: string;
-}
+import { Flight, getActiveFlights } from '../../services/flightService';
 
 const planeIcon = L.divIcon({
     html: '<div style="font-size: 24px; line-height: 1;">✈️</div>',
@@ -43,25 +10,31 @@ const planeIcon = L.divIcon({
     iconAnchor: [15, 15]
 });
 
-interface FlightLayerProps {
-    flights: Flight[];
-}
+const FlightLayer: React.FC = () => {
+    const [flights, setFlights] = useState<Flight[]>([]);
 
-const FlightLayer: React.FC<FlightLayerProps> = ({ flights }) => {
+    useEffect(() => {
+        const fetchFlights = async () => {
+            const data = await getActiveFlights();
+            setFlights(data);
+        };
+
+        fetchFlights();
+        const interval = setInterval(fetchFlights, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <>
             {flights.map(flight => (
-                <Marker key={flight.LivePlotId} position={[flight.Lat, flight.Lon]} icon={planeIcon}>
+                <Marker key={flight.livePlotId} position={[flight.latitude, flight.longitude]} icon={planeIcon}>
                     <Popup>
                         <div>
-                            <h3>{flight.CallSign}</h3>
-                            <p><strong>Track ID:</strong> {flight.TrackId}</p>
-                            <p><strong>Lat/Lon:</strong> {flight.Lat.toFixed(4)}, {flight.Lon.toFixed(4)}</p>
-                            <p><strong>Altitude:</strong> {flight.Altitude?.toFixed(0)} ft</p>
-                            <p><strong>Speed:</strong> {flight.Speed.toFixed(0)} kts</p>
-                            <p><strong>Heading:</strong> {flight.Heading.toFixed(0)}°</p>
-                            <p><strong>Mode S:</strong> {flight.ModeSId}</p>
-                            <p><strong>SSR:</strong> {flight.SSR}</p>
+                            <h3>{flight.callsign}</h3>
+                            <p><strong>Lat/Lon:</strong> {flight.latitude.toFixed(4)}, {flight.longitude.toFixed(4)}</p>
+                            <p><strong>Altitude:</strong> {flight.altitude?.toFixed(0)} ft</p>
+                            <p><strong>Speed:</strong> {flight.speed.toFixed(0)} kts</p>
+                            <p><strong>Heading:</strong> {flight.heading.toFixed(0)}°</p>
                         </div>
                     </Popup>
                 </Marker>

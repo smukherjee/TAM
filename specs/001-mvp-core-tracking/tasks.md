@@ -5,9 +5,9 @@ description: "Task list for Core MVP Tracking & Alerting"
 # Tasks: Core MVP Tracking & Alerting
 
 **Input**: Design documents from `/specs/001-mvp-core-tracking/`
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+**Prerequisites**: plan.md, spec.md, data-model.md, contracts/
 
-**Tests**: Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Tests are OPTIONAL - only included where critical for verification.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -17,22 +17,14 @@ description: "Task list for Core MVP Tracking & Alerting"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
-## Path Conventions
-
-- **Web app**: `backend/src/`, `frontend/src/`
-
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization and basic structure
 
-- [x] T001 Create monorepo structure with backend and frontend directories
-- [x] T002 Initialize Spring Boot project in `backend/` with Web, Kafka, JPA, Timescale dependencies
-- [x] T003 [P] Initialize React project in `frontend/` with TypeScript, Leaflet, Axios
-- [x] T004 Create `docker-compose.yml` with PostgreSQL, TimescaleDB, and Kafka services
-- [x] T005 [P] Configure `backend/pom.xml` dependencies
-- [x] T006 [P] Configure `frontend/package.json` dependencies
-
----
+- [x] T001 Create project structure (backend, frontend folders)
+- [x] T002 Initialize Spring Boot application in `backend/` with Web, Kafka, JPA, PostgreSQL dependencies
+- [x] T003 Initialize React application in `frontend/` with TypeScript and Leaflet
+- [x] T004 Create `docker-compose.yml` with NiFi, Kafka, Zookeeper, TimescaleDB services
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
@@ -40,13 +32,12 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T007 Configure Spring Boot application properties in `backend/src/main/resources/application.yml` (DB, Kafka)
-- [x] T008 [P] Create database initialization script in `backend/src/main/resources/schema.sql` (Hypertable setup)
-- [x] T009 [P] Implement CORS configuration in `backend/src/main/java/com/utam/config/WebConfig.java`
-- [x] T010 [P] Implement Kafka configuration in `backend/src/main/java/com/utam/config/KafkaConfig.java`
-- [x] T011 [P] Setup frontend API client base in `frontend/src/services/api.ts`
-- [x] T012 [P] Create main Dashboard layout in `frontend/src/components/Dashboard/DashboardLayout.tsx`
-- [x] T013 [P] Implement Global Error Handling in `backend/src/main/java/com/utam/exception/GlobalExceptionHandler.java`
+- [x] T005 Configure PostgreSQL/TimescaleDB connection in `backend/src/main/resources/application.properties`
+- [x] T006 Create database schema initialization script (Hypertables) in `backend/src/main/resources/schema.sql`
+- [x] T007 Configure Kafka Consumer/Producer factories in `backend/src/main/java/com/utam/config/KafkaConfig.java`
+- [x] T008 Create base API response wrapper and error handling in `backend/src/main/java/com/utam/common/ApiResponse.java`
+- [x] T009 Setup React Leaflet and basic Map component in `frontend/src/components/Map/Map.tsx` (Default center: IGIA)
+- [x] T010 Configure CORS and Security (Basic Auth) in `backend/src/main/java/com/utam/config/SecurityConfig.java`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -54,21 +45,21 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ## Phase 3: User Story 1 - Live Flight Tracking (Priority: P1) 🎯 MVP
 
-**Goal**: View real-time positions of aircraft on a map.
+**Goal**: Ingest ADSB data via NiFi, process in Spring Boot, and display on React Map.
 
-**Independent Test**: Run Mock ADSB Generator -> Verify aircraft icons on Dashboard Map.
+**Independent Test**: Run Mock ADSB Generator -> Verify icons on Map.
 
 ### Implementation for User Story 1
 
-- [x] T014 [P] [US1] Update Flight entity with full ADS-B fields (LivePlotId, TrackId, FlightLevel, ROC, etc.) in `backend/src/main/java/com/utam/model/Flight.java`
-- [x] T015 [P] [US1] Update Flight repository in `backend/src/main/java/com/utam/repository/FlightRepository.java`
-- [x] T016 [US1] Update Flight Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/FlightService.java`
-- [x] T017 [US1] Update Flight Controller (API endpoints) in `backend/src/main/java/com/utam/controller/FlightController.java`
-- [x] T018 [P] [US1] Implement Mock ADSB Generator with specific JSON signature in `backend/src/main/java/com/utam/simulation/MockAdsbGenerator.java`
-- [x] T019 [P] [US1] Update Database Schema for new Flight fields in `backend/src/main/resources/schema.sql`
-- [x] T020 [P] [US1] Create Map Component in `frontend/src/components/Map/MapComponent.tsx`
-- [x] T021 [P] [US1] Implement Flight Layer in `frontend/src/components/Map/FlightLayer.tsx`
-- [x] T022 [US1] Integrate Flight API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
+- [x] T011 [P] [US1] Create Flight entity in `backend/src/main/java/com/utam/model/Flight.java`
+- [x] T012 [P] [US1] Create FlightRepository in `backend/src/main/java/com/utam/repository/FlightRepository.java`
+- [x] T013 [US1] Implement FlightConsumer to ingest from 'flight-raw-json' in `backend/src/main/java/com/utam/service/FlightConsumer.java`
+- [x] T014 [US1] Implement FlightService to save data in `backend/src/main/java/com/utam/service/FlightService.java`
+- [x] T015 [US1] Create FlightController with GET /api/flights in `backend/src/main/java/com/utam/controller/FlightController.java`
+- [x] T016 [US1] Create Mock ADSB Generator script in `backend/src/main/resources/simulation/adsb-generator.py`
+- [x] T017 [US1] Create NiFi flow configuration for ADSB (ListenHTTP -> PublishKafka) in `infrastructure/nifi/flow_adsb.json`
+- [x] T018 [P] [US1] Implement FlightService client in `frontend/src/services/flightService.ts`
+- [x] T019 [US1] Update Map component to render Flight icons in `frontend/src/components/Map/FlightLayer.tsx`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -76,19 +67,21 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ## Phase 4: User Story 2 - Live Vehicle Tracking (Priority: P1)
 
-**Goal**: View real-time positions of ground vehicles on the map.
+**Goal**: Ingest TelIT data via NiFi, process in Spring Boot, and display on React Map.
 
-**Independent Test**: Run Mock TelIT Generator -> Verify vehicle icons on Dashboard Map.
+**Independent Test**: Run Mock TelIT Generator -> Verify icons on Map.
 
 ### Implementation for User Story 2
 
-- [x] T023 [P] [US2] Update Vehicle entity with full TelIT fields in `backend/src/main/java/com/utam/model/Vehicle.java`
-- [x] T024 [P] [US2] Update Vehicle repository in `backend/src/main/java/com/utam/repository/VehicleRepository.java`
-- [x] T025 [US2] Update Vehicle Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/VehicleService.java`
-- [x] T026 [US2] Update Vehicle Controller (API endpoints) in `backend/src/main/java/com/utam/controller/VehicleController.java`
-- [x] T027 [P] [US2] Implement Mock TelIT Generator with specific JSON signature in `backend/src/main/java/com/utam/simulation/MockTelitGenerator.java`
-- [x] T028 [P] [US2] Update Vehicle Layer in `frontend/src/components/Map/VehicleLayer.tsx`
-- [x] T029 [US2] Integrate Vehicle API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
+- [ ] T020 [P] [US2] Create Vehicle entity in `backend/src/main/java/com/utam/model/Vehicle.java`
+- [ ] T021 [P] [US2] Create VehicleRepository in `backend/src/main/java/com/utam/repository/VehicleRepository.java`
+- [ ] T022 [US2] Implement VehicleConsumer to ingest from 'vehicle-raw-json' in `backend/src/main/java/com/utam/service/VehicleConsumer.java`
+- [ ] T023 [US2] Implement VehicleService to save data in `backend/src/main/java/com/utam/service/VehicleService.java`
+- [ ] T024 [US2] Create VehicleController with GET /api/vehicles in `backend/src/main/java/com/utam/controller/VehicleController.java`
+- [ ] T025 [US2] Create Mock TelIT Generator script in `backend/src/main/resources/simulation/telit-generator.py`
+- [ ] T026 [US2] Create NiFi flow configuration for TelIT in `infrastructure/nifi/flow_telit.json`
+- [ ] T027 [P] [US2] Implement VehicleService client in `frontend/src/services/vehicleService.ts`
+- [ ] T028 [US2] Update Map component to render Vehicle icons in `frontend/src/components/Map/VehicleLayer.tsx`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -96,18 +89,20 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ## Phase 5: User Story 3 - Speed Violation Alerting (Priority: P2)
 
-**Goal**: Receive immediate alerts when a vehicle exceeds the speed limit.
+**Goal**: Detect speed violations from vehicle stream and display alerts.
 
-**Independent Test**: Configure Mock Generator for high speed -> Verify Alert in List & Map Focus.
+**Independent Test**: Send high speed vehicle data -> Verify alert in list.
 
 ### Implementation for User Story 3
 
-- [x] T030 [P] [US3] Create Alert entity in `backend/src/main/java/com/utam/model/Alert.java`
-- [x] T031 [P] [US3] Create Alert repository in `backend/src/main/java/com/utam/repository/AlertRepository.java`
-- [x] T032 [US3] Implement Alert Service (Detection Logic) in `backend/src/main/java/com/utam/service/AlertService.java`
-- [x] T033 [US3] Implement Alert Controller (API endpoints) in `backend/src/main/java/com/utam/controller/AlertController.java`
-- [x] T034 [P] [US3] Create Alert List Component in `frontend/src/components/Alerts/AlertList.tsx`
-- [x] T035 [US3] Integrate Alert API polling in `frontend/src/components/Dashboard/Dashboard.tsx`
+- [ ] T029 [P] [US3] Create Alert entity in `backend/src/main/java/com/utam/model/Alert.java`
+- [ ] T030 [P] [US3] Create AlertRepository in `backend/src/main/java/com/utam/repository/AlertRepository.java`
+- [ ] T031 [US3] Implement AlertService with speed check logic in `backend/src/main/java/com/utam/service/AlertService.java`
+- [ ] T032 [US3] Integrate AlertService into VehicleConsumer in `backend/src/main/java/com/utam/service/VehicleConsumer.java`
+- [ ] T033 [US3] Create AlertController with GET /api/alerts in `backend/src/main/java/com/utam/controller/AlertController.java`
+- [ ] T034 [P] [US3] Implement AlertService client in `frontend/src/services/alertService.ts`
+- [ ] T035 [US3] Create AlertList component in `frontend/src/components/Alerts/AlertList.tsx`
+- [ ] T036 [US3] Add alert visualization/focus to Map in `frontend/src/components/Map/Map.tsx`
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -115,21 +110,21 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ## Phase 6: User Story 4 - Turnaround Management (Priority: P2)
 
-**Goal**: View turnaround status of aircraft on a Gantt chart.
+**Goal**: Ingest CV events via NiFi and visualize on Gantt chart.
 
-**Independent Test**: Run Mock CV Generator -> Verify Gantt Chart updates.
+**Independent Test**: Run Mock CV Generator -> Verify bars on Gantt Chart.
 
 ### Implementation for User Story 4
 
-- [x] T036 [P] [US4] Create TurnaroundEvent entity in `backend/src/main/java/com/utam/model/TurnaroundEvent.java`
-- [x] T037 [P] [US4] Create TurnaroundEvent repository in `backend/src/main/java/com/utam/repository/TurnaroundEventRepository.java`
-- [x] T038 [US4] Implement Turnaround Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/TurnaroundService.java`
-- [x] T039 [US4] Implement Turnaround Controller (API endpoints) in `backend/src/main/java/com/utam/controller/TurnaroundController.java`
-- [x] T040 [P] [US4] Implement Mock CV Generator in `backend/src/main/java/com/utam/simulation/MockCvEventGenerator.java`
-- [x] T041 [P] [US4] Create Turnaround Gantt Component in `frontend/src/components/Turnaround/TurnaroundGantt.tsx`
-- [x] T042 [US4] Integrate Gantt Chart into Dashboard in `frontend/src/components/Dashboard/Dashboard.tsx`
-
-**Checkpoint**: Turnaround feature functional
+- [ ] T037 [P] [US4] Create TurnaroundEvent entity in `backend/src/main/java/com/utam/model/TurnaroundEvent.java`
+- [ ] T038 [P] [US4] Create TurnaroundRepository in `backend/src/main/java/com/utam/repository/TurnaroundRepository.java`
+- [ ] T039 [US4] Implement TurnaroundConsumer to ingest from 'turnaround-raw-json' in `backend/src/main/java/com/utam/service/TurnaroundConsumer.java`
+- [ ] T040 [US4] Implement TurnaroundService in `backend/src/main/java/com/utam/service/TurnaroundService.java`
+- [ ] T041 [US4] Create TurnaroundController with GET /api/turnaround in `backend/src/main/java/com/utam/controller/TurnaroundController.java`
+- [ ] T042 [US4] Create Mock CV Generator script in `backend/src/main/resources/simulation/cv-generator.py`
+- [ ] T043 [US4] Create NiFi flow configuration for CV events in `infrastructure/nifi/flow_cv.json`
+- [ ] T044 [P] [US4] Implement TurnaroundService client in `frontend/src/services/turnaroundService.ts`
+- [ ] T045 [US4] Create Gantt Chart component in `frontend/src/components/Turnaround/TurnaroundGantt.tsx`
 
 ---
 
@@ -137,11 +132,10 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [x] T043 [P] Update README.md with setup instructions
-- [ ] T044 Verify end-to-end latency (< 5s)
-- [ ] T045 Verify load handling (10 flights, 10 vehicles)
-- [ ] T046 Ensure Basic Auth is applied to all endpoints
-- [x] T047 Update Map Center to IGIA and add Range Rings (10, 40, 70 NM)
+- [ ] T046 Update README.md with setup instructions
+- [ ] T047 Verify end-to-end latency meets < 5s requirement
+- [ ] T048 Ensure all mock generators handle connection errors gracefully
+- [ ] T049 Perform load test with 10 concurrent flights and vehicles (SC-002)
 
 ---
 
@@ -154,20 +148,19 @@ description: "Task list for Core MVP Tracking & Alerting"
 - **User Stories (Phase 3+)**: All depend on Foundational phase completion
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
-- **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - Independent of US1
-- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - Depends on Vehicle Service (US2) for trigger logic
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2)
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2)
+- **User Story 3 (P2)**: Depends on User Story 2 (Vehicle Tracking) for data source
+- **User Story 4 (P2)**: Can start after Foundational (Phase 2)
 
 ### Parallel Opportunities
 
 - All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
-- Once Foundational phase completes, US1 and US2 can start in parallel
-- US3 requires Vehicle Service (US2) to be partially complete (for ingestion hook), but Alert Entity/Repo can be done in parallel
+- Once Foundational phase completes, US1, US2, and US4 can start in parallel
+- US3 must wait for US2 core implementation
 
 ---
 
@@ -176,15 +169,15 @@ description: "Task list for Core MVP Tracking & Alerting"
 ### MVP First (User Story 1 Only)
 
 1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+2. Complete Phase 2: Foundational
 3. Complete Phase 3: User Story 1
 4. **STOP and VALIDATE**: Test User Story 1 independently
 5. Deploy/demo if ready
 
 ### Incremental Delivery
 
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 → Test independently → Deploy/Demo
-4. Add User Story 3 → Test independently → Deploy/Demo
-5. Each story adds value without breaking previous stories
+1. Complete Setup + Foundational
+2. Add User Story 1 (Flights) -> Demo
+3. Add User Story 2 (Vehicles) -> Demo
+4. Add User Story 3 (Alerts) -> Demo
+5. Add User Story 4 (Turnaround) -> Demo

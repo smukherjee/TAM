@@ -1,5 +1,6 @@
 package com.utam.controller;
 
+import com.utam.common.ApiResponse;
 import com.utam.model.Flight;
 import com.utam.service.FlightService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,7 @@ public class FlightController {
     }
 
     @GetMapping
-    public List<Flight> getActiveFlights() {
-        return flightService.getActiveFlights();
+    public ApiResponse<List<Flight>> getActiveFlights() {
+        return ApiResponse.success(flightService.getActiveFlights());
     }
 }

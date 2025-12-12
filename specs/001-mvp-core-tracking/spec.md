@@ -91,9 +91,9 @@ As an Airport Operations User, I want to view the turnaround status of aircraft 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST ingest simulated ADS-B flight data via the standard flight data interface (`POST /api/adsblivedata`).
-- **FR-002**: System MUST ingest simulated TelIT vehicle data via the standard vehicle data interface (`POST /veh_live_data_con`).
-- **FR-003**: System MUST publish raw ingestion data to a message broker for asynchronous processing.
+- **FR-001**: System MUST ingest simulated ADS-B flight data via **Apache NiFi** (HTTP Listener).
+- **FR-002**: System MUST ingest simulated TelIT vehicle data via **Apache NiFi** (HTTP Listener).
+- **FR-003**: **Apache NiFi** MUST publish raw ingestion data to Kafka topics (`flight-raw-json`, `vehicle-raw-json`, `turnaround-raw-json`) for asynchronous processing.
 - **FR-004**: System MUST process vehicle streams to detect speed violations based on a configurable threshold (default: 30 km/h).
 - **FR-005**: System MUST persist latest position and alert history to a time-series database.
 - **FR-006**: System MUST expose an API for the Frontend to fetch current positions of all active flights and vehicles.
@@ -101,7 +101,7 @@ As an Airport Operations User, I want to view the turnaround status of aircraft 
 - **FR-008**: Frontend MUST render an interactive map using **Leaflet** and **OpenStreetMap** tiles with distinct icons for Flights and Vehicles.
 - **FR-009**: Frontend MUST auto-refresh data via **HTTP Polling** (every 2-3s) to show movement in near real-time.
 - **FR-010**: Frontend map MUST default to centering on **Indira Gandhi International Airport (IGIA)** on load.
-- **FR-011**: System MUST ingest simulated Computer Vision (CV) turnaround events via `POST /api/turnaround/events`.
+- **FR-011**: System MUST ingest simulated Computer Vision (CV) turnaround events via **Apache NiFi** (HTTP Listener).
 - **FR-012**: System MUST persist turnaround events to the database.
 - **FR-013**: System MUST expose an API to fetch turnaround events by stand or time range.
 - **FR-014**: Frontend MUST render a Gantt chart visualizing the duration of turnaround activities (e.g., Boarding, Fueling).

@@ -1,85 +1,149 @@
-# Data Model: Core MVP Tracking
+# Data Model: Core MVP Tracking & Alerting
 
-## Entities
+**Feature**: `001-mvp-core-tracking` | **Date**: 2025-12-12
 
-### 1. Flight
+## Message Broker (Kafka)
 
-Represents an aircraft tracked via ADS-B.
+### Topic: `flight-raw-json`
+- **Source**: Apache NiFi (Ingestion)
+- **Consumer**: Spring Boot (Flight Service)
+- **Format**: JSON
+- **Schema**:
+  ```json
+  {
+    "LivePlotId": "UUID",
+    "Callsign": "String",
+    "Latitude": "Double",
+    "Longitude": "Double",
+    "Speed": "Double",
+    "Heading": "Double",
+    "Altitude": "Double",
+    "Status": "String",
+    "TrackId": "String",
+    "ModeSId": "String",
+    "FlightLevel": "Double",
+    "ROC": "Double",
+    "SSR": "String",
+    "SafetyAlert": "Boolean",
+    "SystemStatus": "String",
+    "Spi": "Boolean",
+    "UpdateType": "String",
+    "Time": "ISO8601 Timestamp"
+  }
+  ```
 
-| Field | Type | Description | Constraints |
-|-------|------|-------------|-------------|
-| `livePlotId` | UUID | Unique identifier for the plot | PK |
-| `callsign` | String | Flight callsign (e.g., "AI101") | Not Null |
-| `latitude` | Double | Current latitude | -90 to 90 |
-| `longitude` | Double | Current longitude | -180 to 180 |
-| `speed` | Double | Ground speed in knots | >= 0 |
-| `heading` | Double | Heading in degrees | 0-360 |
-| `timestamp` | DateTime | Time of observation | UTC |
-| `status` | String | Flight status (AIRBORNE, LANDED) | Enum |
+### Topic: `vehicle-raw-json`
+- **Source**: Apache NiFi (Ingestion)
+- **Consumer**: Spring Boot (Vehicle Service)
+- **Format**: JSON
+- **Schema**:
+  ```json
+  {
+    "vehicle_no": "String",
+    "vehicletype": "String",
+    "latitude": "String (Double)",
+    "longitude": "String (Double)",
+    "speed": "String (Double)",
+    "status": "String",
+    "vehicle_name": "String",
+    "company": "String",
+    "location": "String",
+    "gpsactualtime": "ISO8601 Timestamp",
+    "ign": "String"
+  }
+  ```
 
-### 2. Vehicle
+### Topic: `turnaround-raw-json`
+- **Source**: Apache NiFi (Ingestion)
+- **Consumer**: Spring Boot (Turnaround Service)
+- **Format**: JSON
+- **Schema**:
+  ```json
+  {
+    "eventUniqueId": "String",
+    "cameraId": "String",
+    "cameraName": "String",
+    "activityType": "String",
+    "eventType": "Integer (0=Start, 1=Stop)",
+    "eventTimeStamp": "ISO8601 Timestamp",
+    "stand": "String"
+  }
+  ```
 
-Represents a ground vehicle tracked via TelIT.
+### Topic: `alerts-json`
+- **Source**: Spring Boot (Alert Service)
+- **Consumer**: Spring Boot (Persistence), External Systems (Future)
+- **Format**: JSON
+- **Schema**:
+  ```json
+  {
+    "alertId": "UUID",
+    "type": "String (e.g., SPEED_VIOLATION)",
+    "entityId": "String",
+    "value": "Double",
+    "timestamp": "ISO8601 Timestamp",
+    "latitude": "Double",
+    "longitude": "Double"
+  }
+  ```
 
-| Field | Type | Description | Constraints |
-|-------|------|-------------|-------------|
-| `vehicleNo` | String | Unique vehicle number | PK |
-| `type` | String | Vehicle type (BUS, TRUCK, CAR) | Not Null |
-| `latitude` | Double | Current latitude | -90 to 90 |
-| `longitude` | Double | Current longitude | -180 to 180 |
-| `speed` | Double | Speed in km/h | >= 0 |
-| `status` | String | Operational status (RUNNING, STOP) | Enum |
-| `timestamp` | DateTime | Time of observation | UTC |
+## Database (PostgreSQL / TimescaleDB)
 
-### 3. Alert
+### Table: `flights` (Hypertable)
+- **Partition Key**: `time`
+- **Columns**:
+  - `live_plot_id` (UUID)
+  - `callsign` (VARCHAR)
+  - `latitude` (DOUBLE PRECISION)
+  - `longitude` (DOUBLE PRECISION)
+  - `speed` (DOUBLE PRECISION)
+  - `heading` (DOUBLE PRECISION)
+  - `altitude` (DOUBLE PRECISION)
+  - `status` (VARCHAR)
+  - `track_id` (VARCHAR)
+  - `mode_s_id` (VARCHAR)
+  - `flight_level` (DOUBLE PRECISION)
+  - `roc` (DOUBLE PRECISION)
+  - `ssr` (VARCHAR)
+  - `safety_alert` (BOOLEAN)
+  - `system_status` (VARCHAR)
+  - `spi` (BOOLEAN)
+  - `update_type` (VARCHAR)
+  - `time` (TIMESTAMPTZ)
 
-Represents a safety violation or event.
+### Table: `vehicles` (Hypertable)
+- **Partition Key**: `gpsactualtime`
+- **Columns**:
+  - `vehicle_no` (VARCHAR)
+  - `vehicletype` (VARCHAR)
+  - `latitude` (DOUBLE PRECISION)
+  - `longitude` (DOUBLE PRECISION)
+  - `speed` (DOUBLE PRECISION)
+  - `status` (VARCHAR)
+  - `vehicle_name` (VARCHAR)
+  - `company` (VARCHAR)
+  - `location` (VARCHAR)
+  - `gpsactualtime` (TIMESTAMPTZ)
+  - `ign` (VARCHAR)
 
-| Field | Type | Description | Constraints |
-|-------|------|-------------|-------------|
-| `alertId` | UUID | Unique alert identifier | PK |
-| `type` | String | Alert type (SPEED_VIOLATION) | Enum |
-| `entityId` | String | ID of the entity (VehicleNo) | Not Null |
-| `value` | Double | Value that triggered alert (Speed) | Not Null |
-| `timestamp` | DateTime | Time of alert generation | UTC |
-| `location` | Point | Lat/Long of the event | |
+### Table: `alerts` (Hypertable)
+- **Partition Key**: `timestamp`
+- **Columns**:
+  - `alert_id` (UUID)
+  - `type` (VARCHAR)
+  - `entity_id` (VARCHAR)
+  - `value` (DOUBLE PRECISION)
+  - `timestamp` (TIMESTAMPTZ)
+  - `latitude` (DOUBLE PRECISION)
+  - `longitude` (DOUBLE PRECISION)
 
-## Database Schema (PostgreSQL/TimescaleDB)
-
-```sql
--- Flights Hypertable
-CREATE TABLE flights (
-    time        TIMESTAMPTZ NOT NULL,
-    live_plot_id UUID NOT NULL,
-    callsign    TEXT NOT NULL,
-    latitude    DOUBLE PRECISION,
-    longitude   DOUBLE PRECISION,
-    speed       DOUBLE PRECISION,
-    heading     DOUBLE PRECISION,
-    status      TEXT
-);
-SELECT create_hypertable('flights', 'time');
-
--- Vehicles Hypertable
-CREATE TABLE vehicles (
-    time        TIMESTAMPTZ NOT NULL,
-    vehicle_no  TEXT NOT NULL,
-    type        TEXT,
-    latitude    DOUBLE PRECISION,
-    longitude   DOUBLE PRECISION,
-    speed       DOUBLE PRECISION,
-    status      TEXT
-);
-SELECT create_hypertable('vehicles', 'time');
-
--- Alerts Table (Standard)
-CREATE TABLE alerts (
-    alert_id    UUID PRIMARY KEY,
-    time        TIMESTAMPTZ NOT NULL,
-    type        TEXT NOT NULL,
-    entity_id   TEXT NOT NULL,
-    value       DOUBLE PRECISION,
-    latitude    DOUBLE PRECISION,
-    longitude   DOUBLE PRECISION
-);
-```
+### Table: `turnaround_events` (Hypertable)
+- **Partition Key**: `event_time_stamp`
+- **Columns**:
+  - `event_unique_id` (VARCHAR)
+  - `camera_id` (VARCHAR)
+  - `camera_name` (VARCHAR)
+  - `activity_type` (VARCHAR)
+  - `event_type` (INTEGER)
+  - `event_time_stamp` (TIMESTAMPTZ)
+  - `stand` (VARCHAR)

@@ -1,58 +1,62 @@
-# Quickstart: Core MVP Tracking
+# Quickstart: Core MVP Tracking & Alerting
+
+**Feature**: `001-mvp-core-tracking`
 
 ## Prerequisites
 
 - Docker & Docker Compose
-- Java 17+ (for local build)
-- Node.js 18+ (for local build)
+- Java 17+ (for local dev, optional if using Docker)
+- Node.js 18+ (for local dev, optional if using Docker)
 
-## Running the System
+## Setup & Run
 
 1. **Clone the repository**
-
    ```bash
    git clone <repo-url>
-   cd tam-mvp
+   cd TAM
    ```
 
-2. **Start the Environment**
-
-   Run the full stack (Backend, Frontend, Kafka, DB) using Docker Compose:
-
+2. **Start Infrastructure (NiFi, Kafka, DB)**
    ```bash
-   docker-compose up --build
+   docker-compose up -d
    ```
+   *Wait for containers to be healthy. NiFi takes a minute to start.*
 
-3. **Access the Dashboard**
-   Open your browser to: [http://localhost:3000](http://localhost:3000)
+3. **Configure NiFi (First Time Only)**
+   - Open NiFi UI: `http://localhost:8091/nifi`
+   - Import the `utam-ingestion-flow.json` (if provided) or create the flow manually:
+     - **Flight Flow**: `ListenHTTP` (Port 8081, Path `/api/adsblivedata`) -> `PublishKafka` (Topic `flight-raw-json`)
+     - **Vehicle Flow**: `ListenHTTP` (Port 8081, Path `/veh_live_data_con`) -> `PublishKafka` (Topic `vehicle-raw-json`)
+     - **Turnaround Flow**: `ListenHTTP` (Port 8081, Path `/api/turnaround/events`) -> `PublishKafka` (Topic `turnaround-raw-json`)
+   - Start the Processors.
 
-   **Credentials**:
-   - Username: `admin`
-   - Password: `admin`
+4. **Run Backend (Spring Boot)**
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
+   *Or run via Docker if configured.*
 
-4. **Verify Data Flow**
-   - The system will automatically start generating mock data.
-   - You should see aircraft and vehicles moving on the map.
-   - Check the "Alerts" panel for any speed violations.
+5. **Run Frontend (React)**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   *Access Dashboard at `http://localhost:3000`*
 
-## Development Commands
+## Verification
 
-### Backend (Spring Boot)
-
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
-### Frontend (React)
-
-```bash
-cd frontend
-npm install
-npm start
-```
+1. **Check Map**: Open `http://localhost:3000`. You should see the map centered on IGIA.
+2. **Check Data**:
+   - Ensure Mock Generators are running (they are part of the Backend in this MVP).
+   - Verify aircraft and vehicle icons appearing on the map.
+   - Verify Gantt chart updating.
+3. **Check NiFi**:
+   - Check NiFi UI counters to see data flowing through `ListenHTTP` processors.
 
 ## Troubleshooting
 
-- **Kafka Connection Issues**: Ensure `docker-compose` is running and Kafka is healthy (`docker ps`).
-- **No Data on Map**: Check backend logs for ingestion errors. Ensure mock generators are active.
+- **NiFi not reachable**: Ensure port 8091 is mapped and container is running.
+- **No Data on Map**: Check Kafka topics (`docker exec -it tam-kafka-1 kafka-console-consumer ...`) to see if NiFi is publishing.
+- **CORS Errors**: Ensure Backend allows requests from `localhost:3000`.

@@ -1,10 +1,13 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 -> 1.1.0 (Architecture Visualization)
-- Modified principles: None.
-- Added sections: Architecture Diagram (Visualized MVP Scope).
+- Version change: 1.1.0 -> 1.2.0 (Ingestion Architecture Swap)
+- Modified principles: Principle IV (Tech Stack Compliance) - Added Apache NiFi.
+- Modified sections: Architecture Diagram (Replaced Spring Boot Adapters with NiFi), Interface Specifications (Updated endpoints).
+- Added sections: None.
 - Removed sections: None.
-- Templates requiring updates: None.
+- Templates requiring updates: 
+  - .specify/templates/plan-template.md (Tech Stack section)
+  - .specify/templates/spec-template.md (Requirements section)
 - Follow-up TODOs: None.
 -->
 # Unified Total Airside Management (UTAM) MVP Constitution
@@ -27,7 +30,8 @@ Since this is a POC, the system MUST rely on mock data generators for ADSB (Flig
 
 Strict adherence to the defined stack:
 
-- Backend: Spring Boot 3.x (Java 17+)
+- Ingestion: Apache NiFi (Containerized)
+- Backend Processing/API: Spring Boot 3.x (Java 17+)
 - Frontend: React 18+ with TypeScript
 - Message Broker: Apache Kafka (single node)
 - Database: PostgreSQL 16+ with TimescaleDB extension
@@ -50,8 +54,7 @@ graph TB
     
     %% ========== INGESTION LAYER ==========
     subgraph "Ingestion Layer"
-        ADSB_ADAPTER[ADS-B Adapter<br/>POST /api/adsblivedata]
-        VEHICLE_ADAPTER[Vehicle Adapter<br/>POST /veh_live_data_con]
+        NIFI[Apache NiFi<br/>Ingestion Gateway]
     end
     
     %% ========== MESSAGE BROKER ==========
@@ -89,12 +92,12 @@ graph TB
     
     %% ========== CONNECTIONS ==========
     %% Sources -> Ingestion
-    ADSB -->|JSON Array| ADSB_ADAPTER
-    TELIT -->|JSON Array| VEHICLE_ADAPTER
+    ADSB -->|HTTP POST| NIFI
+    TELIT -->|HTTP POST| NIFI
     
     %% Ingestion -> Kafka
-    ADSB_ADAPTER --> TOPIC_FLIGHT
-    VEHICLE_ADAPTER --> TOPIC_VEHICLE
+    NIFI -->|Publish| TOPIC_FLIGHT
+    NIFI -->|Publish| TOPIC_VEHICLE
     
     %% Kafka -> Processing
     TOPIC_FLIGHT --> STREAM_FLIGHT
@@ -117,6 +120,7 @@ graph TB
     %% Styling
     style ADSB fill:#e1f5fe
     style TELIT fill:#e1f5fe
+    style NIFI fill:#fff9c4
     style KAFKA fill:#fff3e0
     style TSDB fill:#ffebee
     style WEB_PORTAL fill:#e3f2fd
@@ -134,14 +138,14 @@ To ensure future extendibility, the MVP components must adhere to the interfaces
 #### 1. Flight Data (ADS-B)
 
 - **Source**: Mock Generator (simulating ADS-B feed).
-- **Endpoint**: `POST /api/adsblivedata`
+- **Ingestion Point**: Apache NiFi Listener (HTTP).
 - **Format**: JSON Array of Objects.
 - **Key Fields**: `LivePlotId`, `TrackId`, `Time` (Unix), `Latitude`, `Longitude`, `Speed`, `Heading`, `FlightLevel`, `Callsign`, `FlightNumber`, `AcType`, `FlightStatus`.
 
 #### 2. Vehicle Data (TelIT)
 
 - **Source**: Mock Generator (simulating TelIT feed).
-- **Endpoint**: `POST /veh_live_data_con`
+- **Ingestion Point**: Apache NiFi Listener (HTTP).
 - **Format**: JSON Array of Objects.
 - **Key Fields**: `Vehicle_Name`, `Vehicle_No`, `Latitude`, `Longitude`, `Speed`, `Angle`, `Status` (STOP/RUNNING/IDLE), `Vehicletype`, `GPSActualTime`, `IGN`, `Power`.
 
@@ -183,4 +187,4 @@ This constitution follows Semantic Versioning (MAJOR.MINOR.PATCH).
 
 All Pull Requests and design reviews MUST verify compliance with these principles. Complexity must be justified.
 
-**Version**: 1.1.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-07
+**Version**: 1.2.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-12

@@ -1,0 +1,144 @@
+openapi: 3.0.0
+info:
+  title: UTAM Core MVP API
+  version: 1.0.0
+  description: API for fetching real-time tracking data and alerts.
+servers:
+  - url: http://localhost:8080/api
+    description: Local Development Server
+
+paths:
+  /flights:
+    get:
+      summary: Get all active flights
+      responses:
+        '200':
+          description: List of active flights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flight'
+
+  /vehicles:
+    get:
+      summary: Get all active vehicles
+      responses:
+        '200':
+          description: List of active vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+
+  /alerts:
+    get:
+      summary: Get active alerts
+      responses:
+        '200':
+          description: List of active alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+
+  /turnaround/events:
+    get:
+      summary: Get turnaround events
+      responses:
+        '200':
+          description: List of turnaround events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TurnaroundEvent'
+
+components:
+  schemas:
+    Flight:
+      type: object
+      properties:
+        livePlotId:
+          type: string
+          format: uuid
+        callsign:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        speed:
+          type: number
+        heading:
+          type: number
+        altitude:
+          type: number
+        status:
+          type: string
+        time:
+          type: string
+          format: date-time
+
+    Vehicle:
+      type: object
+      properties:
+        vehicle_no:
+          type: string
+        vehicletype:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        speed:
+          type: number
+        status:
+          type: string
+        gpsactualtime:
+          type: string
+          format: date-time
+
+    Alert:
+      type: object
+      properties:
+        alertId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        entityId:
+          type: string
+        value:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        latitude:
+          type: number
+        longitude:
+          type: number
+
+    TurnaroundEvent:
+      type: object
+      properties:
+        eventUniqueId:
+          type: string
+        cameraId:
+          type: string
+        activityType:
+          type: string
+        eventType:
+          type: integer
+          description: 0=Start, 1=Stop
+        eventTimeStamp:
+          type: string
+          format: date-time
+        stand:
+          type: string

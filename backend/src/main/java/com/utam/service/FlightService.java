@@ -2,8 +2,8 @@ package com.utam.service;
 
 import com.utam.model.Flight;
 import com.utam.repository.FlightRepository;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -18,9 +18,9 @@ public class FlightService {
         this.flightRepository = flightRepository;
     }
 
-    @KafkaListener(topics = "flight-raw-json", groupId = "utam-group")
-    public void consumeFlightEvent(Flight flight) {
-        flightRepository.save(flight);
+    @Transactional
+    public void saveAll(List<Flight> flights) {
+        flightRepository.saveAll(flights);
     }
 
     public List<Flight> getActiveFlights() {

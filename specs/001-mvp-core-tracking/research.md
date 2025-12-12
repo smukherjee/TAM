@@ -1,63 +1,46 @@
-# Research & Decisions: Core MVP Tracking
+# Research & Decisions: Core MVP Tracking & Alerting
 
-**Feature**: Core MVP Tracking & Alerting
-**Date**: 2025-12-07
+**Feature**: `001-mvp-core-tracking` | **Date**: 2025-12-12
 
-## 1. Mock Data Generation
+## Unknowns & Clarifications
 
-**Problem**: Need to simulate ADS-B (Flight) and TelIT (Vehicle) data streams for the MVP.
-**Decision**: Implement as internal components within the Spring Boot Backend.
-**Rationale**:
+| Unknown | Resolution | Source |
+|---------|------------|--------|
+| Ingestion Architecture | Use Apache NiFi as Ingestion Gateway | Constitution v1.2.0 |
+| Map Library | Leaflet (react-leaflet) | Spec Clarifications |
+| Tile Provider | OpenStreetMap (OSM) | Spec Clarifications |
+| Frontend Updates | HTTP Polling (2-3s) | Spec Clarifications |
 
-- Reduces operational complexity (fewer containers to manage).
-- Easier to control simulation state (start/stop/reset) via the same API.
-- Sufficient for MVP scale (10 entities).
-**Alternatives Considered**:
-- Separate Python scripts: Rejected to avoid multi-language complexity in backend.
-- External tools: Rejected to ensure reproducibility without external dependencies.
+## Technology Decisions
 
-## 2. Map Visualization
+### 1. Ingestion: Apache NiFi
+- **Decision**: Use Apache NiFi running in a Docker container.
+- **Rationale**: Provides a flexible, visual way to handle data ingestion from various sources (HTTP, MQTT, etc.) without writing custom Java adapters. Decouples ingestion from processing.
+- **Alternatives**: Spring Boot Controllers (Rejected: Tightly coupled, requires code changes for new sources).
 
-**Problem**: Need a lightweight map component for the React frontend.
-**Decision**: Leaflet (via `react-leaflet`).
-**Rationale**:
+### 2. Message Broker: Apache Kafka
+- **Decision**: Single-node Kafka instance.
+- **Rationale**: Standard for event-driven architectures, handles high throughput, decouples producers (NiFi) from consumers (Spring Boot).
+- **Alternatives**: RabbitMQ (Rejected: Kafka is better suited for stream processing and high-throughput event logs).
 
-- Lightweight and easy to integrate with React.
-- Good support for custom icons (needed for Flight/Vehicle distinction).
-- Free tile providers available.
-**Alternatives Considered**:
-- Google Maps: Rejected due to API key/cost requirements.
-- Mapbox: Rejected due to API key requirement.
+### 3. Backend: Spring Boot 3.x
+- **Decision**: Java 17+ with Spring Boot 3.
+- **Rationale**: Robust, enterprise-grade, excellent Kafka integration (Spring Kafka), familiar to team.
+- **Alternatives**: Node.js (Rejected: Team expertise in Java, better multi-threading for complex processing).
 
-## 3. Real-time Updates
+### 4. Database: TimescaleDB
+- **Decision**: PostgreSQL 16 with TimescaleDB extension.
+- **Rationale**: Optimized for time-series data (tracking history), SQL interface, relational features for metadata.
+- **Alternatives**: MongoDB (Rejected: Need efficient time-series queries and relational integrity).
 
-**Problem**: Frontend needs to show moving entities.
-**Decision**: HTTP Polling (2-3s interval).
-**Rationale**:
+### 5. Frontend: React + Leaflet
+- **Decision**: React 18 with `react-leaflet`.
+- **Rationale**: React is the standard frontend library. Leaflet is lightweight and sufficient for 2D maps.
+- **Alternatives**: OpenLayers (Rejected: Too complex for MVP), Mapbox (Rejected: Requires API key/cost).
 
-- Simple to implement and debug.
-- Meets the latency requirement (< 5s).
-- Avoids complexity of WebSockets for the initial MVP.
-**Alternatives Considered**:
-- WebSockets: Better for real-time, but higher complexity for MVP. Deferred to future phases.
-- Server-Sent Events (SSE): Good middle ground, but polling is sufficient for 10 entities.
+## Best Practices
 
-## 4. Database
-
-**Problem**: Need to store time-series data for tracking.
-**Decision**: PostgreSQL 16 with TimescaleDB extension.
-**Rationale**:
-
-- Mandated by Constitution.
-- Efficient for time-series data (positions).
-- Standard SQL interface.
-
-## 5. Message Broker
-
-**Problem**: Decouple ingestion from processing.
-**Decision**: Apache Kafka (Single Node).
-**Rationale**:
-
-- Mandated by Constitution.
-- Handles high throughput if we scale later.
-- "Single Node" configuration sufficient for MVP local dev.
+- **NiFi**: Use Process Groups to organize flows. Use `HandleHttpRequest` -> `PublishKafka` pattern.
+- **Kafka**: Use JSON serialization for messages. Topic naming convention: `domain.entity.type` (e.g., `utam.flight.raw`).
+- **Spring Boot**: Use `@KafkaListener` for consumption. Use `Repository` pattern for DB access.
+- **React**: Use Context API for state management if needed, or simple props for MVP. Componentize Map Layers.

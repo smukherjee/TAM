@@ -1,0 +1,29 @@
+{
+  "flowName": "ADSB Ingestion",
+  "processors": [
+    {
+      "name": "ListenHTTP",
+      "type": "org.apache.nifi.processors.standard.ListenHTTP",
+      "properties": {
+        "Listening Port": "8080",
+        "Base Path": "api/adsblivedata"
+      }
+    },
+    {
+      "name": "PublishKafka_2_6",
+      "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+      "properties": {
+        "Kafka Brokers": "kafka:29092",
+        "Topic Name": "flight-raw-json",
+        "Delivery Guarantee": "Best Effort"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "ListenHTTP",
+      "to": "PublishKafka_2_6",
+      "relationship": "success"
+    }
+  ]
+}
