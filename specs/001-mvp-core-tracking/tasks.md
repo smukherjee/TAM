@@ -113,15 +113,35 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ---
 
-## Phase 6: Polish & Cross-Cutting Concerns
+## Phase 6: User Story 4 - Turnaround Management (Priority: P2)
+
+**Goal**: View turnaround status of aircraft on a Gantt chart.
+
+**Independent Test**: Run Mock CV Generator -> Verify Gantt Chart updates.
+
+### Implementation for User Story 4
+
+- [x] T036 [P] [US4] Create TurnaroundEvent entity in `backend/src/main/java/com/utam/model/TurnaroundEvent.java`
+- [x] T037 [P] [US4] Create TurnaroundEvent repository in `backend/src/main/java/com/utam/repository/TurnaroundEventRepository.java`
+- [x] T038 [US4] Implement Turnaround Service (Ingestion & Query) in `backend/src/main/java/com/utam/service/TurnaroundService.java`
+- [x] T039 [US4] Implement Turnaround Controller (API endpoints) in `backend/src/main/java/com/utam/controller/TurnaroundController.java`
+- [x] T040 [P] [US4] Implement Mock CV Generator in `backend/src/main/java/com/utam/simulation/MockCvEventGenerator.java`
+- [x] T041 [P] [US4] Create Turnaround Gantt Component in `frontend/src/components/Turnaround/TurnaroundGantt.tsx`
+- [x] T042 [US4] Integrate Gantt Chart into Dashboard in `frontend/src/components/Dashboard/Dashboard.tsx`
+
+**Checkpoint**: Turnaround feature functional
+
+---
+
+## Phase 7: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [x] T036 [P] Update README.md with setup instructions
-- [ ] T037 Verify end-to-end latency (< 5s)
-- [ ] T038 Verify load handling (10 flights, 10 vehicles)
-- [ ] T039 Ensure Basic Auth is applied to all endpoints
-- [x] T040 Update Map Center to IGIA and add Range Rings (10, 40, 70 NM)
+- [x] T043 [P] Update README.md with setup instructions
+- [ ] T044 Verify end-to-end latency (< 5s)
+- [ ] T045 Verify load handling (10 flights, 10 vehicles)
+- [ ] T046 Ensure Basic Auth is applied to all endpoints
+- [x] T047 Update Map Center to IGIA and add Range Rings (10, 40, 70 NM)
 
 ---
 

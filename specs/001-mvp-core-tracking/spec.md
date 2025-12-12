@@ -53,6 +53,22 @@ As a Safety Officer, I want to receive immediate alerts when a vehicle exceeds t
 2. **Given** a Speed Violation alert is generated, **When** the user views the dashboard, **Then** the alert is visible in the "Active Alerts" list.
 3. **Given** an alert is generated, **When** the user clicks it, **Then** the map focuses on the offending vehicle.
 
+---
+
+### User Story 4 - Turnaround Management (Priority: P2)
+
+As an Airport Operations User, I want to view the turnaround status of aircraft on a Gantt chart so that I can monitor ground handling efficiency.
+
+**Why this priority**: Provides visibility into critical path activities on the ground.
+
+**Independent Test**: Can be tested by running the Mock CV Event Generator and verifying the Gantt chart updates with new bars.
+
+**Acceptance Scenarios**:
+
+1. **Given** the Mock CV Event Generator is running, **When** it emits start/stop events for an activity (e.g., Fueling), **Then** the Gantt chart displays a corresponding bar.
+2. **Given** a specific stand is selected, **When** the user changes the selection, **Then** the chart filters to show only events for that stand.
+3. **Given** an activity is ongoing (Start received, no Stop), **When** time passes, **Then** the bar extends to the current time.
+
 ### Edge Cases
 
 - What happens when the Mock Generator stops sending data? (System should log the interruption error, attempt to reconnect 3 times, and then alert the administrator).
@@ -85,6 +101,10 @@ As a Safety Officer, I want to receive immediate alerts when a vehicle exceeds t
 - **FR-008**: Frontend MUST render an interactive map using **Leaflet** and **OpenStreetMap** tiles with distinct icons for Flights and Vehicles.
 - **FR-009**: Frontend MUST auto-refresh data via **HTTP Polling** (every 2-3s) to show movement in near real-time.
 - **FR-010**: Frontend map MUST default to centering on **Indira Gandhi International Airport (IGIA)** on load.
+- **FR-011**: System MUST ingest simulated Computer Vision (CV) turnaround events via `POST /api/turnaround/events`.
+- **FR-012**: System MUST persist turnaround events to the database.
+- **FR-013**: System MUST expose an API to fetch turnaround events by stand or time range.
+- **FR-014**: Frontend MUST render a Gantt chart visualizing the duration of turnaround activities (e.g., Boarding, Fueling).
 
 ### Non-Functional Requirements
 
@@ -96,6 +116,7 @@ As a Safety Officer, I want to receive immediate alerts when a vehicle exceeds t
 - **Flight**: `LivePlotId`, `Callsign`, `Latitude`, `Longitude`, `Speed`, `Heading`, `Timestamp`.
 - **Vehicle**: `VehicleNo`, `Type`, `Latitude`, `Longitude`, `Speed`, `Status`, `Timestamp`.
 - **Alert**: `AlertId`, `Type` (SPEED_VIOLATION), `EntityId` (VehicleNo), `Value` (Speed), `Timestamp`, `Location`.
+- **TurnaroundEvent**: `EventUniqueId`, `CameraId`, `ActivityType`, `EventType` (Start/Stop), `EventTimeStamp`, `Stand`.
 
 ## Success Criteria *(mandatory)*
 
