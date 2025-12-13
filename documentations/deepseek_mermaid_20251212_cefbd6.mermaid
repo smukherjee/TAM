@@ -1,0 +1,207 @@
+graph TB
+    %% ========== DATA SOURCES LAYER ==========
+    subgraph "Data Sources (Multi-Protocol)"
+        ADSB[ADS-B<br/>HTTP/2-sec]
+        TELIT[TelIT IoT<br/>HTTP/<1-sec]
+        TAJSATS[TajSATS<br/>REST API]
+        CV[Computer Vision<br/>HTTP/Event]
+        AODB[AODB<br/>SFTP/30-min]
+        QP[QP Data<br/>HTTP/Daily]
+        CDM[CDM System<br/>SFTP]
+        VHF[VHF/UHF<br/>Streaming]
+    end
+    
+    %% ========== INGESTION LAYER (NIFI) ==========
+    subgraph "Ingestion Layer - Apache NiFi Cluster"
+        NIFI_CLUSTER[Apache NiFi<br/>3-Node Cluster]
+        
+        subgraph "Data Flow Groups"
+            FLOW1[ADSB Flow Group]
+            FLOW2[Vehicle Flow Group]
+            FLOW3[CV Flow Group]
+            FLOW4[AODB Flow Group]
+            FLOW5[CDM Flow Group]
+        end
+        
+        SCHEMA_REG[Schema Registry<br/>Confluent]
+        PROVENANCE[Provenance<br/>Repository]
+        SECURITY[Security<br/>LDAP/SSL]
+    end
+    
+    %% ========== STREAM PROCESSING LAYER ==========
+    subgraph "Stream Processing Layer"
+        KAFKA[Apache Kafka Cluster<br/>6 nodes/3 AZ]
+        
+        subgraph "Kafka Topics"
+            T1[flight-raw-avro<br/>50 partitions]
+            T2[vehicle-raw-avro<br/>30 partitions]
+            T3[cv-events-avro<br/>20 partitions]
+            T4[schedule-updates-avro<br/>10 partitions]
+            T5[alerts-json<br/>5 partitions]
+            DLQ[dead-letter-queue]
+        end
+        
+        KSTREAMS[Kafka Streams<br/>Real-time Processing]
+        KSQL[ksqlDB<br/>Streaming SQL]
+        FLINK[Apache Flink<br/>Complex Event Processing]
+    end
+    
+    %% ========== MICROSERVICES LAYER ==========
+    subgraph "Microservices Layer (Kubernetes)"
+        subgraph "Core Business Services"
+            LIVE_SVC[Live Service<br/>gRPC/WebSocket]
+            ALERT_SVC[Alert Service<br/>Rules Engine]
+            TURN_SVC[Turnaround Service<br/>CDM Milestones]
+            REPORT_SVC[Report Service<br/>Batch Processing]
+        end
+        
+        subgraph "Supporting Services"
+            USER_SVC[User Service<br/>AuthN/AuthZ]
+            CONFIG_SVC[Config Service<br/>Feature Flags]
+            NOTIFY_SVC[Notification Service<br/>Multi-channel]
+            INTEG_SVC[Integration Service<br/>External APIs]
+        end
+        
+        subgraph "Service Mesh"
+            ISTIO[Istio Service Mesh]
+            APM[Distributed Tracing]
+            CIRCUIT[Circuit Breakers]
+        end
+    end
+    
+    %% ========== DATA STORAGE LAYER ==========
+    subgraph "Data Storage (Polyglot)"
+        subgraph "Operational Stores"
+            PG_OP[(PostgreSQL 15<br/>HA Cluster)]
+            TSDB[(TimescaleDB<br/>Time-series)]
+            REDIS[(Redis Cluster<br/>Cache/Sessions)]
+        end
+        
+        subgraph "Analytical Stores"
+            DATA_LAKE[(Data Lake<br/>S3/Parquet)]
+            OLAP[(ClickHouse<br/>Analytics)]
+            ES[(Elasticsearch<br/>Search/Logs)]
+        end
+        
+        subgraph "Data Warehouse"
+            SNOWFLAKE[(Snowflake<br/>Reporting)]
+            METASTORE[Hive Metastore]
+        end
+    end
+    
+    %% ========== PRESENTATION LAYER ==========
+    subgraph "Presentation Layer"
+        API_GW[API Gateway<br/>Kong/Traefik]
+        
+        subgraph "Web Applications"
+            REACT_DASH[React Dashboard<br/>SSR/PWA]
+            ADMIN_PORTAL[Admin Portal<br/>Angular]
+            MOBILE_APP[Mobile Apps<br/>React Native]
+        end
+        
+        subgraph "BI & Analytics"
+            PBI[Power BI Embedded]
+            SUPERSET[Apache Superset]
+            GRAFANA[Grafana Dashboards]
+        end
+    end
+    
+    %% ========== OBSERVABILITY LAYER ==========
+    subgraph "Observability Layer"
+        subgraph "Monitoring"
+            PROMETHEUS[Prometheus Cluster]
+            ALERT_MGR[Alert Manager]
+            GRAFANA_MON[Grafana Monitoring]
+        end
+        
+        subgraph "Logging"
+            ELK[ELK Stack<br/>Centralized Logging]
+            LOKI[Grafana Loki]
+        end
+        
+        subgraph "Tracing"
+            JAEGER[Jaeger<br/>Distributed Tracing]
+            ZIPKIN[Zipkin]
+        end
+    end
+    
+    %% ========== SECURITY LAYER ==========
+    subgraph "Security & Governance"
+        subgraph "Identity & Access"
+            KEYCLOAK[Keycloak<br/>SSO/OIDC]
+            LDAP[LDAP/Active Directory]
+            RBAC[RBAC/ABAC Engine]
+        end
+        
+        subgraph "Data Security"
+            VAULT[HashiCorp Vault]
+            KMS[Key Management Service]
+            DLP[Data Loss Prevention]
+        end
+        
+        subgraph "Compliance"
+            AUDIT[Audit Trail System]
+            RETENTION[Data Retention Manager]
+            CLASSIFICATION[Data Classification]
+        end
+    end
+    
+    %% ========== INFRASTRUCTURE ==========
+    subgraph "Infrastructure (Multi-Cloud)"
+        K8S[Kubernetes<br/>Multi-cluster/Multi-region]
+        TERRAFORM[Terraform<br/>Infrastructure as Code]
+        ARGOCD[ArgoCD<br/>GitOps]
+        BACKUP[Backup/Disaster Recovery]
+    end
+    
+    %% ========== CONNECTIONS ==========
+    ADSB --> NIFI_CLUSTER
+    TELIT --> NIFI_CLUSTER
+    TAJSATS --> NIFI_CLUSTER
+    CV --> NIFI_CLUSTER
+    AODB --> NIFI_CLUSTER
+    QP --> NIFI_CLUSTER
+    CDM --> NIFI_CLUSTER
+    VHF --> NIFI_CLUSTER
+    
+    NIFI_CLUSTER --> KAFKA
+    SCHEMA_REG --> NIFI_CLUSTER
+    
+    KAFKA --> KSTREAMS
+    KAFKA --> KSQL
+    KAFKA --> FLINK
+    
+    KSTREAMS --> LIVE_SVC
+    FLINK --> ALERT_SVC
+    KSQL --> TURN_SVC
+    
+    LIVE_SVC --> TSDB
+    LIVE_SVC --> REDIS
+    ALERT_SVC --> PG_OP
+    TURN_SVC --> PG_OP
+    REPORT_SVC --> DATA_LAKE
+    
+    LIVE_SVC --> API_GW
+    ALERT_SVC --> API_GW
+    TURN_SVC --> API_GW
+    REPORT_SVC --> API_GW
+    
+    API_GW --> REACT_DASH
+    API_GW --> ADMIN_PORTAL
+    API_GW --> MOBILE_APP
+    REPORT_SVC --> PBI
+    REPORT_SVC --> SUPERSET
+    
+    %% Monitoring connections
+    ALL_SVCS[All Services] --> PROMETHEUS
+    ALL_SVCS --> ELK
+    ALL_SVCS --> JAEGER
+    
+    %% Security connections
+    API_GW --> KEYCLOAK
+    ALL_SVCS --> VAULT
+    
+    %% Infrastructure
+    K8S --> ALL_SVCS
+    TERRAFORM --> K8S
+    ARGOCD --> K8S

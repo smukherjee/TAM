@@ -1,0 +1,69 @@
+graph TB
+    subgraph "Source Layer"
+        A1[Flight Schedules<br/>Batch/JSON]
+        A2[Flight Movements<br/>Stream/JSON]
+        A3[IoT Device Data<br/>Real-time/JSON]
+        A4[Video Analytics<br/>Stream/JSON]
+    end
+    
+    subgraph "Ingestion Layer"
+        B1[API Gateway<br/>REST/WebSocket]
+        B2[Message Broker<br/>Apache Kafka]
+        B3[File Ingestion Service]
+    end
+    
+    subgraph "Transformation Layer"
+        C1[Adapter Service<br/>Provider-specific]
+        C2[Schema Registry<br/>Avro Protobuf]
+        C3[Validation Service]
+    end
+    
+    subgraph "Processing Layer"
+        D1[Stream Processor<br/>Flink/Kafka Streams]
+        D2[Batch Processor<br/>Spark]
+        D3[Rules Engine]
+    end
+    
+    subgraph "Core Services Layer"
+        E1[Flight Metadata Service]
+        E2[Movement Service]
+        E3[IoT Service]
+        E4[Analytics Service]
+    end
+    
+    subgraph "Storage Layer"
+        F1[Operational Store<br/>PostgreSQL]
+        F2[Analytical Store<br/>Data Lake]
+        F3[Time Series DB<br/>TimescaleDB]
+        F4[Document Store<br/>MongoDB]
+        F5[Object Storage<br/>S3]
+    end
+    
+    subgraph "Orchestration & Observability"
+        G1[Kubernetes]
+        G2[Service Mesh<br/>Istio]
+        G3[Monitoring Stack]
+    end
+    
+    A1 --> B3
+    A2 --> B1
+    A3 --> B1
+    A4 --> B1
+    B1 --> B2
+    B3 --> B2
+    B2 --> C1
+    C1 --> C2
+    C2 --> C3
+    C3 --> D1
+    C3 --> D2
+    D1 --> E1
+    D1 --> E2
+    D1 --> E3
+    D1 --> E4
+    D2 --> E1
+    D2 --> E2
+    E1 --> F1
+    E2 --> F2
+    E3 --> F3
+    E4 --> F4
+    E4 --> F5

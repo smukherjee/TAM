@@ -1,0 +1,150 @@
+graph TB
+    %% ========== PLATFORM CORE ==========
+    subgraph "Platform Core (Multi-Tenant)"
+        subgraph "Universal Ingestion Layer"
+            INGEST_API[Universal Ingestion API<br/>Protocol-agnostic]
+            PROTOCOL_ADAPTERS[Protocol Adapters<br/>HTTP/2, gRPC, WebSocket, MQTT, SFTP]
+            SCHEMA_REGISTRY[Schema Registry<br/>Avro/Protobuf/JSON Schema]
+            VALIDATION[Data Validation Engine]
+        end
+        
+        subgraph "Stream Processing Layer"
+            KAFKA[Apache Kafka<br/>Multi-cluster, Geo-replicated]
+            FLINK[Apache Flink Cluster<br/>Stateful Stream Processing]
+            KSQL[ksqlDB Cluster<br/>Streaming SQL]
+            CEP[Complex Event Processing Engine]
+        end
+        
+        subgraph "Data Transformation Engine"
+            TRANSFORM[Transformation Pipeline<br/>DAG-based]
+            ENRICHMENT[Data Enrichment Service]
+            NORMALIZATION[Canonical Model Service]
+            QUALITY[Data Quality Engine]
+        end
+        
+        subgraph "Platform Services"
+            METADATA[Metadata Catalog<br/>Data Discovery]
+            GOVERNANCE[Data Governance<br/>Lineage, PII, Compliance]
+            ORCHESTRATION[Pipeline Orchestration]
+            MONETIZATION[Billing & Metering]
+        end
+    end
+    
+    %% ========== DOMAIN-SPECIFIC LAYERS ==========
+    subgraph "Domain-Specific Processing"
+        subgraph "Aviation Domain"
+            AVIATION_PROC[Aviation Processors<br/>Flight/Vehicle/Schedule]
+            AVIATION_MODELS[Aviation Data Models]
+            AVIATION_RULES[Business Rules Engine]
+        end
+        
+        subgraph "Use Case Processors"
+            UTAM_PROC[UTAM Processor<br/>Airport Ops]
+            AIRLINE_PROC[Airline Processor<br/>Fleet Ops]
+            MAINT_PROC[Maintenance Processor<br/>Predictive]
+            ENV_PROC[Environmental Processor<br/>Sustainability]
+        end
+    end
+    
+    %% ========== DATA STORAGE ==========
+    subgraph "Multi-Modal Storage"
+        subgraph "Raw Data Lake"
+            RAW_S3[Raw Data Lake<br/>S3/Parquet/AVRO]
+            ICEBERG[Apache Iceberg<br/>Table Format]
+            DELTA[Delta Lake]
+        end
+        
+        subgraph "Processed Data Warehouse"
+            PROCESSED_DW[Processed Data Warehouse<br/>Snowflake/BigQuery]
+            DATA_MARTS[Data Marts<br/>Use-case specific]
+            CACHE[Real-time Cache<br/>Redis/KeyDB]
+        end
+        
+        subgraph "Feature Store"
+            FEATURE_STORE[Feature Store<br/>ML Features]
+            VECTOR_DB[Vector Database<br/>Similarity Search]
+            GRAPH_DB[Graph Database<br/>Relationships]
+        end
+    end
+    
+    %% ========== API & DELIVERY ==========
+    subgraph "API & Delivery Layer"
+        subgraph "Query Engines"
+            PRESTO[Presto/Trino<br/>SQL on Everything]
+            SPARK[Spark SQL<br/>Batch Processing]
+            DUCKDB[DuckDB<br/>Embedded Analytics]
+        end
+        
+        subgraph "API Gateways"
+            REST_API[REST API Gateway<br/>GraphQL/gRPC]
+            STREAM_API[Streaming API<br/>WebSocket/Server-Sent Events]
+            FILE_API[File API<br/>Export/Import]
+        end
+        
+        subgraph "Client SDKs"
+            PYTHON_SDK[Python SDK]
+            JS_SDK[JavaScript/TypeScript SDK]
+            JAVA_SDK[Java SDK]
+            CLI[CLI Tools]
+        end
+    end
+    
+    %% ========== USE CASES ==========
+    subgraph "Use Cases (Consumers)"
+        UTAM_APP[UTAM Application<br/>Airport Operations]
+        AIRLINE_APP[Airline Dashboard<br/>Fleet Management]
+        MAINT_APP[Maintenance System<br/>Predictive Alerts]
+        ENV_APP[Environmental Dashboard<br/>Carbon Tracking]
+        CUSTOM_1[Custom App 1]
+        CUSTOM_2[Custom App 2]
+    end
+    
+    %% ========== OBSERVABILITY ==========
+    subgraph "Platform Observability"
+        METRICS[Platform Metrics<br/>Usage, Performance, Cost]
+        OBSERVABILITY[Distributed Tracing<br/>OpenTelemetry]
+        AUDIT[Audit Trail<br/>Data Access Logging]
+        ALERTING[Platform Alerting<br/>SLA Monitoring]
+    end
+    
+    %% ========== CONNECTIONS ==========
+    EXTERNAL[External Data Sources] --> PROTOCOL_ADAPTERS
+    PROTOCOL_ADAPTERS --> VALIDATION --> KAFKA
+    KAFKA --> FLINK --> TRANSFORM
+    KAFKA --> KSQL --> CEP
+    TRANSFORM --> ENRICHMENT --> NORMALIZATION --> QUALITY
+    
+    QUALITY --> AVIATION_PROC --> UTAM_PROC
+    QUALITY --> AVIATION_PROC --> AIRLINE_PROC
+    QUALITY --> AVIATION_PROC --> MAINT_PROC
+    QUALITY --> AVIATION_PROC --> ENV_PROC
+    
+    UTAM_PROC --> RAW_S3
+    AIRLINE_PROC --> RAW_S3
+    MAINT_PROC --> RAW_S3
+    ENV_PROC --> RAW_S3
+    
+    RAW_S3 --> ICEBERG --> PROCESSED_DW
+    PROCESSED_DW --> DATA_MARTS --> FEATURE_STORE
+    
+    FEATURE_STORE --> PRESTO --> REST_API
+    FEATURE_STORE --> SPARK --> REST_API
+    CACHE --> STREAM_API
+    
+    REST_API --> UTAM_APP
+    REST_API --> AIRLINE_APP
+    STREAM_API --> MAINT_APP
+    FILE_API --> ENV_APP
+    REST_API --> CUSTOM_1
+    REST_API --> CUSTOM_2
+    
+    REST_API --> PYTHON_SDK
+    REST_API --> JS_SDK
+    REST_API --> JAVA_SDK
+    REST_API --> CLI
+    
+    %% Observability
+    ALL_SVCS[All Services] --> METRICS
+    ALL_SVCS --> OBSERVABILITY
+    ALL_SVCS --> AUDIT
+    METRICS --> ALERTING
