@@ -7,27 +7,6 @@ import AlertList from '../Alerts/AlertList';
 import api from '../../services/api';
 import TurnaroundGantt from '../Turnaround/TurnaroundGantt';
 
-interface Flight {
-    LivePlotId: string;
-    CallSign: string;
-    Lat: number;
-    Lon: number;
-    Speed: number;
-    Heading: number;
-    Altitude: number;
-    Status: string;
-    TrackId: string;
-    ModeSId: string;
-    FlightLevel: number;
-    ROC: number;
-    SSR: string;
-    SafetyAlert: boolean;
-    SystemStatus: string;
-    Spi: boolean;
-    UpdateType: string;
-    Time: string;
-}
-
 interface Vehicle {
     vehicle_no: string;
     vehicletype: string;
@@ -53,18 +32,8 @@ interface Alert {
 }
 
 const Dashboard: React.FC = () => {
-    const [flights, setFlights] = useState<Flight[]>([]);
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
-
-    const fetchFlights = async () => {
-        try {
-            const response = await api.get<Flight[]>('/flights');
-            setFlights(response.data);
-        } catch (error) {
-            console.error('Error fetching flights:', error);
-        }
-    };
 
     const fetchVehicles = async () => {
         try {
@@ -85,11 +54,9 @@ const Dashboard: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchFlights();
         fetchVehicles();
         fetchAlerts();
         const interval = setInterval(() => {
-            fetchFlights();
             fetchVehicles();
             fetchAlerts();
         }, 2000); // Poll every 2 seconds
@@ -101,7 +68,7 @@ const Dashboard: React.FC = () => {
             <div className="flex flex-col h-full">
                 <div className="relative flex-1 w-full min-h-[50%]">
                     <MapComponent>
-                        <FlightLayer flights={flights} />
+                        <FlightLayer />
                         <VehicleLayer vehicles={vehicles} />
                     </MapComponent>
                     <div className="absolute top-2 right-2 z-[1000] w-[300px]">

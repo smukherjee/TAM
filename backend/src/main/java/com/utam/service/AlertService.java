@@ -1,5 +1,7 @@
 package com.utam.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.model.Alert;
 import com.utam.model.Vehicle;
 import com.utam.repository.AlertRepository;
@@ -17,26 +19,34 @@ public class AlertService {
 
     private static final Logger log = LoggerFactory.getLogger(AlertService.class);
     private final AlertRepository alertRepository;
+    private final ObjectMapper objectMapper;
 
-    public AlertService(AlertRepository alertRepository) {
+    public AlertService(AlertRepository alertRepository, ObjectMapper objectMapper) {
         this.alertRepository = alertRepository;
+        this.objectMapper = objectMapper;
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @KafkaListener(topics = "vehicle-raw-json", groupId = "utam-alert-group")
-    public void checkVehicleAlert(Vehicle vehicle) {
-        // Simple rule: Speed > 70 km/h is a violation
-        if (vehicle.getSpeed() > 70.0) {
-            Alert alert = new Alert();
-            alert.setAlertId(UUID.randomUUID());
-            alert.setType("SPEED_VIOLATION");
-            alert.setEntityId(vehicle.getVehicleNo());
-            alert.setValue(vehicle.getSpeed());
-            alert.setTimestamp(LocalDateTime.now());
-            alert.setLatitude(vehicle.getLatitude());
-            alert.setLongitude(vehicle.getLongitude());
+    public void checkVehicleAlert(String message) {
+        try {
+            Vehicle vehicle = objectMapper.readValue(message, Vehicle.class);
+            // Simple rule: Speed > 70 km/h is a violation
+            if (vehicle.getSpeed() != null && vehicle.getSpeed() > 70.0) {
+                Alert alert = new Alert();
+                alert.setAlertId(UUID.randomUUID());
+                alert.setType("SPEED_VIOLATION");
+                alert.setEntityId(vehicle.getVehicleNo());
+                alert.setValue(vehicle.getSpeed());
+                alert.setTimestamp(LocalDateTime.now());
+                alert.setLatitude(vehicle.getLatitude());
+                alert.setLongitude(vehicle.getLongitude());
 
-            alertRepository.save(alert);
-            log.warn("Speed Violation Detected: {} at {} km/h", vehicle.getVehicleNo(), vehicle.getSpeed());
+                alertRepository.save(alert);
+                log.warn("Speed Violation Detected: {} at {} km/h", vehicle.getVehicleNo(), vehicle.getSpeed());
+            }
+        } catch (Exception e) {
+            log.error("Error processing vehicle alert message: {}", e.getMessage());
         }
     }
 

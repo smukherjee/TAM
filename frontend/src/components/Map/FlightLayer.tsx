@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { Flight, getActiveFlights } from '../../services/flightService';
+import { FlightDisplay, getActiveFlights } from '../../services/flightService';
 
 const planeIcon = L.divIcon({
     html: '<div style="font-size: 24px; line-height: 1;">✈️</div>',
@@ -11,7 +11,7 @@ const planeIcon = L.divIcon({
 });
 
 const FlightLayer: React.FC = () => {
-    const [flights, setFlights] = useState<Flight[]>([]);
+    const [flights, setFlights] = useState<FlightDisplay[]>([]);
 
     useEffect(() => {
         const fetchFlights = async () => {

@@ -1,5 +1,6 @@
 package com.utam.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.model.Flight;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -19,14 +21,22 @@ public class FlightConsumer {
 
     public FlightConsumer(FlightService flightService, ObjectMapper objectMapper) {
         this.flightService = flightService;
+        // Configure ObjectMapper for flexible JSON parsing
         this.objectMapper = objectMapper;
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @KafkaListener(topics = "flight-raw-json", groupId = "utam-group")
     public void consume(String message) {
         try {
-            // NiFi sends an array of objects
-            List<Flight> flights = Arrays.asList(objectMapper.readValue(message, Flight[].class));
+            List<Flight> flights;
+            // Check if it's an array or single object
+            if (message.trim().startsWith("[")) {
+                flights = Arrays.asList(objectMapper.readValue(message, Flight[].class));
+            } else {
+                Flight flight = objectMapper.readValue(message, Flight.class);
+                flights = Collections.singletonList(flight);
+            }
             logger.info("Received {} flights from Kafka", flights.size());
             flightService.saveAll(flights);
         } catch (Exception e) {

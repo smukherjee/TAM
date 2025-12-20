@@ -12,6 +12,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,31 +45,31 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
+    public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
+    public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
     public NewTopic flightTopic() {
-        return TopicBuilder.name("flight-raw-json")
-                .partitions(1)
+        return TopicBuilder.name("flight-raw-avro")
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
 
     @Bean
     public NewTopic vehicleTopic() {
-        return TopicBuilder.name("vehicle-raw-json")
-                .partitions(1)
+        return TopicBuilder.name("vehicle-raw-avro")
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
@@ -76,15 +77,23 @@ public class KafkaConfig {
     @Bean
     public NewTopic alertTopic() {
         return TopicBuilder.name("alerts-json")
-                .partitions(1)
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
-    
+
     @Bean
     public NewTopic turnaroundTopic() {
-        return TopicBuilder.name("turnaround-raw-json")
-                .partitions(1)
+        return TopicBuilder.name("turnaround-raw-avro")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic cvEventsTopic() {
+        return TopicBuilder.name("cv-events-avro")
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
