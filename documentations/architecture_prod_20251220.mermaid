@@ -1,0 +1,223 @@
+graph TB
+    %% ========== PRODUCTION ARCHITECTURE (PORTABLE) ==========
+    %% Supports: On-Premise, Azure, AWS
+    
+    subgraph "Data Sources (Multi-Protocol)"
+        ADSB[ADS-B<br/>HTTP/2-sec]
+        TELIT[TelIT IoT<br/>HTTP/<1-sec]
+        TAJSATS[TajSATS<br/>REST API]
+        CV[Computer Vision<br/>HTTP/Event]
+        AODB[AODB<br/>SFTP/30-min]
+        CDM[CDM System<br/>SFTP]
+    end
+    
+    %% ========== INGESTION LAYER ==========
+    subgraph "Ingestion Layer (Apache NiFi Cluster)"
+        NIFI_CLUSTER[Apache NiFi Cluster<br/>3-Node HA<br/>Visual Data Flows]
+        
+        subgraph "Flow Groups"
+            PROD_FLOW1[ADSB Flow Group]
+            PROD_FLOW2[Vehicle Flow Group]
+            PROD_FLOW3[CV Events Flow]
+            PROD_FLOW4[Batch Files Flow]
+        end
+        
+        NIFI_REG[NiFi Registry<br/>Version Control]
+    end
+    
+    %% ========== MESSAGE QUEUE (PORTABLE) ==========
+    subgraph "Message Queue Layer"
+        subgraph "On-Premise"
+            STRIMZI[Strimzi Kafka<br/>Kubernetes Operator<br/>6 Brokers]
+        end
+        subgraph "Azure"
+            EVENTHUBS[Azure Event Hubs<br/>Kafka API Compatible]
+        end
+        subgraph "AWS"
+            MSK[Amazon MSK<br/>Managed Kafka]
+        end
+        
+        KAFKA_API{Kafka Protocol<br/>Port 9092}
+        
+        subgraph "Topics (Same Everywhere)"
+            PROD_T1[flight-raw-avro<br/>50 partitions]
+            PROD_T2[vehicle-raw-avro<br/>30 partitions]
+            PROD_T3[cv-events-avro<br/>20 partitions]
+            PROD_T4[alerts-json<br/>10 partitions]
+            PROD_DLQ[dead-letter-queue]
+        end
+        
+        CONFLUENT_SR[Schema Registry<br/>Confluent/Apicurio]
+    end
+    
+    %% ========== STREAM PROCESSING ==========
+    subgraph "Stream Processing Layer"
+        KSQLDB[ksqlDB Cluster<br/>Streaming SQL<br/>CEP Rules]
+        
+        subgraph "When Needed"
+            FLINK[Apache Flink<br/>Complex Joins<br/>Stateful Processing]
+        end
+    end
+    
+    %% ========== BUSINESS SERVICES ==========
+    subgraph "Microservices (Kubernetes)"
+        subgraph "Core Services (Spring Boot)"
+            LIVE_SVC[Live Service<br/>gRPC/WebSocket]
+            ALERT_SVC[Alert Service<br/>Rules Engine]
+            TURN_SVC[Turnaround Service<br/>CDM Milestones]
+            REPORT_SVC[Report Service<br/>Batch Processing]
+        end
+        
+        subgraph "Supporting Services"
+            USER_SVC[User Service<br/>AuthN/AuthZ]
+            CONFIG_SVC[Config Service<br/>Feature Flags]
+            NOTIFY_SVC[Notification Service]
+        end
+        
+        API_GW[API Gateway<br/>Kong/Traefik]
+    end
+    
+    %% ========== DATA STORAGE (PORTABLE) ==========
+    subgraph "Data Storage Layer"
+        subgraph "Operational Store"
+            TIMESCALE[TimescaleDB<br/>HA Cluster<br/>Time-series]
+            REDIS[Redis Cluster<br/>Cache/Sessions]
+        end
+        
+        subgraph "Object Storage (S3 API)"
+            subgraph "On-Premise"
+                MINIO[MinIO<br/>S3 Compatible]
+            end
+            subgraph "Azure"
+                ADLS[Azure Data Lake<br/>Gen2]
+            end
+            subgraph "AWS"
+                S3[Amazon S3]
+            end
+        end
+        
+        subgraph "Data Warehouse (SQL Standard)"
+            subgraph "On-Premise"
+                STARROCKS[StarRocks<br/>OLAP Engine]
+            end
+            subgraph "Azure"
+                SYNAPSE[Azure Synapse<br/>Analytics]
+            end
+            subgraph "AWS"
+                REDSHIFT[Amazon Redshift<br/>Serverless]
+            end
+        end
+    end
+    
+    %% ========== PRESENTATION (PORTABLE) ==========
+    subgraph "Presentation Layer"
+        subgraph "Web Applications"
+            REACT_PROD[React Dashboard<br/>SSR/PWA]
+            ADMIN[Admin Portal]
+        end
+        
+        subgraph "BI Tools (Per Environment)"
+            subgraph "On-Premise"
+                SUPERSET[Apache Superset]
+            end
+            subgraph "Azure"
+                POWERBI[PowerBI Embedded]
+            end
+            subgraph "AWS"
+                QUICKSIGHT[Amazon QuickSight]
+            end
+        end
+        
+        GRAFANA_PROD[Grafana Dashboards<br/>Operational Metrics]
+    end
+    
+    %% ========== OBSERVABILITY (OTEL) ==========
+    subgraph "Observability Layer (OpenTelemetry)"
+        OTEL_COLLECTOR[OTel Collector<br/>Central Router]
+        
+        subgraph "On-Premise"
+            PROM[Prometheus]
+            LOKI[Loki]
+            TEMPO[Tempo/Jaeger]
+        end
+        
+        subgraph "Azure"
+            AZ_MONITOR[Azure Monitor]
+            APP_INSIGHTS[Application Insights]
+        end
+        
+        subgraph "AWS"
+            CLOUDWATCH[CloudWatch]
+            XRAY[AWS X-Ray]
+        end
+    end
+    
+    %% ========== SECURITY ==========
+    subgraph "Security & Governance"
+        KEYCLOAK[Keycloak<br/>SSO/OIDC]
+        VAULT[HashiCorp Vault<br/>Secrets Management]
+        AUDIT[Audit Trail<br/>Compliance Logging]
+    end
+    
+    %% ========== INFRASTRUCTURE ==========
+    subgraph "Infrastructure"
+        K8S[Kubernetes<br/>On-Prem/AKS/EKS]
+        HELM[Helm Charts<br/>values-env.yaml]
+        ARGOCD[ArgoCD<br/>GitOps Deployment]
+    end
+    
+    %% ========== CONNECTIONS ==========
+    ADSB --> NIFI_CLUSTER
+    TELIT --> NIFI_CLUSTER
+    TAJSATS --> NIFI_CLUSTER
+    CV --> NIFI_CLUSTER
+    AODB --> NIFI_CLUSTER
+    CDM --> NIFI_CLUSTER
+    
+    NIFI_CLUSTER --> KAFKA_API
+    STRIMZI --> KAFKA_API
+    EVENTHUBS --> KAFKA_API
+    MSK --> KAFKA_API
+    
+    KAFKA_API --> KSQLDB
+    KAFKA_API --> FLINK
+    
+    KSQLDB --> LIVE_SVC
+    KSQLDB --> ALERT_SVC
+    FLINK --> ALERT_SVC
+    
+    LIVE_SVC --> TIMESCALE
+    LIVE_SVC --> REDIS
+    ALERT_SVC --> TIMESCALE
+    REPORT_SVC --> MINIO
+    REPORT_SVC --> ADLS
+    REPORT_SVC --> S3
+    
+    LIVE_SVC --> API_GW
+    ALERT_SVC --> API_GW
+    REPORT_SVC --> API_GW
+    
+    API_GW --> REACT_PROD
+    
+    TIMESCALE --> STARROCKS
+    TIMESCALE --> SYNAPSE
+    TIMESCALE --> REDSHIFT
+    
+    STARROCKS --> SUPERSET
+    SYNAPSE --> POWERBI
+    REDSHIFT --> QUICKSIGHT
+    
+    %% Observability
+    ALL_SVCS[All Services] -.-> OTEL_COLLECTOR
+    OTEL_COLLECTOR -.-> PROM
+    OTEL_COLLECTOR -.-> AZ_MONITOR
+    OTEL_COLLECTOR -.-> CLOUDWATCH
+    
+    %% Security
+    API_GW --> KEYCLOAK
+    ALL_SVCS -.-> VAULT
+    
+    %% Infrastructure
+    K8S --> ALL_SVCS
+    HELM --> K8S
+    ARGOCD --> HELM

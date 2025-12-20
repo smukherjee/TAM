@@ -1,0 +1,87 @@
+graph TB
+    %% ========== DEV ENVIRONMENT ARCHITECTURE ==========
+    %% Lightweight, Docker-based, Laptop-friendly
+    
+    subgraph "Data Sources (Simulated)"
+        DEV_ADSB[ADSB Simulator<br/>Mock HTTP/2-sec]
+        DEV_VEHICLE[Vehicle Simulator<br/>Mock HTTP/<1-sec]
+        DEV_AODB[AODB Files<br/>Local SFTP]
+    end
+    
+    %% ========== INGESTION LAYER ==========
+    subgraph "Ingestion Layer (Docker)"
+        NIFI_DEV[Apache NiFi<br/>Single Node<br/>Port 8091]
+        
+        subgraph "NiFi Flow Groups"
+            FLOW_ADSB[ADSB Flow]
+            FLOW_VEHICLE[Vehicle Flow]
+            FLOW_BATCH[Batch File Flow]
+        end
+    end
+    
+    %% ========== MESSAGE QUEUE ==========
+    subgraph "Message Queue (Docker)"
+        REDPANDA[Redpanda<br/>Single Node<br/>Kafka API Compatible<br/>Port 9092]
+        
+        subgraph "Topics"
+            T_FLIGHT[flight-raw-avro]
+            T_VEHICLE[vehicle-raw-avro]
+            T_ALERTS[alerts-json]
+        end
+        
+        SCHEMA_REG[Redpanda Schema Registry<br/>Built-in<br/>Port 8081]
+    end
+    
+    %% ========== STREAM PROCESSING ==========
+    subgraph "Stream Processing (Docker)"
+        KSQLDB_DEV[ksqlDB<br/>Single Node<br/>Port 8088]
+    end
+    
+    %% ========== BUSINESS SERVICES ==========
+    subgraph "Business Services (Docker)"
+        SPRING_LIVE[Live Service<br/>Spring Boot<br/>Port 8080]
+        SPRING_ALERT[Alert Service<br/>Spring Boot<br/>Port 8082]
+    end
+    
+    %% ========== DATA STORAGE ==========
+    subgraph "Data Storage (Docker)"
+        TIMESCALE_DEV[TimescaleDB<br/>PostgreSQL 16<br/>Port 5432]
+        MINIO_DEV[MinIO<br/>S3 Compatible<br/>Port 9000/9001]
+    end
+    
+    %% ========== PRESENTATION ==========
+    subgraph "Presentation (Docker)"
+        REACT_DEV[React Dashboard<br/>Port 3000]
+        SUPERSET_DEV[Apache Superset<br/>Port 8088]
+        GRAFANA_DEV[Grafana<br/>Port 3001]
+    end
+    
+    %% ========== OBSERVABILITY ==========
+    subgraph "Observability (Docker)"
+        PROMETHEUS_DEV[Prometheus<br/>Port 9090]
+        LOKI_DEV[Loki<br/>Logs]
+    end
+    
+    %% ========== CONNECTIONS ==========
+    DEV_ADSB --> NIFI_DEV
+    DEV_VEHICLE --> NIFI_DEV
+    DEV_AODB --> NIFI_DEV
+    
+    NIFI_DEV --> REDPANDA
+    REDPANDA --> KSQLDB_DEV
+    
+    KSQLDB_DEV --> SPRING_LIVE
+    KSQLDB_DEV --> SPRING_ALERT
+    
+    SPRING_LIVE --> TIMESCALE_DEV
+    SPRING_ALERT --> TIMESCALE_DEV
+    SPRING_LIVE --> MINIO_DEV
+    
+    SPRING_LIVE --> REACT_DEV
+    TIMESCALE_DEV --> SUPERSET_DEV
+    PROMETHEUS_DEV --> GRAFANA_DEV
+    
+    %% Observability
+    SPRING_LIVE -.-> PROMETHEUS_DEV
+    SPRING_ALERT -.-> PROMETHEUS_DEV
+    REDPANDA -.-> PROMETHEUS_DEV
