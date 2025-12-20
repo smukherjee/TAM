@@ -285,6 +285,7 @@ services:
       SUPERSET_LOAD_EXAMPLES: "no"
     volumes:
       - superset_data:/app/superset_home
+      - ./infrastructure/superset/superset_config.py:/app/pythonpath/superset_config.py
     depends_on:
       timescaledb:
         condition: service_healthy
