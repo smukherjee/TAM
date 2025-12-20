@@ -11,6 +11,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -30,13 +32,21 @@ public class VehicleService {
     @KafkaListener(topics = "vehicle-raw-json", groupId = "utam-group")
     public void consumeVehicleEvent(String message) {
         try {
-            Vehicle vehicle = objectMapper.readValue(message, Vehicle.class);
-            // Ensure timestamp is set if missing
-            if (vehicle.getTimestamp() == null) {
-                vehicle.setTimestamp(LocalDateTime.now());
+            List<Vehicle> vehicles;
+            if (message.trim().startsWith("[")) {
+                vehicles = Arrays.asList(objectMapper.readValue(message, Vehicle[].class));
+            } else {
+                vehicles = Collections.singletonList(objectMapper.readValue(message, Vehicle.class));
             }
-            logger.info("Consumed vehicle from Kafka: {}", vehicle.getVehicleNo());
-            vehicleRepository.save(vehicle);
+
+            for (Vehicle vehicle : vehicles) {
+                // Ensure timestamp is set if missing
+                if (vehicle.getTimestamp() == null) {
+                    vehicle.setTimestamp(LocalDateTime.now());
+                }
+                logger.debug("Consumed vehicle from Kafka: {}", vehicle.getVehicleNo());
+                vehicleRepository.save(vehicle);
+            }
         } catch (Exception e) {
             logger.error("Error processing vehicle message: {}", message, e);
         }

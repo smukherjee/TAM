@@ -3,6 +3,7 @@ package com.utam.simulation;
 import com.utam.model.dto.CvEventDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -19,31 +20,33 @@ public class MockCvEventGenerator {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
 
+    @Value("${simulation.cv-url}")
+    private String ingestionUrl;
+
     // Stand -> (Activity -> StartTime)
     private final Map<String, Map<String, LocalDateTime>> standActivityState = new ConcurrentHashMap<>();
 
     private final List<String> activityTypes = Arrays.asList(
-        "Passenger Boarding Bridge",
-        "Passenger Step Ladder Front",
-        "Passenger Step Ladder Back",
-        "Towable Conveyor Belt Front",
-        "Towable Conveyor Belt Back",
-        "Aircraft Back Door",
-        "Aircraft Front Door",
-        "Aircraft Front Belly",
-        "Aircraft Back Belly",
-        "Passenger Coach",
-        "Person Arrival Movement",
-        "Person Departure Movement",
-        "Head Unit (EBT) / Diesel Tug (DT)",
-        "Bag Movement Arrival",
-        "Bag Movement Departure",
-        "Fuel Vehicle",
-        "Water Cart",
-        "Toilet Cart",
-        "Ambulance",
-        "Push Back Tug"
-    );
+            "Passenger Boarding Bridge",
+            "Passenger Step Ladder Front",
+            "Passenger Step Ladder Back",
+            "Towable Conveyor Belt Front",
+            "Towable Conveyor Belt Back",
+            "Aircraft Back Door",
+            "Aircraft Front Door",
+            "Aircraft Front Belly",
+            "Aircraft Back Belly",
+            "Passenger Coach",
+            "Person Arrival Movement",
+            "Person Departure Movement",
+            "Head Unit (EBT) / Diesel Tug (DT)",
+            "Bag Movement Arrival",
+            "Bag Movement Departure",
+            "Fuel Vehicle",
+            "Water Cart",
+            "Toilet Cart",
+            "Ambulance",
+            "Push Back Tug");
 
     private final List<String> stands = Arrays.asList("D7", "B106", "C005", "A12", "E4");
 
@@ -100,7 +103,8 @@ public class MockCvEventGenerator {
     private String pickRandomInactiveActivity(Set<String> activeTypes) {
         List<String> candidates = new ArrayList<>(activityTypes);
         candidates.removeAll(activeTypes);
-        if (candidates.isEmpty()) return null;
+        if (candidates.isEmpty())
+            return null;
         return candidates.get(random.nextInt(candidates.size()));
     }
 
@@ -109,10 +113,11 @@ public class MockCvEventGenerator {
         dto.setEventUniqueId(UUID.randomUUID().toString());
         dto.setCameraId(String.valueOf(1 + random.nextInt(10)));
         dto.setCameraName("Cam-" + dto.getCameraId());
-        
+
         // Randomly format to test normalization (snake_case vs Title Case)
         if (random.nextBoolean()) {
-            dto.setActivityType(activityType.toLowerCase().replace(" ", "_").replace("/", "").replace("(", "").replace(")", ""));
+            dto.setActivityType(
+                    activityType.toLowerCase().replace(" ", "_").replace("/", "").replace("(", "").replace(")", ""));
         } else {
             dto.setActivityType(activityType);
         }
@@ -125,9 +130,9 @@ public class MockCvEventGenerator {
 
     private void sendEvent(CvEventDto dto) {
         try {
-            log.info("Generated CV event: {} ({}) at {}", dto.getActivityType(), dto.getEventType() == 0 ? "START" : "STOP", dto.getStand());
-            String url = "http://localhost:8080/api/cv/events";
-            restTemplate.postForObject(url, Collections.singletonList(dto), Void.class);
+            log.info("Generated CV event: {} ({}) at {}", dto.getActivityType(),
+                    dto.getEventType() == 0 ? "START" : "STOP", dto.getStand());
+            restTemplate.postForObject(ingestionUrl, Collections.singletonList(dto), Void.class);
         } catch (Exception e) {
             log.error("Failed to send mock CV event: {}", e.getMessage());
         }

@@ -55,7 +55,10 @@ services:
     image: apache/nifi:1.25.0
     container_name: tam-nifi
     ports:
-      - "8091:8080"
+      - "8091:8080"       # NiFi Web UI
+      - "8092:8092"       # ListenHTTP for ADSB data
+      - "8093:8093"       # ListenHTTP for Vehicle data
+      - "8094:8094"       # ListenHTTP for CV Event data
     environment:
       - NIFI_WEB_HTTP_PORT=8080
       - SINGLE_USER_CREDENTIALS_USERNAME=admin

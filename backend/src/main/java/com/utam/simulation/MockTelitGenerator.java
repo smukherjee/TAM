@@ -3,9 +3,10 @@ package com.utam.simulation;
 import com.utam.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,11 +24,14 @@ public class MockTelitGenerator {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
 
+    @Value("${simulation.vehicle-url}")
+    private String ingestionUrl;
+
     private static class VehicleConfig {
         String name;
         String no;
         String type;
-        
+
         VehicleConfig(String name, String no, String type) {
             this.name = name;
             this.no = no;
@@ -36,11 +40,10 @@ public class MockTelitGenerator {
     }
 
     private final List<VehicleConfig> configs = Arrays.asList(
-        new VehicleConfig("TMD-000013", "PBT11", "Compactor"),
-        new VehicleConfig("TMD254HV-000009", "BFL30", "SUV"),
-        new VehicleConfig("BUS-101", "DL1PC0001", "BUS"),
-        new VehicleConfig("TRUCK-55", "HR55X9999", "TRUCK")
-    );
+            new VehicleConfig("TMD-000013", "PBT11", "Compactor"),
+            new VehicleConfig("TMD254HV-000009", "BFL30", "SUV"),
+            new VehicleConfig("BUS-101", "DL1PC0001", "BUS"),
+            new VehicleConfig("TRUCK-55", "HR55X9999", "TRUCK"));
 
     public MockTelitGenerator(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -54,24 +57,24 @@ public class MockTelitGenerator {
         vehicle.setVehicleName(config.name);
         vehicle.setVehicleNo(config.no);
         vehicle.setType(config.type);
-        
+
         vehicle.setCompany("Phase3_DIAL");
         vehicle.setBranch("Phase3_DIAL");
         vehicle.setTemperature("--");
         vehicle.setGps("ON");
-        
+
         vehicle.setDoor1("--");
         vehicle.setDoor2("--");
         vehicle.setDoor3("--");
         vehicle.setDoor4("--");
-        
+
         LocalDateTime now = LocalDateTime.now();
         vehicle.setTimestamp(now);
         vehicle.setGpsActualTime(now.minusSeconds(1).format(DATE_FORMATTER));
-        
+
         vehicle.setStatus(random.nextBoolean() ? "RUNNING" : "IDLE");
         vehicle.setDeviceModel("MT4G-CANV2-MQTT");
-        
+
         // Random lat/lon around IGIA (New Delhi)
         double baseLat = 28.5562;
         double baseLon = 77.1000;
@@ -80,16 +83,16 @@ public class MockTelitGenerator {
         vehicle.setLongitude(baseLon + (random.nextDouble() - 0.5) * 0.02);
 
         // Generate speed between 0 and 100 km/h to trigger alerts (> 70 km/h)
-        vehicle.setSpeed(random.nextDouble() * 100); 
+        vehicle.setSpeed(random.nextDouble() * 100);
         vehicle.setAc("--");
         vehicle.setImeiNo("359214420" + (100000 + random.nextInt(900000)));
         vehicle.setOdometer(String.valueOf(100000 + random.nextInt(10000)));
         vehicle.setPoi("--");
-        
+
         vehicle.setDriverFirstName("--");
         vehicle.setDriverMiddleName("--");
         vehicle.setDriverLastName("--");
-        
+
         vehicle.setImmobilizeState("--");
         vehicle.setIgn("ON");
         vehicle.setAngle(random.nextDouble() * 360);
@@ -102,9 +105,9 @@ public class MockTelitGenerator {
         vehicle.setLocation("IGIA, New Delhi");
 
         log.info("Generated vehicle data: {}", vehicle);
-        
+
         try {
-            restTemplate.postForObject("http://localhost:8080/api/veh_live_data_con", Collections.singletonList(vehicle), Void.class);
+            restTemplate.postForObject(ingestionUrl, Collections.singletonList(vehicle), Void.class);
         } catch (Exception e) {
             log.error("Failed to send vehicle data to ingestion layer: {}", e.getMessage());
         }
