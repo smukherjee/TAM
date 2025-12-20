@@ -1,6 +1,6 @@
-import axios from 'axios';
+import api from './api';
 
-const API_URL = '/api/flights';
+const API_URL = '/flights';
 
 export interface Flight {
   LivePlotId: string;
@@ -38,7 +38,7 @@ export interface FlightDisplay {
 
 export const getActiveFlights = async (): Promise<FlightDisplay[]> => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await api.get(API_URL);
     if (response.data.success && Array.isArray(response.data.data)) {
       // Map API response to display format
       return response.data.data.map((f: Flight) => ({

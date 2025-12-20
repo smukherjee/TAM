@@ -4,6 +4,7 @@ import FlightLayer from '../components/Map/FlightLayer';
 import VehicleLayer from '../components/Map/VehicleLayer';
 import AlertList from '../components/Alerts/AlertList';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Vehicle {
     vehicle_no: string;
@@ -30,8 +31,15 @@ interface Alert {
 }
 
 const MapPage: React.FC = () => {
+    const { user } = useAuth();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
+
+    const getCenter = (): [number, number] => {
+        if (user?.icaoCode === 'VABB') return [19.0896, 72.8656];
+        if (user?.icaoCode === 'LIRN') return [40.8844, 14.2908];
+        return [28.5562, 77.1000]; // Default VIDP OR LIRN? No, default for VIDP.
+    };
 
     const fetchVehicles = async () => {
         try {
@@ -63,7 +71,7 @@ const MapPage: React.FC = () => {
 
     return (
         <div className="relative w-full h-full">
-            <MapComponent>
+            <MapComponent center={getCenter()}>
                 <FlightLayer />
                 <VehicleLayer vehicles={vehicles} />
             </MapComponent>

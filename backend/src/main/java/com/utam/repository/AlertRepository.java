@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
+    java.util.List<Alert> findByIcaoCode(String icaoCode);
 }

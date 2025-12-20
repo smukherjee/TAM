@@ -24,25 +24,71 @@ public class CvEventDto {
     @JsonProperty("stand")
     private String stand;
 
+    @JsonProperty("icao_code")
+    private String icaoCode;
+
     // Getters and Setters
-    public String getCameraId() { return cameraId; }
-    public void setCameraId(String cameraId) { this.cameraId = cameraId; }
+    public String getCameraId() {
+        return cameraId;
+    }
 
-    public String getCameraName() { return cameraName; }
-    public void setCameraName(String cameraName) { this.cameraName = cameraName; }
+    public void setCameraId(String cameraId) {
+        this.cameraId = cameraId;
+    }
 
-    public String getActivityType() { return activityType; }
-    public void setActivityType(String activityType) { this.activityType = activityType; }
+    public String getCameraName() {
+        return cameraName;
+    }
 
-    public String getEventUniqueId() { return eventUniqueId; }
-    public void setEventUniqueId(String eventUniqueId) { this.eventUniqueId = eventUniqueId; }
+    public void setCameraName(String cameraName) {
+        this.cameraName = cameraName;
+    }
 
-    public Integer getEventType() { return eventType; }
-    public void setEventType(Integer eventType) { this.eventType = eventType; }
+    public String getActivityType() {
+        return activityType;
+    }
 
-    public String getEventTimeStamp() { return eventTimeStamp; }
-    public void setEventTimeStamp(String eventTimeStamp) { this.eventTimeStamp = eventTimeStamp; }
+    public void setActivityType(String activityType) {
+        this.activityType = activityType;
+    }
 
-    public String getStand() { return stand; }
-    public void setStand(String stand) { this.stand = stand; }
+    public String getEventUniqueId() {
+        return eventUniqueId;
+    }
+
+    public void setEventUniqueId(String eventUniqueId) {
+        this.eventUniqueId = eventUniqueId;
+    }
+
+    public Integer getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(Integer eventType) {
+        this.eventType = eventType;
+    }
+
+    public String getEventTimeStamp() {
+        return eventTimeStamp;
+    }
+
+    public void setEventTimeStamp(String eventTimeStamp) {
+        this.eventTimeStamp = eventTimeStamp;
+    }
+
+    public String getStand() {
+        return stand;
+    }
+
+    public void setStand(String stand) {
+        this.stand = stand;
+    }
+
+    public String getIcaoCode() {
+        return icaoCode;
+    }
+
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
+    }
 }

@@ -13,5 +13,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, String> {
 
     @Query(value = "SELECT DISTINCT ON (vehicle_no) * FROM vehicles WHERE timestamp > :since ORDER BY vehicle_no, timestamp DESC", nativeQuery = true)
     List<Vehicle> findLatestVehicles(LocalDateTime since);
-}
 
+    @Query(value = "SELECT DISTINCT ON (vehicle_no) * FROM vehicles WHERE timestamp > :since AND icao_code = :icaoCode ORDER BY vehicle_no, timestamp DESC", nativeQuery = true)
+    List<Vehicle> findLatestVehiclesByIcao(LocalDateTime since, String icaoCode);
+}

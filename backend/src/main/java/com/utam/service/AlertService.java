@@ -50,6 +50,7 @@ public class AlertService {
                     alert.setTimestamp(LocalDateTime.now());
                     alert.setLatitude(vehicle.getLatitude());
                     alert.setLongitude(vehicle.getLongitude());
+                    alert.setIcaoCode(vehicle.getIcaoCode());
 
                     alertRepository.save(alert);
                     log.warn("Speed Violation Detected: {} at {} km/h", vehicle.getVehicleNo(), vehicle.getSpeed());
@@ -60,7 +61,10 @@ public class AlertService {
         }
     }
 
-    public List<Alert> getAllAlerts() {
+    public List<Alert> getAllAlerts(String icaoCode) {
+        if (icaoCode != null && !icaoCode.isEmpty()) {
+            return alertRepository.findByIcaoCode(icaoCode);
+        }
         return alertRepository.findAll();
     }
 }

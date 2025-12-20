@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TurnaroundEventRepository extends JpaRepository<TurnaroundEvent, String> {
+    java.util.List<TurnaroundEvent> findByIcaoCode(String icaoCode);
 }

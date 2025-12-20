@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Random;
 
 @Component
-public class MockTelitGenerator {
+public class MockTelitGenerator_LIRN {
 
-    private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator_LIRN.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
     private final RestTemplate restTemplate;
@@ -40,21 +40,20 @@ public class MockTelitGenerator {
     }
 
     private final List<VehicleConfig> configs = Arrays.asList(
-            new VehicleConfig("TMD-000013", "PBT11", "Compactor"),
-            new VehicleConfig("TMD254HV-000009", "BFL30", "SUV"),
-            new VehicleConfig("BUS-101", "DL1PC0001", "BUS"),
-            new VehicleConfig("TRUCK-55", "HR55X9999", "TRUCK"));
+            new VehicleConfig("NAP-BUS-01", "NAP01", "BUS"),
+            new VehicleConfig("NAP-TUG-05", "NAP05", "TUG"),
+            new VehicleConfig("NAP-FUEL-02", "NAP02", "FUEL"),
+            new VehicleConfig("NAP-CATER-03", "NAP03", "CATERING"));
 
-    private final List<String> airports = Arrays.asList("VIDP");
+    private final String icao = "LIRN";
 
-    public MockTelitGenerator(RestTemplate restTemplate) {
+    public MockTelitGenerator_LIRN(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
     @Scheduled(fixedRate = 3000) // Every 3 seconds
     public void generateVehicleData() {
         VehicleConfig config = configs.get(random.nextInt(configs.size()));
-        String icao = airports.get(random.nextInt(airports.size()));
 
         Vehicle vehicle = new Vehicle();
         vehicle.setIcaoCode(icao);
@@ -62,15 +61,10 @@ public class MockTelitGenerator {
         vehicle.setVehicleNo(config.no);
         vehicle.setType(config.type);
 
-        vehicle.setCompany("Phase3_DIAL");
-        vehicle.setBranch("Phase3_DIAL");
+        vehicle.setCompany("GESAC");
+        vehicle.setBranch("RAMP");
         vehicle.setTemperature("--");
         vehicle.setGps("ON");
-
-        vehicle.setDoor1("--");
-        vehicle.setDoor2("--");
-        vehicle.setDoor3("--");
-        vehicle.setDoor4("--");
 
         LocalDateTime now = LocalDateTime.now();
         vehicle.setTimestamp(now);
@@ -79,36 +73,22 @@ public class MockTelitGenerator {
         vehicle.setStatus(random.nextBoolean() ? "RUNNING" : "IDLE");
         vehicle.setDeviceModel("MT4G-CANV2-MQTT");
 
-        // Random lat/lon around IGIA (New Delhi)
-        double baseLat = 28.5562;
-        double baseLon = 77.1000;
+        // Random lat/lon around LIRN
+        double baseLat = 40.8844;
+        double baseLon = 14.2908;
 
-        vehicle.setLatitude(baseLat + (random.nextDouble() - 0.5) * 0.02);
-        vehicle.setLongitude(baseLon + (random.nextDouble() - 0.5) * 0.02);
+        vehicle.setLatitude(baseLat + (random.nextDouble() - 0.5) * 0.01);
+        vehicle.setLongitude(baseLon + (random.nextDouble() - 0.5) * 0.01);
 
-        // Generate speed between 0 and 100 km/h to trigger alerts (> 70 km/h)
         vehicle.setSpeed(random.nextDouble() * 100);
         vehicle.setAc("--");
-        vehicle.setImeiNo("359214420" + (100000 + random.nextInt(900000)));
-        vehicle.setOdometer(String.valueOf(100000 + random.nextInt(10000)));
-        vehicle.setPoi("--");
-
-        vehicle.setDriverFirstName("--");
-        vehicle.setDriverMiddleName("--");
-        vehicle.setDriverLastName("--");
-
-        vehicle.setImmobilizeState("--");
+        vehicle.setImeiNo("865214420" + (100000 + random.nextInt(900000)));
+        vehicle.setOdometer(String.valueOf(random.nextInt(50000)));
         vehicle.setIgn("ON");
         vehicle.setAngle(random.nextDouble() * 360);
-        vehicle.setSos("--");
-        vehicle.setFuel(Collections.emptyList());
-        vehicle.setBatteryPercentage("0");
-        vehicle.setExternalVolt(random.nextBoolean() ? "28.00" : "12.70");
-        vehicle.setPower("ON");
-        vehicle.setAltitude(0.0);
-        vehicle.setLocation("IGIA, New Delhi");
+        vehicle.setLocation("Naples International Airport");
 
-        log.info("Generated vehicle data: {}", vehicle);
+        log.info("Generated LIRN vehicle data: {}", vehicle);
 
         try {
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(vehicle), Void.class);

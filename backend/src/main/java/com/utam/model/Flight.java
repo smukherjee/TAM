@@ -85,10 +85,16 @@ public class Flight {
     @Column(name = "update_type")
     private String updateType;
 
+    @JsonProperty("icao_code")
+    @Column(name = "icao_code")
+    private String icaoCode;
+
     public Flight() {
     }
 
-    public Flight(UUID livePlotId, Instant time, String callsign, Double latitude, Double longitude, Double speed, Double heading, Double altitude, String status, String trackId, String modeSId, Double flightLevel, Double roc, String ssr, Boolean safetyAlert, String systemStatus, Boolean spi, String updateType) {
+    public Flight(UUID livePlotId, Instant time, String callsign, Double latitude, Double longitude, Double speed,
+            Double heading, Double altitude, String status, String trackId, String modeSId, Double flightLevel,
+            Double roc, String ssr, Boolean safetyAlert, String systemStatus, Boolean spi, String updateType) {
         this.livePlotId = livePlotId;
         this.time = time;
         this.callsign = callsign;
@@ -251,6 +257,14 @@ public class Flight {
 
     public void setUpdateType(String updateType) {
         this.updateType = updateType;
+    }
+
+    public String getIcaoCode() {
+        return icaoCode;
+    }
+
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
     }
 
     @Override

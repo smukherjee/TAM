@@ -30,7 +30,7 @@ public class TurnaroundService {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
-    @KafkaListener(topics = "turnaround-raw-json", groupId = "utam-group")
+    @KafkaListener(topics = "turnaround-raw-json", groupId = "utam-turnaround-group")
     public void consumeTurnaroundEvent(String message) {
         try {
             List<TurnaroundEvent> events;
@@ -40,7 +40,10 @@ public class TurnaroundService {
                 events = Collections.singletonList(objectMapper.readValue(message, TurnaroundEvent.class));
             }
 
+            logger.info("Received Raw Turnaround JSON: {}", message); // DEBUG
+
             for (TurnaroundEvent event : events) {
+                logger.info("Saving Event: {}, ICAO: {}", event.getActivityType(), event.getIcaoCode()); // DEBUG
                 repository.save(event);
             }
             logger.debug("Consumed {} turnaround events", events.size());
@@ -49,7 +52,10 @@ public class TurnaroundService {
         }
     }
 
-    public List<TurnaroundEvent> getAllEvents() {
+    public List<TurnaroundEvent> getAllEvents(String icaoCode) {
+        if (icaoCode != null && !icaoCode.isEmpty()) {
+            return repository.findByIcaoCode(icaoCode);
+        }
         return repository.findAll();
     }
 }

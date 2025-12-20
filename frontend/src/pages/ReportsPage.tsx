@@ -1,8 +1,22 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const ReportsPage: React.FC = () => {
-    const supersetUrl = "http://localhost:8089/superset/dashboard/tam_ops/?standalone=2&show_filters=0";
+    const { user } = useAuth();
+
+    // Determine Dashboard Slug based on User Context
+    const getDashboardSlug = () => {
+        if (!user || user.role === 'ADMIN') return 'tam_ops';
+        // For Tenants, look for specific dashboard
+        const icao = user.icaoCode ? user.icaoCode.toLowerCase() : '';
+        if (icao) return `tam_ops_${icao}`;
+        return 'tam_ops';
+    };
+
+    const dashboardSlug = getDashboardSlug();
+    // Use the determined slug
+    const supersetUrl = `http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`;
 
     return (
         <div className="w-full h-full flex flex-col bg-gray-50">
@@ -10,6 +24,7 @@ const ReportsPage: React.FC = () => {
                 <div>
                     <h2 className="text-xl font-bold text-gray-800">Analytics & Reports</h2>
                     <p className="text-sm text-gray-500">Powered by Apache Superset</p>
+                    <p className="text-xs text-blue-500 mt-1">Dashboard: {dashboardSlug}</p>
                 </div>
                 <a
                     href={supersetUrl}

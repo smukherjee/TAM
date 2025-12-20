@@ -33,10 +33,22 @@ public class Alert {
     @Column(name = "longitude")
     private Double longitude;
 
+    @Column(name = "icao_code")
+    private String icaoCode;
+
+    public String getIcaoCode() {
+        return icaoCode;
+    }
+
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
+    }
+
     public Alert() {
     }
 
-    public Alert(UUID alertId, String type, String entityId, Double value, LocalDateTime timestamp, Double latitude, Double longitude) {
+    public Alert(UUID alertId, String type, String entityId, Double value, LocalDateTime timestamp, Double latitude,
+            Double longitude) {
         this.alertId = alertId;
         this.type = type;
         this.entityId = entityId;

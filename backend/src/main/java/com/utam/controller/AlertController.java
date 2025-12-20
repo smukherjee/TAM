@@ -3,6 +3,7 @@ package com.utam.controller;
 import com.utam.model.Alert;
 import com.utam.service.AlertService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +20,7 @@ public class AlertController {
     }
 
     @GetMapping
-    public List<Alert> getAllAlerts() {
-        return alertService.getAllAlerts();
+    public List<Alert> getAllAlerts(@RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
+        return alertService.getAllAlerts(icaoCode);
     }
 }

@@ -1,5 +1,7 @@
 package com.utam.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -19,7 +21,19 @@ public class TurnaroundEvent {
     private LocalDateTime eventTimeStamp;
     private String stand;
 
+    @Column(name = "icao_code")
+    @JsonProperty("icao_code")
+    private String icaoCode;
+
     // Getters and Setters
+
+    public String getIcaoCode() {
+        return icaoCode;
+    }
+
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
+    }
 
     public String getEventUniqueId() {
         return eventUniqueId;

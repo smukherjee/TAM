@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isOpen, setIsOpen] = useState(true);
+    const { user, logout } = useAuth();
+
+    // Logic for role-based access
+    const showMap = user?.role === 'ADMIN' || user?.role === 'GH';
+    const showTurnaround = user?.role === 'ADMIN' || user?.role === 'GH';
+    const showReports = user?.role === 'ADMIN' || user?.role === 'AIRPORT_USER';
 
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -34,14 +41,25 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         Dashboards
                     </div>
 
-                    <NavItem to="/" icon={<Map size={20} />} label="Live Map" isOpen={isOpen} />
-                    <NavItem to="/turnaround" icon={<Activity size={20} />} label="Turnaround" isOpen={isOpen} />
-                    <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics" isOpen={isOpen} />
+                    {showMap && <NavItem to="/" icon={<Map size={20} />} label="Live Map" isOpen={isOpen} />}
+                    {showTurnaround && <NavItem to="/turnaround" icon={<Activity size={20} />} label="Turnaround" isOpen={isOpen} />}
+                    {showReports && <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics" isOpen={isOpen} />}
                 </nav>
 
-                {/* Footer */}
-                <div className={`p-4 bg-gray-900/50 text-xs text-gray-500 text-center border-t border-gray-700 whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-                    {isOpen ? 'TAM Platform v1.0' : ''}
+                {/* Footer / User Info */}
+                <div className="p-4 bg-gray-900 border-t border-gray-700">
+                    <div className={`flex items-center ${isOpen ? 'justify-between' : 'justify-center'} mb-4 transition-all duration-200`}>
+                        {isOpen ? (
+                            <div className="overflow-hidden">
+                                <p className="text-sm font-medium text-white truncate">{user?.username}</p>
+                                <p className="text-xs text-gray-500 truncate">{user?.role} • {user?.icaoCode}</p>
+                            </div>
+                        ) : null}
+                    </div>
+                    <button onClick={logout} className={`p-2 rounded hover:bg-red-500/10 text-red-500 w-full flex items-center ${isOpen ? 'justify-start space-x-3' : 'justify-center'} transition-colors duration-200`} title="Sign Out">
+                        <LogOut size={18} />
+                        {isOpen && <span>Sign Out</span>}
+                    </button>
                 </div>
             </div>
 

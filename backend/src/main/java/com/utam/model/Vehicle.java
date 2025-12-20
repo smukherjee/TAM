@@ -163,10 +163,19 @@ public class Vehicle {
     @Column(name = "location")
     private String location;
 
+    @JsonProperty("icao_code")
+    @Column(name = "icao_code")
+    private String icaoCode;
+
     public Vehicle() {
     }
 
-    public Vehicle(String vehicleNo, String type, Double latitude, Double longitude, Double speed, Double altitude, String status, LocalDateTime timestamp, String vehicleName, String company, String temperature, String gps, String door1, String door2, String door3, String door4, String branch, String gpsActualTime, String deviceModel, String ac, String imeiNo, String odometer, String poi, String driverMiddleName, String driverFirstName, String driverLastName, String immobilizeState, String ign, Double angle, String sos, List<String> fuel, String batteryPercentage, String externalVolt, String power, String location) {
+    public Vehicle(String vehicleNo, String type, Double latitude, Double longitude, Double speed, Double altitude,
+            String status, LocalDateTime timestamp, String vehicleName, String company, String temperature, String gps,
+            String door1, String door2, String door3, String door4, String branch, String gpsActualTime,
+            String deviceModel, String ac, String imeiNo, String odometer, String poi, String driverMiddleName,
+            String driverFirstName, String driverLastName, String immobilizeState, String ign, Double angle, String sos,
+            List<String> fuel, String batteryPercentage, String externalVolt, String power, String location) {
         this.vehicleNo = vehicleNo;
         this.type = type;
         this.latitude = latitude;
@@ -483,6 +492,14 @@ public class Vehicle {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getIcaoCode() {
+        return icaoCode;
+    }
+
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
     }
 
     @Override

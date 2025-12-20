@@ -23,9 +23,12 @@ public class FlightService {
         flightRepository.saveAll(flights);
     }
 
-    public List<Flight> getActiveFlights() {
+    public List<Flight> getActiveFlights(String icaoCode) {
         // Get flights from the last 5 minutes
         Instant fiveMinutesAgo = Instant.now().minus(5, ChronoUnit.MINUTES);
+        if (icaoCode != null && !icaoCode.isEmpty()) {
+            return flightRepository.findLatestFlightsByIcao(fiveMinutesAgo, icaoCode);
+        }
         return flightRepository.findLatestFlights(fiveMinutesAgo);
     }
 }

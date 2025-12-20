@@ -52,9 +52,12 @@ public class VehicleService {
         }
     }
 
-    public List<Vehicle> getActiveVehicles() {
+    public List<Vehicle> getActiveVehicles(String icaoCode) {
         // Get vehicles from the last 5 minutes
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+        if (icaoCode != null && !icaoCode.isEmpty()) {
+            return vehicleRepository.findLatestVehiclesByIcao(fiveMinutesAgo, icaoCode);
+        }
         return vehicleRepository.findLatestVehicles(fiveMinutesAgo);
     }
 }

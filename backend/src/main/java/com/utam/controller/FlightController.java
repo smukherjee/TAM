@@ -4,6 +4,7 @@ import com.utam.common.ApiResponse;
 import com.utam.model.Flight;
 import com.utam.service.FlightService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +21,8 @@ public class FlightController {
     }
 
     @GetMapping
-    public ApiResponse<List<Flight>> getActiveFlights() {
-        return ApiResponse.success(flightService.getActiveFlights());
+    public ApiResponse<List<Flight>> getActiveFlights(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
+        return ApiResponse.success(flightService.getActiveFlights(icaoCode));
     }
 }
