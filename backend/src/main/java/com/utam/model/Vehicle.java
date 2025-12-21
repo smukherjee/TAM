@@ -167,6 +167,10 @@ public class Vehicle {
     @Column(name = "icao_code")
     private String icaoCode;
 
+    @JsonProperty("creation_timestamp")
+    @jakarta.persistence.Transient
+    private Long creationTimestamp;
+
     public Vehicle() {
     }
 
@@ -500,6 +504,14 @@ public class Vehicle {
 
     public void setIcaoCode(String icaoCode) {
         this.icaoCode = icaoCode;
+    }
+
+    public Long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Long creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 
     @Override

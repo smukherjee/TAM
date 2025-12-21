@@ -63,8 +63,8 @@ public class AlertService {
 
     public List<Alert> getAllAlerts(String icaoCode) {
         if (icaoCode != null && !icaoCode.isEmpty()) {
-            return alertRepository.findByIcaoCode(icaoCode);
+            return alertRepository.findTop10ByIcaoCodeOrderByTimestampDesc(icaoCode);
         }
-        return alertRepository.findAll();
+        return alertRepository.findTop10ByOrderByTimestampDesc();
     }
 }

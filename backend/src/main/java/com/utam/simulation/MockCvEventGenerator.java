@@ -7,10 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import com.utam.repository.TurnaroundEventRepository;
-import com.utam.model.TurnaroundEvent;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -21,8 +17,8 @@ public class MockCvEventGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(MockCvEventGenerator.class);
     private final RestTemplate restTemplate;
-    private final TurnaroundEventRepository repository;
     private final Random random = new Random();
+    private final io.micrometer.core.instrument.Counter eventCounter;
 
     @Value("${simulation.cv-url}")
     private String ingestionUrl;
@@ -39,9 +35,13 @@ public class MockCvEventGenerator {
 
     private final List<String> stands = Arrays.asList("D7", "B106", "C005");
 
-    public MockCvEventGenerator(RestTemplate restTemplate, TurnaroundEventRepository repository) {
+    public MockCvEventGenerator(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
         this.restTemplate = restTemplate;
-        this.repository = repository;
+        this.eventCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
+                .tag("type", "turnaround")
+                .tag("icao", "VIDP")
+                .description("Number of mock turnaround events generated")
+                .register(registry);
     }
 
     @Scheduled(fixedRate = 2000) // Check every 2 seconds
@@ -117,6 +117,7 @@ public class MockCvEventGenerator {
         dto.setEventType(eventType);
         dto.setEventTimeStamp(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         dto.setStand(stand);
+        dto.setCreationTimestamp(System.currentTimeMillis());
         return dto;
     }
 
@@ -124,33 +125,10 @@ public class MockCvEventGenerator {
         try {
             log.info("Generated CV event: {} ({}) at {}", dto.getActivityType(),
                     dto.getEventType() == 0 ? "START" : "STOP", dto.getStand());
-
-            // Bypass NiFi and save directly to DB
-            saveToDb(dto);
-
-            // Also send to NiFi (optional)
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(dto), Void.class);
+            eventCounter.increment();
         } catch (Exception e) {
             log.error("Failed to send mock CV event: {}", e.getMessage());
-        }
-    }
-
-    private void saveToDb(CvEventDto dto) {
-        try {
-            TurnaroundEvent event = new TurnaroundEvent();
-            event.setEventUniqueId(dto.getEventUniqueId());
-            event.setIcaoCode(dto.getIcaoCode());
-            event.setCameraId(dto.getCameraId());
-            event.setCameraName(dto.getCameraName());
-            event.setActivityType(dto.getActivityType());
-            event.setEventType(dto.getEventType());
-            event.setStand(dto.getStand());
-            event.setEventTimeStamp(
-                    LocalDateTime.parse(dto.getEventTimeStamp(), DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
-            repository.save(event);
-        } catch (Exception e) {
-            log.error("Failed to save to DB directly", e);
         }
     }
 }

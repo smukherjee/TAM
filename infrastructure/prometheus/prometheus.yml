@@ -41,3 +41,9 @@ scrape_configs:
   - job_name: 'ksqldb'
     static_configs:
       - targets: ['ksqldb-server:8088']
+
+  # NiFi (Prometheus Reporting Task)
+  - job_name: 'nifi'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['tam-nifi:9092']

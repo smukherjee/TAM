@@ -21,12 +21,25 @@ public class VehicleService {
     private static final Logger logger = LoggerFactory.getLogger(VehicleService.class);
     private final VehicleRepository vehicleRepository;
     private final ObjectMapper objectMapper;
+    private final io.micrometer.core.instrument.Timer latencyTimer;
+    private final io.micrometer.core.instrument.Counter errorCounter;
 
-    public VehicleService(VehicleRepository vehicleRepository, ObjectMapper objectMapper) {
+    public VehicleService(VehicleRepository vehicleRepository, ObjectMapper objectMapper,
+            io.micrometer.core.instrument.MeterRegistry registry) {
         this.vehicleRepository = vehicleRepository;
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.registerModule(new JavaTimeModule());
+
+        this.latencyTimer = io.micrometer.core.instrument.Timer.builder("pipeline.latency.seconds")
+                .tag("type", "vehicle")
+                .description("End-to-end latency for vehicle events")
+                .register(registry);
+
+        this.errorCounter = io.micrometer.core.instrument.Counter.builder("pipeline.events.failed")
+                .tag("type", "vehicle")
+                .description("Number of failed vehicle events")
+                .register(registry);
     }
 
     @KafkaListener(topics = "vehicle-raw-json", groupId = "utam-group")
@@ -44,11 +57,18 @@ public class VehicleService {
                 if (vehicle.getTimestamp() == null) {
                     vehicle.setTimestamp(LocalDateTime.now());
                 }
-                logger.debug("Consumed vehicle from Kafka: {}", vehicle.getVehicleNo());
+
+                if (vehicle.getCreationTimestamp() != null) {
+                    long latency = System.currentTimeMillis() - vehicle.getCreationTimestamp();
+                    latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
+                }
+
+                logger.info("Consumed vehicle from Kafka: {}", vehicle.getVehicleNo());
                 vehicleRepository.save(vehicle);
             }
         } catch (Exception e) {
             logger.error("Error processing vehicle message: {}", message, e);
+            errorCounter.increment();
         }
     }
 

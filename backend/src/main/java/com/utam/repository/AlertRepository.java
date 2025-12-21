@@ -8,5 +8,7 @@ import java.util.UUID;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
-    java.util.List<Alert> findByIcaoCode(String icaoCode);
+    java.util.List<Alert> findTop10ByIcaoCodeOrderByTimestampDesc(String icaoCode);
+
+    java.util.List<Alert> findTop10ByOrderByTimestampDesc();
 }

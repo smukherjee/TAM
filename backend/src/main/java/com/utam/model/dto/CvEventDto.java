@@ -27,6 +27,9 @@ public class CvEventDto {
     @JsonProperty("icao_code")
     private String icaoCode;
 
+    @JsonProperty("creation_timestamp")
+    private Long creationTimestamp;
+
     // Getters and Setters
     public String getCameraId() {
         return cameraId;
@@ -90,5 +93,13 @@ public class CvEventDto {
 
     public void setIcaoCode(String icaoCode) {
         this.icaoCode = icaoCode;
+    }
+
+    public Long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Long creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 }

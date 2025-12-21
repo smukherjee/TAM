@@ -4,7 +4,9 @@ import MainLayout from './components/Layout/MainLayout';
 import MapPage from './pages/MapPage';
 import TurnaroundPage from './pages/TurnaroundPage';
 import ReportsPage from './pages/ReportsPage';
+import PipelinePage from './pages/PipelinePage';
 import LoginPage from './pages/LoginPage';
+import PlatformAdminPage from './pages/PlatformAdminPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -36,6 +38,20 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <ReportsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/pipeline" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PipelinePage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PlatformAdminPage />
           </MainLayout>
         </ProtectedRoute>
       } />

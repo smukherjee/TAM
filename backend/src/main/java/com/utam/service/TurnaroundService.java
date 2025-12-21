@@ -22,12 +22,30 @@ public class TurnaroundService {
     private static final Logger logger = LoggerFactory.getLogger(TurnaroundService.class);
     private final TurnaroundEventRepository repository;
     private final ObjectMapper objectMapper;
+    private final io.micrometer.core.instrument.Counter consumedCounter;
+    private final io.micrometer.core.instrument.Timer latencyTimer;
+    private final io.micrometer.core.instrument.Counter errorCounter;
 
-    public TurnaroundService(TurnaroundEventRepository repository, ObjectMapper objectMapper) {
+    public TurnaroundService(TurnaroundEventRepository repository, ObjectMapper objectMapper,
+            io.micrometer.core.instrument.MeterRegistry registry) {
         this.repository = repository;
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.registerModule(new JavaTimeModule());
+        this.consumedCounter = io.micrometer.core.instrument.Counter.builder("kafka.events.consumed")
+                .tag("type", "turnaround")
+                .description("Number of turnaround events consumed from Kafka")
+                .register(registry);
+
+        this.latencyTimer = io.micrometer.core.instrument.Timer.builder("pipeline.latency.seconds")
+                .tag("type", "turnaround")
+                .description("End-to-end latency for turnaround events")
+                .register(registry);
+
+        this.errorCounter = io.micrometer.core.instrument.Counter.builder("pipeline.events.failed")
+                .tag("type", "turnaround")
+                .description("Number of failed turnaround events")
+                .register(registry);
     }
 
     @KafkaListener(topics = "turnaround-raw-json", groupId = "utam-turnaround-group")
@@ -44,18 +62,29 @@ public class TurnaroundService {
 
             for (TurnaroundEvent event : events) {
                 logger.info("Saving Event: {}, ICAO: {}", event.getActivityType(), event.getIcaoCode()); // DEBUG
+
+                if (event.getCreationTimestamp() != null) {
+                    long latency = System.currentTimeMillis() - event.getCreationTimestamp();
+                    latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
+                }
+
                 repository.save(event);
+                consumedCounter.increment();
             }
             logger.debug("Consumed {} turnaround events", events.size());
         } catch (Exception e) {
             logger.error("Error processing turnaround message: {}", message, e);
+            errorCounter.increment();
         }
     }
 
     public List<TurnaroundEvent> getAllEvents(String icaoCode) {
+        // Only return events from last hour for real-time display
+        java.time.LocalDateTime oneHourAgo = java.time.LocalDateTime.now().minusHours(1);
+
         if (icaoCode != null && !icaoCode.isEmpty()) {
-            return repository.findByIcaoCode(icaoCode);
+            return repository.findRecentByIcaoCode(icaoCode, oneHourAgo);
         }
-        return repository.findAll();
+        return repository.findRecentEvents(oneHourAgo);
     }
 }

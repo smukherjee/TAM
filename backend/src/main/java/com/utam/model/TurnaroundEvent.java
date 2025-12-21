@@ -25,6 +25,10 @@ public class TurnaroundEvent {
     @JsonProperty("icao_code")
     private String icaoCode;
 
+    @JsonProperty("creation_timestamp")
+    @jakarta.persistence.Transient
+    private Long creationTimestamp;
+
     // Getters and Setters
 
     public String getIcaoCode() {
@@ -89,5 +93,13 @@ public class TurnaroundEvent {
 
     public void setStand(String stand) {
         this.stand = stand;
+    }
+
+    public Long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Long creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 }

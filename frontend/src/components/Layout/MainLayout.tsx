@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -8,9 +8,11 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, logout } = useAuth();
 
     // Logic for role-based access
-    const showMap = user?.role === 'ADMIN' || user?.role === 'GH';
-    const showTurnaround = user?.role === 'ADMIN' || user?.role === 'GH';
-    const showReports = user?.role === 'ADMIN' || user?.role === 'AIRPORT_USER';
+    const role = user?.role ? user.role.trim().toUpperCase() : '';
+    const showMap = role === 'ADMIN' || role === 'GH';
+    const showTurnaround = role === 'ADMIN' || role === 'GH';
+    const showReports = role === 'ADMIN' || role === 'AIRPORT_USER';
+    const showPipeline = role === 'ADMIN';
 
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -44,6 +46,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     {showMap && <NavItem to="/" icon={<Map size={20} />} label="Live Map" isOpen={isOpen} />}
                     {showTurnaround && <NavItem to="/turnaround" icon={<Activity size={20} />} label="Turnaround" isOpen={isOpen} />}
                     {showReports && <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics" isOpen={isOpen} />}
+                    {showPipeline && <NavItem to="/pipeline" icon={<Network size={20} />} label="Observability" isOpen={isOpen} />}
+                    {role === 'ADMIN' && (
+                        <div className={`mt-6 pt-6 border-t border-gray-700 ${isOpen ? 'block' : 'hidden md:block'}`}>
+                            <div className={`text-xs font-semibold text-gray-500 uppercase tracking-wilder mb-2 px-2 transition-all duration-300 ${isOpen ? 'opacity-100 h-auto' : 'opacity-0 h-0 hidden'}`}>
+                                Admin
+                            </div>
+                            <NavItem to="/admin" icon={<Network size={20} className="text-purple-400" />} label="Platform Admin" isOpen={isOpen} />
+                        </div>
+                    )}
                 </nav>
 
                 {/* Footer / User Info */}
@@ -53,6 +64,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             <div className="overflow-hidden">
                                 <p className="text-sm font-medium text-white truncate">{user?.username}</p>
                                 <p className="text-xs text-gray-500 truncate">{user?.role} • {user?.icaoCode}</p>
+                                <div className="text-[10px] text-gray-500 mt-1">
+                                    Role: "{role}"<br />
+                                    ShowObs: {showPipeline ? 'YES' : 'NO'}
+                                </div>
                             </div>
                         ) : null}
                     </div>
@@ -74,7 +89,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const NavItem = ({ to, icon, label, isOpen }: { to: string; icon: React.ReactNode; label: string; isOpen: boolean }) => (
     <NavLink
         to={to}
-        className={({ isActive }) =>
+        className={({ isActive }: { isActive: boolean }) =>
             `flex items-center ${isOpen ? 'justify-start space-x-3 px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 ${isActive
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                 : 'text-gray-400 hover:bg-gray-700 hover:text-white'

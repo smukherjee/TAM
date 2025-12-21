@@ -12,16 +12,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import com.utam.repository.TurnaroundEventRepository;
-import com.utam.model.TurnaroundEvent;
 
 @Component
 public class MockCvEventGenerator_LIRN {
 
     private static final Logger log = LoggerFactory.getLogger(MockCvEventGenerator_LIRN.class);
     private final RestTemplate restTemplate;
-    private final TurnaroundEventRepository repository;
     private final Random random = new Random();
+    private final io.micrometer.core.instrument.Counter eventCounter;
 
     @Value("${simulation.cv-url}")
     private String ingestionUrl;
@@ -38,9 +36,13 @@ public class MockCvEventGenerator_LIRN {
 
     private final List<String> stands = Arrays.asList("NAP_1", "NAP_2", "NAP_3");
 
-    public MockCvEventGenerator_LIRN(RestTemplate restTemplate, TurnaroundEventRepository repository) {
+    public MockCvEventGenerator_LIRN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
         this.restTemplate = restTemplate;
-        this.repository = repository;
+        this.eventCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
+                .tag("type", "turnaround")
+                .tag("icao", "LIRN")
+                .description("Number of mock LIRN turnaround events generated")
+                .register(registry);
     }
 
     @Scheduled(fixedRate = 2000)
@@ -89,6 +91,7 @@ public class MockCvEventGenerator_LIRN {
         dto.setEventType(eventType);
         dto.setEventTimeStamp(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         dto.setStand(stand);
+        dto.setCreationTimestamp(System.currentTimeMillis());
         return dto;
     }
 
@@ -96,32 +99,10 @@ public class MockCvEventGenerator_LIRN {
         try {
             log.info("Generated LIRN CV event: {} ({}) at {}", dto.getActivityType(),
                     dto.getEventType() == 0 ? "START" : "STOP", dto.getStand());
-
-            // Bypass NiFi
-            saveToDb(dto);
-
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(dto), Void.class);
+            eventCounter.increment();
         } catch (Exception e) {
             log.error("Failed to send mock LIRN CV event: {}", e.getMessage());
-        }
-    }
-
-    private void saveToDb(CvEventDto dto) {
-        try {
-            TurnaroundEvent event = new TurnaroundEvent();
-            event.setEventUniqueId(dto.getEventUniqueId());
-            event.setIcaoCode(dto.getIcaoCode());
-            event.setCameraId(dto.getCameraId());
-            event.setCameraName(dto.getCameraName());
-            event.setActivityType(dto.getActivityType());
-            event.setEventType(dto.getEventType());
-            event.setStand(dto.getStand());
-            event.setEventTimeStamp(
-                    LocalDateTime.parse(dto.getEventTimeStamp(), DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
-            repository.save(event);
-        } catch (Exception e) {
-            log.error("Failed to save LIRN event to DB directly", e);
         }
     }
 }

@@ -27,7 +27,7 @@ ADSB_HTTP=$(curl -s -X POST "$NIFI_URL/process-groups/$ADSB_PG/processors" \
 echo "   Creating PublishKafka..."
 ADSB_KAFKA=$(curl -s -X POST "$NIFI_URL/process-groups/$ADSB_PG/processors" \
   -H "Content-Type: application/json" \
-  -d '{"revision":{"version":0},"component":{"type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6","name":"Publish to flight-raw-json","position":{"x":500,"y":100},"config":{"properties":{"bootstrap.servers":"redpanda:29092","topic":"flight-raw-json","acks":"1"}}}}' | jq -r '.id')
+  -d '{"revision":{"version":0},"component":{"type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6","name":"Publish to flight-raw-json","position":{"x":500,"y":100},"config":{"properties":{"bootstrap.servers":"redpanda:29092","topic":"flight-raw-json","acks":"1"},"autoTerminatedRelationships":["success","failure"]}}}' | jq -r '.id')
 
 # 2. Vehicle Ingestion
 echo "📦 Creating Vehicle Ingestion Process Group..."
@@ -44,7 +44,7 @@ VEHICLE_HTTP=$(curl -s -X POST "$NIFI_URL/process-groups/$VEHICLE_PG/processors"
 echo "   Creating PublishKafka..."
 VEHICLE_KAFKA=$(curl -s -X POST "$NIFI_URL/process-groups/$VEHICLE_PG/processors" \
   -H "Content-Type: application/json" \
-  -d '{"revision":{"version":0},"component":{"type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6","name":"Publish to vehicle-raw-json","position":{"x":500,"y":100},"config":{"properties":{"bootstrap.servers":"redpanda:29092","topic":"vehicle-raw-json","acks":"1"}}}}' | jq -r '.id')
+  -d '{"revision":{"version":0},"component":{"type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6","name":"Publish to vehicle-raw-json","position":{"x":500,"y":100},"config":{"properties":{"bootstrap.servers":"redpanda:29092","topic":"vehicle-raw-json","acks":"1"},"autoTerminatedRelationships":["success","failure"]}}}' | jq -r '.id')
 
 # 3. CV Event Ingestion
 echo "📦 Creating CV Event Ingestion Process Group..."
@@ -61,7 +61,7 @@ CV_HTTP=$(curl -s -X POST "$NIFI_URL/process-groups/$CV_PG/processors" \
 echo "   Creating PublishKafka..."
 CV_KAFKA=$(curl -s -X POST "$NIFI_URL/process-groups/$CV_PG/processors" \
   -H "Content-Type: application/json" \
-  -d '{"revision":{"version":0},"component":{"type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6","name":"Publish to turnaround-raw-json","position":{"x":500,"y":100},"config":{"properties":{"bootstrap.servers":"redpanda:29092","topic":"turnaround-raw-json","acks":"1"}}}}' | jq -r '.id')
+  -d '{"revision":{"version":0},"component":{"type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6","name":"Publish to turnaround-raw-json","position":{"x":500,"y":100},"config":{"properties":{"bootstrap.servers":"redpanda:29092","topic":"turnaround-raw-json","acks":"1"},"autoTerminatedRelationships":["success","failure"]}}}' | jq -r '.id')
 
 echo ""
 echo "✅ NiFi flows created successfully!"

@@ -23,6 +23,7 @@ public class MockTelitGenerator_LIRN {
 
     private final RestTemplate restTemplate;
     private final Random random = new Random();
+    private final io.micrometer.core.instrument.Counter vehicleCounter;
 
     @Value("${simulation.vehicle-url}")
     private String ingestionUrl;
@@ -47,8 +48,13 @@ public class MockTelitGenerator_LIRN {
 
     private final String icao = "LIRN";
 
-    public MockTelitGenerator_LIRN(RestTemplate restTemplate) {
+    public MockTelitGenerator_LIRN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
         this.restTemplate = restTemplate;
+        this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
+                .tag("type", "vehicle")
+                .tag("icao", "LIRN")
+                .description("Number of mock vehicle events generated")
+                .register(registry);
     }
 
     @Scheduled(fixedRate = 3000) // Every 3 seconds
@@ -69,6 +75,7 @@ public class MockTelitGenerator_LIRN {
         LocalDateTime now = LocalDateTime.now();
         vehicle.setTimestamp(now);
         vehicle.setGpsActualTime(now.minusSeconds(1).format(DATE_FORMATTER));
+        vehicle.setCreationTimestamp(System.currentTimeMillis());
 
         vehicle.setStatus(random.nextBoolean() ? "RUNNING" : "IDLE");
         vehicle.setDeviceModel("MT4G-CANV2-MQTT");
@@ -92,6 +99,7 @@ public class MockTelitGenerator_LIRN {
 
         try {
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(vehicle), Void.class);
+            vehicleCounter.increment();
         } catch (Exception e) {
             log.error("Failed to send vehicle data to ingestion layer: {}", e.getMessage());
         }

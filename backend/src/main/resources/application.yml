@@ -125,3 +125,13 @@ management:
   endpoint:
     health:
       show-details: always
+
+# Monitoring and Observability Configuration
+monitoring:
+  health:
+    green-threshold-seconds: 60
+    amber-threshold-seconds: 120
+  metrics:
+    enable-latency: true
+    enable-error-tracking: true
+

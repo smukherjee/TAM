@@ -22,6 +22,7 @@ public class MockAdsbGenerator_LIRN {
 
     private final RestTemplate restTemplate;
     private final Random random = new Random();
+    private final io.micrometer.core.instrument.Counter flightCounter;
 
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
@@ -30,8 +31,13 @@ public class MockAdsbGenerator_LIRN {
     private final List<String> callsigns = Arrays.asList("AZ123", "RYR45", "EJU99", "LH333", "BA777");
     private final String icao = "LIRN";
 
-    public MockAdsbGenerator_LIRN(RestTemplate restTemplate) {
+    public MockAdsbGenerator_LIRN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
         this.restTemplate = restTemplate;
+        this.flightCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
+                .tag("type", "flight")
+                .tag("icao", "LIRN")
+                .description("Number of mock flight events generated")
+                .register(registry);
     }
 
     @Scheduled(fixedRate = 2000) // Every 2 seconds
@@ -66,11 +72,13 @@ public class MockAdsbGenerator_LIRN {
         flight.setSystemStatus("OK");
         flight.setSpi(false);
         flight.setUpdateType("TRACK_UPDATE");
+        flight.setCreationTimestamp(System.currentTimeMillis());
 
         log.info("Generated LIRN flight data: {}", flight);
 
         try {
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(flight), Void.class);
+            flightCounter.increment();
         } catch (Exception e) {
             log.error("Failed to send flight data to ingestion layer: {}", e.getMessage());
         }

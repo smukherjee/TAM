@@ -89,6 +89,10 @@ public class Flight {
     @Column(name = "icao_code")
     private String icaoCode;
 
+    @JsonProperty("creation_timestamp")
+    @jakarta.persistence.Transient
+    private Long creationTimestamp;
+
     public Flight() {
     }
 
@@ -265,6 +269,14 @@ public class Flight {
 
     public void setIcaoCode(String icaoCode) {
         this.icaoCode = icaoCode;
+    }
+
+    public Long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Long creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 
     @Override
