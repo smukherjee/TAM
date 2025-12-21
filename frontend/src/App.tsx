@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './components/Layout/MainLayout';
 import MapPage from './pages/MapPage';
 import TurnaroundPage from './pages/TurnaroundPage';
-import ReportsPage from './pages/ReportsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import PipelinePage from './pages/PipelinePage';
 import LoginPage from './pages/LoginPage';
 import PlatformAdminPage from './pages/PlatformAdminPage';
@@ -37,7 +37,7 @@ const AppRoutes = () => {
       <Route path="/reports" element={
         <ProtectedRoute>
           <MainLayout>
-            <ReportsPage />
+            <AnalyticsPage />
           </MainLayout>
         </ProtectedRoute>
       } />
