@@ -37,8 +37,9 @@ const LoginPage: React.FC = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-1">Username</label>
+                        <label htmlFor="username" className="block text-gray-400 text-sm font-medium mb-1">Username</label>
                         <input
+                            id="username"
                             type="text"
                             name="username"
                             autoComplete="username"
@@ -48,8 +49,9 @@ const LoginPage: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-1">Password</label>
+                        <label htmlFor="password" className="block text-gray-400 text-sm font-medium mb-1">Password</label>
                         <input
+                            id="password"
                             type="password"
                             name="password"
                             autoComplete="current-password"

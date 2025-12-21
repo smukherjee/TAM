@@ -1,0 +1,135 @@
+openapi: 3.0.0
+info:
+  title: Turnaround Management API
+  version: 1.0.0
+paths:
+  /api/turnaround/sessions:
+    get:
+      summary: List active turnaround sessions (Grid View)
+      parameters:
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TurnaroundSessionSummary'
+
+  /api/turnaround/sessions/{id}:
+    get:
+      summary: Get detailed session info (Detailed View)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed session data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TurnaroundSessionDetail'
+
+  /api/alerts:
+    get:
+      summary: Get active alerts (Sidebar)
+      responses:
+        '200':
+          description: List of active alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+
+components:
+  schemas:
+    TurnaroundSessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        flightId:
+          type: string
+        standId:
+          type: string
+        status:
+          type: string
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskSummary'
+    
+    TurnaroundSessionDetail:
+      allOf:
+        - $ref: '#/components/schemas/TurnaroundSessionSummary'
+        - type: object
+          properties:
+            sirt:
+              type: string
+              format: date-time
+            tobt:
+              type: string
+              format: date-time
+            tasks:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaskDetail'
+
+    TaskSummary:
+      type: object
+      properties:
+        type:
+          type: string
+        status:
+          type: string
+
+    TaskDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        status:
+          type: string
+        plannedStart:
+          type: string
+          format: date-time
+        plannedEnd:
+          type: string
+          format: date-time
+        actualStart:
+          type: string
+          format: date-time
+        actualEnd:
+          type: string
+          format: date-time
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
