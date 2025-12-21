@@ -5,8 +5,8 @@
       "name": "ListenHTTP",
       "type": "org.apache.nifi.processors.standard.ListenHTTP",
       "properties": {
-        "Listening Port": "8080",
-        "Base Path": "api/adsblivedata"
+        "Listening Port": "8092",
+        "Base Path": "adsb-ingest"
       }
     },
     {

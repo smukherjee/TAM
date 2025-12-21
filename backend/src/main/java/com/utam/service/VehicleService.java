@@ -23,13 +23,22 @@ public class VehicleService {
     private final ObjectMapper objectMapper;
     private final io.micrometer.core.instrument.Timer latencyTimer;
     private final io.micrometer.core.instrument.Counter errorCounter;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    private final RedisService redisService;
+    private final MinioService minioService;
 
     public VehicleService(VehicleRepository vehicleRepository, ObjectMapper objectMapper,
-            io.micrometer.core.instrument.MeterRegistry registry) {
+            io.micrometer.core.instrument.MeterRegistry registry,
+            org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate,
+            RedisService redisService,
+            MinioService minioService) {
         this.vehicleRepository = vehicleRepository;
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.registerModule(new JavaTimeModule());
+        this.messagingTemplate = messagingTemplate;
+        this.redisService = redisService;
+        this.minioService = minioService;
 
         this.latencyTimer = io.micrometer.core.instrument.Timer.builder("pipeline.latency.seconds")
                 .tag("type", "vehicle")
@@ -63,9 +72,27 @@ public class VehicleService {
                     latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
                 }
 
+                // WebSocket Push
+                String icao = vehicle.getIcaoCode() != null ? vehicle.getIcaoCode() : "VIDP";
+                messagingTemplate.convertAndSend("/topic/vehicles/" + icao, vehicle);
+
+                // Redis Cache
+                if (vehicle.getVehicleNo() != null) {
+                    String redisKey = "vehicle:" + icao + ":" + vehicle.getVehicleNo();
+                    redisService.set(redisKey, vehicle, 300, java.util.concurrent.TimeUnit.SECONDS);
+                    redisService.addToSet("active_vehicles:" + icao, vehicle.getVehicleNo());
+                }
+
                 logger.info("Consumed vehicle from Kafka: {}", vehicle.getVehicleNo());
                 vehicleRepository.save(vehicle);
             }
+
+            // Archive to MinIO
+            String icao = !vehicles.isEmpty() && vehicles.get(0).getIcaoCode() != null ? vehicles.get(0).getIcaoCode() : "VIDP";
+            String timestamp = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
+            String filename = "archives/raw/" + icao + "/" + timestamp + "/vehicle_" + java.util.UUID.randomUUID() + ".json";
+            minioService.uploadJson(filename, message);
+
         } catch (Exception e) {
             logger.error("Error processing vehicle message: {}", message, e);
             errorCounter.increment();
@@ -73,7 +100,23 @@ public class VehicleService {
     }
 
     public List<Vehicle> getActiveVehicles(String icaoCode) {
-        // Get vehicles from the last 5 minutes
+        // Try Redis first
+        String icao = icaoCode != null && !icaoCode.isEmpty() ? icaoCode : "VIDP";
+        java.util.Set<Object> activeIds = redisService.getSetMembers("active_vehicles:" + icao);
+
+        if (activeIds != null && !activeIds.isEmpty()) {
+            List<Vehicle> vehicles = new java.util.ArrayList<>();
+            for (Object idObj : activeIds) {
+                String id = (String) idObj;
+                java.util.Optional<Vehicle> vehicleOpt = redisService.get("vehicle:" + icao + ":" + id, Vehicle.class);
+                vehicleOpt.ifPresent(vehicles::add);
+            }
+            if (!vehicles.isEmpty()) {
+                return vehicles;
+            }
+        }
+
+        // Fallback to DB
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
         if (icaoCode != null && !icaoCode.isEmpty()) {
             return vehicleRepository.findLatestVehiclesByIcao(fiveMinutesAgo, icaoCode);

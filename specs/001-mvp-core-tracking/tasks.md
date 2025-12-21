@@ -56,7 +56,7 @@ description: "Task list for Core MVP Tracking & Alerting"
 - [x] T013 [US1] Implement FlightConsumer to ingest from 'flight-raw-json' in `backend/src/main/java/com/utam/service/FlightConsumer.java`
 - [x] T014 [US1] Implement FlightService to save data in `backend/src/main/java/com/utam/service/FlightService.java`
 - [x] T015 [US1] Create FlightController with GET /api/flights in `backend/src/main/java/com/utam/controller/FlightController.java`
-- [x] T016 [US1] Create Mock ADSB Generator script in `backend/src/main/resources/simulation/adsb-generator.py`
+- [x] T016 [US1] Create Mock ADSB Generator in `backend/src/main/java/com/utam/simulation/MockAdsbGenerator.java`
 - [x] T017 [US1] Create NiFi flow configuration for ADSB (ListenHTTP -> PublishKafka) in `infrastructure/nifi/flow_adsb.json`
 - [x] T018 [P] [US1] Implement FlightService client in `frontend/src/services/flightService.ts`
 - [x] T019 [US1] Update Map component to render Flight icons in `frontend/src/components/Map/FlightLayer.tsx`
@@ -78,7 +78,7 @@ description: "Task list for Core MVP Tracking & Alerting"
 - [ ] T022 [US2] Implement VehicleConsumer to ingest from 'vehicle-raw-json' in `backend/src/main/java/com/utam/service/VehicleConsumer.java`
 - [ ] T023 [US2] Implement VehicleService to save data in `backend/src/main/java/com/utam/service/VehicleService.java`
 - [ ] T024 [US2] Create VehicleController with GET /api/vehicles in `backend/src/main/java/com/utam/controller/VehicleController.java`
-- [ ] T025 [US2] Create Mock TelIT Generator script in `backend/src/main/resources/simulation/telit-generator.py`
+- [ ] T025 [US2] Create Mock TelIT Generator in `backend/src/main/java/com/utam/simulation/MockTelitGenerator.java`
 - [ ] T026 [US2] Create NiFi flow configuration for TelIT in `infrastructure/nifi/flow_telit.json`
 - [ ] T027 [P] [US2] Implement VehicleService client in `frontend/src/services/vehicleService.ts`
 - [ ] T028 [US2] Update Map component to render Vehicle icons in `frontend/src/components/Map/VehicleLayer.tsx`

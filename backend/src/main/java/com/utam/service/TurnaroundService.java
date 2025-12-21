@@ -79,12 +79,12 @@ public class TurnaroundService {
     }
 
     public List<TurnaroundEvent> getAllEvents(String icaoCode) {
-        // Only return events from last hour for real-time display
-        java.time.LocalDateTime oneHourAgo = java.time.LocalDateTime.now().minusHours(1);
+        // Return events from last 24 hours to ensure data visibility during demos/dev
+        java.time.LocalDateTime since = java.time.LocalDateTime.now().minusHours(24);
 
         if (icaoCode != null && !icaoCode.isEmpty()) {
-            return repository.findRecentByIcaoCode(icaoCode, oneHourAgo);
+            return repository.findRecentByIcaoCode(icaoCode, since);
         }
-        return repository.findRecentEvents(oneHourAgo);
+        return repository.findRecentEvents(since);
     }
 }

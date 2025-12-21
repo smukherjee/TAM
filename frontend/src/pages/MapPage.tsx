@@ -5,6 +5,7 @@ import VehicleLayer from '../components/Map/VehicleLayer';
 import AlertList from '../components/Alerts/AlertList';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { webSocketService } from '../services/WebSocketService';
 
 interface Vehicle {
     vehicle_no: string;
@@ -34,11 +35,12 @@ const MapPage: React.FC = () => {
     const { user } = useAuth();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
+    const icao = user?.icaoCode || 'VIDP';
 
     const getCenter = (): [number, number] => {
         if (user?.icaoCode === 'VABB') return [19.0896, 72.8656];
         if (user?.icaoCode === 'LIRN') return [40.8844, 14.2908];
-        return [28.5562, 77.1000]; // Default VIDP OR LIRN? No, default for VIDP.
+        return [28.5562, 77.1000]; // Default VIDP
     };
 
     const fetchVehicles = async () => {
@@ -62,12 +64,31 @@ const MapPage: React.FC = () => {
     useEffect(() => {
         fetchVehicles();
         fetchAlerts();
+
+        // Subscribe to Vehicles via WebSocket
+        const vehicleSub = webSocketService.subscribe(`/topic/vehicles/${icao}`, (vehicle: Vehicle) => {
+            setVehicles(prev => {
+                const index = prev.findIndex(v => v.vehicle_no === vehicle.vehicle_no);
+                if (index >= 0) {
+                    const newVehicles = [...prev];
+                    newVehicles[index] = vehicle;
+                    return newVehicles;
+                } else {
+                    return [...prev, vehicle];
+                }
+            });
+        });
+
         const interval = setInterval(() => {
-            fetchVehicles();
+            // Only poll alerts, vehicles are real-time now
             fetchAlerts();
-        }, 2000); // Poll every 2 seconds
-        return () => clearInterval(interval);
-    }, []);
+        }, 2000); 
+
+        return () => {
+            clearInterval(interval);
+            vehicleSub.unsubscribe();
+        };
+    }, [icao]);
 
     return (
         <div className="relative w-full h-full">

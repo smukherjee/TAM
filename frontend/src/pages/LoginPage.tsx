@@ -40,6 +40,8 @@ const LoginPage: React.FC = () => {
                         <label className="block text-gray-400 text-sm font-medium mb-1">Username</label>
                         <input
                             type="text"
+                            name="username"
+                            autoComplete="username"
                             className="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-blue-500"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
@@ -49,6 +51,8 @@ const LoginPage: React.FC = () => {
                         <label className="block text-gray-400 text-sm font-medium mb-1">Password</label>
                         <input
                             type="password"
+                            name="password"
+                            autoComplete="current-password"
                             className="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-blue-500"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}

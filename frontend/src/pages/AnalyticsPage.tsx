@@ -8,14 +8,20 @@ const AnalyticsPage = () => {
 
     // Determine Superset Dashboard Slug based on User Context
     const getDashboardSlug = () => {
-        if (!user || user.role === 'ADMIN') return 'tam_ops';
-        const icao = user.icaoCode ? user.icaoCode.toLowerCase() : '';
-        if (icao) return `tam_ops_${icao}`;
+        if (!user) return 'tam_ops';
+        
+        // If user has an ICAO code, show that tenant's dashboard
+        if (user.icaoCode) {
+            return `tam_ops_${user.icaoCode.trim().toLowerCase()}`;
+        }
+        
+        // Fallback to generic dashboard
         return 'tam_ops';
     };
 
     const dashboardSlug = getDashboardSlug();
     const supersetUrl = `http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`;
+    const supersetTitle = user?.icaoCode ? `TAM Ops - ${user.icaoCode}` : 'Superset BI Reports';
 
     // Grafana dashboard configurations
     const dashboards = {
@@ -68,7 +74,7 @@ const AnalyticsPage = () => {
             description: 'Stand occupancy and planning'
         },
         superset: {
-            name: 'Superset BI Reports',
+            name: supersetTitle,
             url: supersetUrl,
             icon: <Database className="w-4 h-4" />,
             description: 'Business intelligence dashboards'

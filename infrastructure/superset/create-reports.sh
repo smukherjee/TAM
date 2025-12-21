@@ -92,28 +92,40 @@ create_chart() {
 }
 
 # Params as Raw String (not JSON encoded yet)
-PARAMS_FLIGHT_STATUS='{"metrics": ["count"], "groupby": ["status"], "adhoc_filters": [], "row_limit": 100}'
+# Use explicit ad-hoc metric to avoid "Field may not be null" error in orderby
+METRIC_COUNT='{"expressionType": "SQL", "sqlExpression": "COUNT(*)", "label": "Count"}'
+
+PARAMS_FLIGHT_STATUS=$(jq -n --argjson metric "$METRIC_COUNT" '{"metric": $metric, "groupby": ["status"], "adhoc_filters": [], "row_limit": 100}')
 CHART_1=$(create_chart "Flights by Status" "$FLIGHTS_ID" "pie" "$PARAMS_FLIGHT_STATUS")
 
-PARAMS_VEHICLE_TYPE='{"metrics": ["count"], "groupby": ["vehicletype"], "adhoc_filters": [], "row_limit": 100}'
+PARAMS_VEHICLE_TYPE=$(jq -n --argjson metric "$METRIC_COUNT" '{"metric": $metric, "groupby": ["vehicletype"], "adhoc_filters": [], "row_limit": 100}')
 CHART_2=$(create_chart "Vehicle Types" "$VEHICLES_ID" "pie" "$PARAMS_VEHICLE_TYPE")
 
 # 5. Create Dashboard
 echo "   Creating Dashboard..." >&2
-slug="tam_ops_$(date +%s)" # unique slug
-DASH_PAYLOAD=$(jq -n --arg slug "$slug" '{dashboard_title: "TAM Operations Dashboard", published: true, slug: $slug}')
+slug="tam_ops" # Fixed slug for frontend integration
 
-DASH_RESP=$(curl -s -X POST "$SUPERSET_URL/api/v1/dashboard/" \
-    -H "$AUTH_HEADER" \
-    -H "Content-Type: application/json" \
-    -d "$DASH_PAYLOAD")
+# Check if exists
+EXISTING_DASH=$(curl -s -X GET "$SUPERSET_URL/api/v1/dashboard/?q=(filters:!((col:slug,opr:eq,value:$slug)))" -H "$AUTH_HEADER" | jq -r ".result[] | select(.slug == \"$slug\") | .id")
 
-DASH_ID=$(echo "$DASH_RESP" | jq -r '.id')
-
-if [ "$DASH_ID" == "null" ]; then
-    echo "   ⚠️ Failed to create dashboard. Response: $DASH_RESP" >&2
+if [ -n "$EXISTING_DASH" ]; then
+    echo "   ⚠️ Dashboard 'TAM Operations Dashboard' already exists (ID: $EXISTING_DASH)" >&2
+    DASH_ID="$EXISTING_DASH"
 else
-    echo "   ✅ Created Dashboard 'TAM Operations Dashboard' (ID: $DASH_ID)" >&2
+    DASH_PAYLOAD=$(jq -n --arg slug "$slug" '{dashboard_title: "TAM Operations Dashboard", published: true, slug: $slug}')
+
+    DASH_RESP=$(curl -s -X POST "$SUPERSET_URL/api/v1/dashboard/" \
+        -H "$AUTH_HEADER" \
+        -H "Content-Type: application/json" \
+        -d "$DASH_PAYLOAD")
+
+    DASH_ID=$(echo "$DASH_RESP" | jq -r '.id')
+
+    if [ "$DASH_ID" == "null" ]; then
+        echo "   ⚠️ Failed to create dashboard. Response: $DASH_RESP" >&2
+    else
+        echo "   ✅ Created Dashboard 'TAM Operations Dashboard' (ID: $DASH_ID)" >&2
+    fi
 fi
 
 echo "🎉 Created Assets."

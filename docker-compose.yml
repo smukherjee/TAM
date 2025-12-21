@@ -1,41 +1,117 @@
+# TAM Platform - Development Infrastructure
+# Based on architecture_dev_20251220.mermaid
+# Lightweight, Docker-based, Laptop-friendly stack
+
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+  # ============================================
+  # MESSAGE QUEUE - Redpanda (Kafka Compatible)
+  # ============================================
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.4
+    container_name: tam-redpanda
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --mode dev-container
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr PLAINTEXT://0.0.0.0:8082,OUTSIDE://0.0.0.0:18082
+      - --advertise-pandaproxy-addr PLAINTEXT://redpanda:8082,OUTSIDE://localhost:18082
+      - --schema-registry-addr PLAINTEXT://0.0.0.0:8081,OUTSIDE://0.0.0.0:18081
+      - --advertise-rpc-addr redpanda:33145
     ports:
-      - "2181:2181"
+      - "9092:9092"       # Kafka API (external)
+      - "18081:18081"     # Schema Registry (external)
+      - "18082:18082"     # REST Proxy (external)
+      - "9644:9644"       # Admin API
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
+  # Redpanda Console (UI for Kafka topics)
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:v2.7.2
+    container_name: tam-redpanda-console
     depends_on:
-      - zookeeper
+      redpanda:
+        condition: service_healthy
     ports:
-      - "9092:9092"
+      - "8090:8080"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKERS: redpanda:29092
+      KAFKA_SCHEMAREGISTRY_ENABLED: "true"
+      KAFKA_SCHEMAREGISTRY_URLS: http://redpanda:8081
 
+  # ============================================
+  # INGESTION LAYER - Apache NiFi
+  # ============================================
   nifi:
     image: apache/nifi:1.25.0
+    container_name: tam-nifi
     ports:
-      - "8091:8080"
+      - "8091:8080"       # NiFi Web UI
+      - "8092:8092"       # ListenHTTP for ADSB data
+      - "8093:8093"       # ListenHTTP for Vehicle data
+      - "8094:8094"       # ListenHTTP for CV Event data
     environment:
       - NIFI_WEB_HTTP_PORT=8080
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=admin123456789
     volumes:
       - nifi_data:/opt/nifi/nifi-current/data
       - nifi_conf:/opt/nifi/nifi-current/conf
+      - nifi_logs:/opt/nifi/nifi-current/logs
+      - nifi_provenance:/opt/nifi/nifi-current/provenance_repository
     depends_on:
-      - zookeeper
-      - kafka
+      redpanda:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/nifi"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
+  # ============================================
+  # STREAM PROCESSING - ksqlDB
+  # ============================================
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.29.0
+    container_name: tam-ksqldb
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: redpanda:29092
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_KSQL_SERVICE_ID: tam_ksqldb
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://redpanda:8081
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.29.0
+    container_name: tam-ksqldb-cli
+    depends_on:
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
+    stdin_open: true
+
+  # ============================================
+  # DATA STORAGE - TimescaleDB (PostgreSQL)
+  # ============================================
   timescaledb:
     image: timescale/timescaledb:latest-pg16
+    container_name: tam-timescaledb
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -44,28 +120,207 @@ services:
       - "5432:5432"
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
+      - ./infrastructure/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ============================================
+  # OBJECT STORAGE - MinIO (S3 Compatible)
+  # ============================================
+  minio:
+    image: minio/minio:latest
+    container_name: tam-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Create default buckets on startup
+  minio-init:
+    image: minio/mc
+    container_name: tam-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      mc mb myminio/tam-raw-data --ignore-existing;
+      mc mb myminio/tam-processed-data --ignore-existing;
+      mc mb myminio/tam-reports --ignore-existing;
+      exit 0;
+      "
+
+  # ============================================
+  # CACHE - Redis
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: tam-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # BACKEND SERVICE - Spring Boot
+  # ============================================
   backend:
     build: ./backend
+    container_name: tam-backend
     ports:
       - "8080:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/utam
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      - timescaledb
-      - kafka
+      timescaledb:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
+  # ============================================
+  # FRONTEND - React Dashboard
+  # ============================================
   frontend:
     build: ./frontend
+    container_name: tam-frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
+    environment:
+      VITE_API_URL: http://localhost:8080
 
+  # ============================================
+  # OBSERVABILITY - Prometheus
+  # ============================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: tam-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+
+  # ============================================
+  # OBSERVABILITY - Grafana
+  # ============================================
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: tam-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+      - ./infrastructure/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./infrastructure/grafana/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      - prometheus
+
+
+  # ============================================
+  # OBSERVABILITY - Loki (Logs)
+  # ============================================
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: tam-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # ============================================
+  # BI TOOL - Apache Superset
+  # ============================================
+  superset:
+    image: apache/superset:3.0.0
+    container_name: tam-superset
+    ports:
+      - "8089:8088"
+    environment:
+      SUPERSET_SECRET_KEY: tam-dev-secret-key-change-in-prod
+      SUPERSET_LOAD_EXAMPLES: "no"
+    volumes:
+      - superset_data:/app/superset_home
+      - ./infrastructure/superset/superset_config.py:/app/pythonpath/superset_config.py
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    command: >
+      /bin/sh -c "
+      superset db upgrade &&
+      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@tam.local --password admin || true &&
+      superset init &&
+      superset run -h 0.0.0.0 -p 8088
+      "
+
+# ============================================
+# VOLUMES
+# ============================================
 volumes:
-  timescaledb_data:
+  redpanda_data:
   nifi_data:
   nifi_conf:
+  nifi_logs:
+  nifi_provenance:
+  timescaledb_data:
+  minio_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  superset_data:
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  default:
+    name: tam-network
+    driver: bridge

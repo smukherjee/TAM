@@ -85,7 +85,7 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:redpanda:29092}
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
     consumer:
       group-id: utam-group
       auto-offset-reset: earliest
@@ -101,9 +101,9 @@ spring:
 
 # Simulation Configuration
 simulation:
-  adsb-url: ${SIMULATION_ADSB_URL:http://tam-nifi:8092/adsb-ingest}
-  vehicle-url: ${SIMULATION_VEHICLE_URL:http://tam-nifi:8093/vehicle-ingest}
-  cv-url: ${SIMULATION_CV_URL:http://tam-nifi:8094/cv-event-ingest}
+  adsb-url: ${SIMULATION_ADSB_URL:http://nifi:8092/adsb-ingest}
+  vehicle-url: ${SIMULATION_VEHICLE_URL:http://nifi:8093/vehicle-ingest}
+  cv-url: ${SIMULATION_CV_URL:http://nifi:8094/cv-event-ingest}
 
 # MinIO Configuration
 minio:

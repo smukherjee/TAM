@@ -33,10 +33,13 @@ for TENANT in "VIDP" "LIRN"; do
     DS_F=$(create_dataset "flights_$LOWER" "SELECT * FROM flights WHERE icao_code = '$TENANT'")
     DS_V=$(create_dataset "vehicles_$LOWER" "SELECT * FROM vehicles WHERE icao_code = '$TENANT'")
     
-    PARAMS_F='{"metrics": ["count"], "groupby": ["status"], "adhoc_filters": [], "row_limit": 100}'
+    # Use explicit ad-hoc metric to avoid "Field may not be null" error
+    METRIC_COUNT='{"expressionType": "SQL", "sqlExpression": "COUNT(*)", "label": "Count"}'
+    
+    PARAMS_F=$(jq -n --argjson metric "$METRIC_COUNT" '{"metric": $metric, "groupby": ["status"], "adhoc_filters": [], "row_limit": 100}')
     CHART_F=$(create_chart "Flights ($TENANT)" "$DS_F" "$PARAMS_F")
     
-    PARAMS_V='{"metrics": ["count"], "groupby": ["type"], "adhoc_filters": [], "row_limit": 100}'
+    PARAMS_V=$(jq -n --argjson metric "$METRIC_COUNT" '{"metric": $metric, "groupby": ["vehicle_type"], "adhoc_filters": [], "row_limit": 100}')
     CHART_V=$(create_chart "Vehicles ($TENANT)" "$DS_V" "$PARAMS_V")
     
     # Check if dashboard exists

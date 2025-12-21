@@ -12,13 +12,25 @@ import java.time.LocalDateTime;
 public class TurnaroundEvent {
 
     @Id
+    @Column(name = "event_unique_id")
     private String eventUniqueId;
 
+    @Column(name = "camera_id")
     private String cameraId;
+
+    @Column(name = "camera_name")
     private String cameraName;
+
+    @Column(name = "activity_type")
     private String activityType;
+
+    @Column(name = "event_type")
     private Integer eventType;
+
+    @Column(name = "event_time_stamp")
     private LocalDateTime eventTimeStamp;
+
+    @Column(name = "stand")
     private String stand;
 
     @Column(name = "icao_code")

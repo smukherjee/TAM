@@ -10,14 +10,13 @@ UTAM is a real-time tracking system for flights and ground vehicles, featuring s
 - **Frontend**: React 18, TypeScript, Vite, Leaflet, Tailwind CSS
 - **Database**: PostgreSQL / TimescaleDB
 - **Ingestion & Streaming**: Apache NiFi, Apache Kafka
-- **Simulation**: Python 3
+- **Simulation**: Java (Integrated in Backend)
 
 ## Prerequisites
 
 - **Java**: JDK 21
 - **Node.js**: v18+
 - **Docker**: Docker Desktop or Docker Engine & Docker Compose
-- **Python**: Python 3.8+ (for simulation scripts)
 
 ## Setup & Run
 
@@ -86,39 +85,17 @@ npm run dev
 
 ### 4. Run Simulation Data Generators
 
-To simulate real-time traffic (Flights, Vehicles, CV Events), use the provided Python scripts. These scripts generate mock data and send it to the NiFi ingestion layer.
+The simulation data generators are integrated into the Spring Boot Backend as scheduled components. They automatically start generating mock data (Flights, Vehicles, CV Events) when the backend application starts.
 
-**Install Python Dependencies:**
+- **Flight Data (ADSB)**: Generated every 2 seconds.
+- **Vehicle Data (Telit)**: Generated every 2 seconds.
+- **Computer Vision Events**: Generated every 5 seconds.
 
-```bash
-pip install -r backend/src/main/resources/simulation/requirements.txt
-```
-
-**Run Generators:**
-
-Open separate terminals for each generator you want to run:
-
-- **Flight Data (ADSB)**:
-
-  ```bash
-  python3 backend/src/main/resources/simulation/adsb-generator.py
-  ```
-
-- **Vehicle Data (Telit)**:
-
-  ```bash
-  python3 backend/src/main/resources/simulation/telit-generator.py
-  ```
-
-- **Computer Vision Events**:
-
-  ```bash
-  python3 backend/src/main/resources/simulation/cv-generator.py
-  ```
+To configure the simulation URLs (e.g., if NiFi is running on a different host/port), update `backend/src/main/resources/application.yml`.
 
 ## Architecture Overview
 
-1. **Data Ingestion**: Python scripts simulate data sources and push JSON payloads to **Apache NiFi** endpoints.
+1. **Data Ingestion**: Java components in the backend simulate data sources and push JSON payloads to **Apache NiFi** endpoints.
 2. **Streaming**: NiFi processes the data and publishes it to **Apache Kafka** topics.
 3. **Processing**: The **Spring Boot Backend** consumes messages from Kafka, processes them (e.g., speed checks), and persists data to **TimescaleDB**.
 4. **Visualization**: The **React Frontend** polls the backend API to display real-time positions and alerts on a map.
