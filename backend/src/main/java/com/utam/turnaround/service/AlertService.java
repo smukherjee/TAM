@@ -14,7 +14,7 @@ public class AlertService {
         this.alertRepository = alertRepository;
     }
 
-    public List<Alert> getActiveAlerts(String icaoCode) {
-        return alertRepository.findByIcaoCodeAndIsActiveTrue(icaoCode);
+    public List<Alert> getActiveAlerts(String tenantCode) {
+        return alertRepository.findByTenantCodeAndIsActiveTrue(tenantCode);
     }
 }

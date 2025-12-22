@@ -6,20 +6,7 @@ import VehicleLayer from '../Map/VehicleLayer';
 import AlertList from '../Alerts/AlertList';
 import api from '../../services/api';
 import TurnaroundGantt from '../Turnaround/TurnaroundGantt';
-
-interface Vehicle {
-    vehicle_no: string;
-    vehicletype: string;
-    latitude: string;
-    longitude: string;
-    speed: string;
-    status: string;
-    vehicle_name: string;
-    company: string;
-    location: string;
-    gpsactualtime: string;
-    ign: string;
-}
+import { Vehicle } from '../../services/vehicleService';
 
 interface Alert {
     alertId: string;
@@ -46,7 +33,7 @@ const Dashboard: React.FC = () => {
 
     const fetchAlerts = async () => {
         try {
-            const response = await api.get<Alert[]>('/alerts');
+            const response = await api.get<Alert[]>('/vehicle-alerts');
             setAlerts(response.data);
         } catch (error) {
             console.error('Error fetching alerts:', error);

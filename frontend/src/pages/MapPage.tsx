@@ -6,20 +6,7 @@ import AlertList from '../components/Alerts/AlertList';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { webSocketService } from '../services/WebSocketService';
-
-interface Vehicle {
-    vehicle_no: string;
-    vehicletype: string;
-    latitude: string;
-    longitude: string;
-    speed: string;
-    status: string;
-    vehicle_name: string;
-    company: string;
-    location: string;
-    gpsactualtime: string;
-    ign: string;
-}
+import { Vehicle } from '../services/vehicleService';
 
 interface Alert {
     alertId: string;
@@ -65,11 +52,11 @@ const MapPage: React.FC = () => {
         fetchVehicles();
         fetchAlerts();
 
-        // Subscribe to Vehicles via WebSocket
-        const vehicleSub = webSocketService.subscribe(`/topic/vehicles/${icao}`, (vehicle: Vehicle) => {
+        // WebSocket Subscription
+        const handleVehicleUpdate = (vehicle: Vehicle) => {
             setVehicles(prev => {
                 const index = prev.findIndex(v => v.vehicle_no === vehicle.vehicle_no);
-                if (index >= 0) {
+                if (index !== -1) {
                     const newVehicles = [...prev];
                     newVehicles[index] = vehicle;
                     return newVehicles;
@@ -77,27 +64,34 @@ const MapPage: React.FC = () => {
                     return [...prev, vehicle];
                 }
             });
+        };
+
+        const handleAlertUpdate = (alert: Alert) => {
+            setAlerts(prev => [alert, ...prev].slice(0, 50));
+        };
+
+        webSocketService.connect(() => {
+            webSocketService.subscribe('/topic/vehicles/' + icao, handleVehicleUpdate);
+            webSocketService.subscribe('/topic/alerts/' + icao, handleAlertUpdate);
         });
 
-        const interval = setInterval(() => {
-            // Only poll alerts, vehicles are real-time now
-            fetchAlerts();
-        }, 2000); 
-
         return () => {
-            clearInterval(interval);
-            vehicleSub.unsubscribe();
+            webSocketService.disconnect();
         };
     }, [icao]);
 
     return (
-        <div className="relative w-full h-full">
-            <MapComponent center={getCenter()}>
-                <FlightLayer />
-                <VehicleLayer vehicles={vehicles} />
-            </MapComponent>
-            <div className="absolute top-4 right-4 z-[500] w-[400px]">
-                <AlertList alerts={alerts} />
+        <div className="h-full flex flex-col">
+            <div className="flex-1 relative">
+                <MapComponent center={getCenter()} zoom={14}>
+                    <FlightLayer />
+                    <VehicleLayer vehicles={vehicles} />
+                </MapComponent>
+                
+                {/* Overlay Alerts */}
+                <div className="absolute top-4 right-4 w-96 z-[1000]">
+                    <AlertList alerts={alerts} />
+                </div>
             </div>
         </div>
     );

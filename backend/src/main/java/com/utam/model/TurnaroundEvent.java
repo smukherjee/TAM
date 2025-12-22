@@ -33,9 +33,9 @@ public class TurnaroundEvent {
     @Column(name = "stand")
     private String stand;
 
-    @Column(name = "icao_code")
-    @JsonProperty("icao_code")
-    private String icaoCode;
+    @Column(name = "tenant_code")
+    @JsonProperty("tenant_code")
+    private String tenantCode;
 
     @JsonProperty("creation_timestamp")
     @jakarta.persistence.Transient
@@ -43,12 +43,12 @@ public class TurnaroundEvent {
 
     // Getters and Setters
 
-    public String getIcaoCode() {
-        return icaoCode;
+    public String getTenantCode() {
+        return tenantCode;
     }
 
-    public void setIcaoCode(String icaoCode) {
-        this.icaoCode = icaoCode;
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
     }
 
     public String getEventUniqueId() {

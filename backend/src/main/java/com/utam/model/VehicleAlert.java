@@ -4,11 +4,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "vehicle_alerts")
+@Table(name = "sensor_alerts")
 public class VehicleAlert {
 
     @Id
@@ -25,7 +25,7 @@ public class VehicleAlert {
     private Double value;
 
     @Column(name = "timestamp")
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @Column(name = "latitude")
     private Double latitude;
@@ -33,13 +33,13 @@ public class VehicleAlert {
     @Column(name = "longitude")
     private Double longitude;
 
-    @Column(name = "icao_code")
-    private String icaoCode;
+    @Column(name = "tenant_code")
+    private String tenantCode;
 
     public VehicleAlert() {
     }
 
-    public VehicleAlert(UUID alertId, String type, String entityId, Double value, LocalDateTime timestamp, Double latitude, Double longitude) {
+    public VehicleAlert(UUID alertId, String type, String entityId, Double value, Instant timestamp, Double latitude, Double longitude) {
         this.alertId = alertId;
         this.type = type;
         this.entityId = entityId;
@@ -81,11 +81,11 @@ public class VehicleAlert {
         this.value = value;
     }
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -105,12 +105,12 @@ public class VehicleAlert {
         this.longitude = longitude;
     }
 
-    public String getIcaoCode() {
-        return icaoCode;
+    public String getTenantCode() {
+        return tenantCode;
     }
 
-    public void setIcaoCode(String icaoCode) {
-        this.icaoCode = icaoCode;
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
     }
 
     @Override

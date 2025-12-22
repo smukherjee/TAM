@@ -12,10 +12,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 @RestController
 public class IngestionController {
@@ -41,7 +44,7 @@ public class IngestionController {
     public void ingestVehicleData(@RequestBody List<Vehicle> vehicles) {
         log.info("Received {} vehicle records via HTTP ingestion", vehicles.size());
         for (Vehicle vehicle : vehicles) {
-            kafkaTemplate.send("vehicle-raw-json", vehicle.getVehicleNo(), vehicle);
+            kafkaTemplate.send("vehicle-raw-json", vehicle.getVehicleId(), vehicle);
         }
     }
 
@@ -51,54 +54,35 @@ public class IngestionController {
         for (TajSatsVehicleDto dto : dtos) {
             try {
                 Vehicle vehicle = new Vehicle();
-                vehicle.setVehicleNo(dto.getVehicleNo());
-                vehicle.setVehicleName(dto.getVehicleName());
-                vehicle.setType(dto.getVehicleType());
+                vehicle.setId(UUID.randomUUID());
+                vehicle.setVehicleId(dto.getVehicleNo());
+                // vehicle.setVehicleName(dto.getVehicleName()); // Removed
+                vehicle.setVehicleType(dto.getVehicleType());
                 
                 // Parse numeric fields
                 vehicle.setLatitude(parseDouble(dto.getLatitude()));
                 vehicle.setLongitude(parseDouble(dto.getLongitude()));
                 vehicle.setSpeed(parseDouble(dto.getSpeed()));
-                vehicle.setAngle(parseDouble(dto.getAngle()));
-                vehicle.setAltitude(0.0); // Default as not in source
                 
                 vehicle.setStatus(dto.getStatus());
-                vehicle.setCompany(dto.getCompany());
-                vehicle.setBranch(dto.getBranch());
-                vehicle.setTemperature(dto.getTemperature());
-                vehicle.setGps(dto.getGps());
-                vehicle.setDeviceModel(dto.getDeviceModel());
-                vehicle.setImeiNo(dto.getImeiNo());
-                vehicle.setOdometer(dto.getOdometer());
-                vehicle.setPoi(dto.getPoi());
-                vehicle.setIgn(dto.getIgn());
-                vehicle.setBatteryPercentage(dto.getBatteryPercentage());
-                vehicle.setExternalVolt(dto.getExternalVolt());
-                vehicle.setPower(dto.getPower());
-                vehicle.setLocation(dto.getLocation());
-                
-                // Set defaults for missing fields
-                vehicle.setDoor1("--");
-                vehicle.setDoor2("--");
-                vehicle.setDoor3("--");
-                vehicle.setDoor4("--");
-                vehicle.setSos("--");
-                vehicle.setImmobilizeState("--");
+                // vehicle.setCompany(dto.getCompany()); // Removed
+                // vehicle.setLocation(dto.getLocation()); // Removed
+                // vehicle.setIgn(dto.getIgn()); // Removed
                 
                 // Handle timestamps
-                vehicle.setGpsActualTime(dto.getGpsActualTime());
                 if (dto.getDatetime() != null) {
                     try {
-                        vehicle.setTimestamp(LocalDateTime.parse(dto.getDatetime(), TAJSATS_DATE_FORMATTER));
+                        LocalDateTime ldt = LocalDateTime.parse(dto.getDatetime(), TAJSATS_DATE_FORMATTER);
+                        vehicle.setTimestamp(ldt.atZone(ZoneId.systemDefault()).toInstant());
                     } catch (Exception e) {
                         log.warn("Failed to parse datetime '{}' for vehicle {}", dto.getDatetime(), dto.getVehicleNo());
-                        vehicle.setTimestamp(LocalDateTime.now());
+                        vehicle.setTimestamp(Instant.now());
                     }
                 } else {
-                    vehicle.setTimestamp(LocalDateTime.now());
+                    vehicle.setTimestamp(Instant.now());
                 }
 
-                kafkaTemplate.send("vehicle-raw-json", vehicle.getVehicleNo(), vehicle);
+                kafkaTemplate.send("vehicle-raw-json", vehicle.getVehicleId(), vehicle);
             } catch (Exception e) {
                 log.error("Error processing TAjSats record for vehicle {}: {}", dto.getVehicleNo(), e.getMessage());
             }
@@ -150,11 +134,6 @@ public class IngestionController {
 
     private String mapActivityType(String rawType) {
         if (rawType == null) return "Unknown";
-        
-        // Normalize: replace underscores with spaces and capitalize words
-        // Example: "push_back_vehicle" -> "Push Back Vehicle"
-        // The user provided specific mappings, but without a full map, we'll do a best-effort formatting
-        // or specific overrides if needed.
         
         switch (rawType.toLowerCase()) {
             case "push_back_vehicle": return "Push Back Tug";

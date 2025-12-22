@@ -25,6 +25,23 @@ class WebSocketService {
         this.client.activate();
     }
 
+    connect(onConnect?: () => void) {
+        if (onConnect) {
+            if (this.client.connected) {
+                onConnect();
+            } else {
+                const originalOnConnect = this.client.onConnect;
+                this.client.onConnect = (frame) => {
+                    if (originalOnConnect) originalOnConnect(frame);
+                    onConnect();
+                };
+            }
+        }
+        if (!this.client.active) {
+            this.client.activate();
+        }
+    }
+
     subscribe(topic: string, callback: (message: any) => void): { unsubscribe: () => void } {
         // Always track the subscription so we can re-subscribe on reconnect
         const subscriptionRecord = { 

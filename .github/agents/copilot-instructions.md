@@ -8,6 +8,11 @@ Auto-generated from all feature plans. Last updated: 2025-12-07
 - Java 17 (Spring Boot 3.x), TypeScript 5.x (React 18) (003-nifi-ksqldb-integration)
 - Java 17+ (Backend), TypeScript 5.x (Frontend) + Spring Boot 3.x, React 18+, TailwindCSS (001-turnaround-ui-overhaul)
 - PostgreSQL 16+ (TimescaleDB) (001-turnaround-ui-overhaul)
+- Java 21 (Virtual Threads enabled) + Spring Boot 3.x, Resilience4j (Circuit Breaker), Micrometer (Context Propagation) (004-platform-services-layer)
+- PostgreSQL 16+ (TimescaleDB), Redis (Cache), MinIO (Object Storage) (004-platform-services-layer)
+- Java 21 (Virtual Threads enabled) + Spring Boot 3.x, Resilience4j (Circuit Breaker), Micrometer (Context Propagation + Tracing), Spring Tx (Synchronization) (004-platform-services-layer)
+- Java 21 (Required for Virtual Threads/ScopedValue per FR-006) + Spring Boot 3.2+, Micrometer, Resilience4j, Kafka Clients, Redis Clients (Lettuce), MinIO Java SDK (004-platform-services-layer)
+- PostgreSQL 16 (TimescaleDB), Redis (Cache), MinIO (Object Storage) (004-platform-services-layer)
 
 - Java 17+ (Spring Boot 3.x), TypeScript (React 18+) + Spring Boot Web, Spring Kafka, React, Leaflet, react-leafle (001-mvp-core-tracking)
 
@@ -27,9 +32,9 @@ npm test && npm run lint
 Java 17+ (Spring Boot 3.x), TypeScript (React 18+): Follow standard conventions
 
 ## Recent Changes
-- 001-turnaround-ui-overhaul: Added Java 17+ (Backend), TypeScript 5.x (Frontend) + Spring Boot 3.x, React 18+, TailwindCSS
-- 003-nifi-ksqldb-integration: Added Java 17 (Spring Boot 3.x), TypeScript 5.x (React 18)
-- 001-mvp-core-tracking: Added Java 17+ (Spring Boot 3.x), TypeScript (React 18+) + Apache NiFi (Ingestion), Spring Boot Web, Spring Kafka, React, Leaflet, react-leafle
+- 004-platform-services-layer: Added Java 21 (Required for Virtual Threads/ScopedValue per FR-006) + Spring Boot 3.2+, Micrometer, Resilience4j, Kafka Clients, Redis Clients (Lettuce), MinIO Java SDK
+- 004-platform-services-layer: Added Java 21 (Virtual Threads enabled) + Spring Boot 3.x, Resilience4j (Circuit Breaker), Micrometer (Context Propagation + Tracing), Spring Tx (Synchronization)
+- 004-platform-services-layer: Added Java 21 (Virtual Threads enabled) + Spring Boot 3.x, Resilience4j (Circuit Breaker), Micrometer (Context Propagation)
 
 
 <!-- MANUAL ADDITIONS START -->

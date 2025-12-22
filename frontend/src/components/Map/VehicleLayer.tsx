@@ -1,13 +1,11 @@
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { Vehicle } from '../../services/vehicleService';
 
 // Fix for default marker icon (if not already handled globally)
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// Use a different icon color or style if possible, but for now standard marker
-// Maybe we can use a custom icon later.
 
 let DefaultIcon = L.icon({
     iconUrl: icon,
@@ -17,20 +15,6 @@ let DefaultIcon = L.icon({
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
-
-interface Vehicle {
-    vehicle_no: string;
-    vehicletype: string;
-    latitude: string;
-    longitude: string;
-    speed: string;
-    status: string;
-    vehicle_name: string;
-    company: string;
-    location: string;
-    gpsactualtime: string;
-    ign: string;
-}
 
 const busIcon = L.divIcon({
     html: '<div style="font-size: 24px; line-height: 1;">🚌</div>',
@@ -84,6 +68,7 @@ const getIconForType = (type: string) => {
     if (lowerType.includes('compactor')) return gseIcon;
     if (lowerType.includes('headunit')) return cateringIcon; // TajSats
     if (lowerType.includes('catering')) return cateringIcon;
+    if (lowerType.includes('tug')) return gseIcon;
     
     return carIcon; // Default
 };
@@ -98,7 +83,7 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
             {vehicles.map(vehicle => (
                 <Marker 
                     key={vehicle.vehicle_no} 
-                    position={[parseFloat(vehicle.latitude), parseFloat(vehicle.longitude)]} 
+                    position={[vehicle.latitude, vehicle.longitude]} 
                     icon={getIconForType(vehicle.vehicletype)}
                 >
                     <Popup>
@@ -107,7 +92,7 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
                             <p><strong>Type:</strong> {vehicle.vehicletype}</p>
                             <p><strong>Company:</strong> {vehicle.company}</p>
                             <p><strong>Status:</strong> {vehicle.status}</p>
-                            <p><strong>Speed:</strong> {vehicle.speed} km/h</p>
+                            <p><strong>Speed:</strong> {vehicle.speed.toFixed(1)} km/h</p>
                             <p><strong>Ignition:</strong> {vehicle.ign}</p>
                             <p><strong>Location:</strong> {vehicle.location}</p>
                             <p><strong>Last Update:</strong> {vehicle.gpsactualtime}</p>

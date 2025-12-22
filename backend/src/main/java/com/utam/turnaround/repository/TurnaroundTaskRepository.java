@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface TurnaroundTaskRepository extends JpaRepository<TurnaroundTask, UUID> {
-    List<TurnaroundTask> findByIcaoCode(String icaoCode);
+    List<TurnaroundTask> findByTenantCode(String tenantCode);
     List<TurnaroundTask> findBySessionId(UUID sessionId);
 }

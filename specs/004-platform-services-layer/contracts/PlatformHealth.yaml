@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: Platform Services Health API
+  version: 1.0.0
+  description: API for monitoring the health of platform services.
+paths:
+  /actuator/health/platform:
+    get:
+      summary: Get Platform Health
+      description: Returns the aggregated health status of all platform services (EventBus, Cache, Storage).
+      responses:
+        '200':
+          description: Service is UP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformHealth'
+        '503':
+          description: Service is DOWN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformHealth'
+components:
+  schemas:
+    PlatformHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, DEGRADED]
+        components:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ServiceHealth'
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, DEGRADED]
+        details:
+          type: object
+          additionalProperties:
+            type: object

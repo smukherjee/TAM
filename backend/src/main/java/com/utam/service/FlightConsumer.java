@@ -65,20 +65,25 @@ public class FlightConsumer {
             logger.info("Received {} flights from Kafka", flights.size());
 
             for (Flight flight : flights) {
-                if (flight.getCreationTimestamp() != null) {
-                    long latency = System.currentTimeMillis() - flight.getCreationTimestamp();
+                if (flight.getTimestamp() != null) {
+                    long latency = System.currentTimeMillis() - flight.getTimestamp().toEpochMilli();
                     latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
                 }
 
+                // Set default tenant if missing
+                if (flight.getTenantCode() == null) {
+                    flight.setTenantCode("VIDP");
+                }
+
                 // WebSocket Push
-                String icao = flight.getIcaoCode() != null ? flight.getIcaoCode() : "VIDP";
-                messagingTemplate.convertAndSend("/topic/flights/" + icao, flight);
+                String tenant = flight.getTenantCode();
+                messagingTemplate.convertAndSend("/topic/flights/" + tenant, flight);
 
                 // Redis Cache
                 if (flight.getCallsign() != null) {
-                    String redisKey = "flight:" + icao + ":" + flight.getCallsign();
+                    String redisKey = "flight:" + tenant + ":" + flight.getCallsign();
                     redisService.set(redisKey, flight, 300, java.util.concurrent.TimeUnit.SECONDS);
-                    redisService.addToSet("active_flights:" + icao, flight.getCallsign());
+                    redisService.addToSet("active_flights:" + tenant, flight.getCallsign());
                 }
             }
 
@@ -94,9 +99,9 @@ public class FlightConsumer {
             }
 
             // Archive to MinIO
-            String icao = !flights.isEmpty() && flights.get(0).getIcaoCode() != null ? flights.get(0).getIcaoCode() : "VIDP";
+            String tenant = !flights.isEmpty() && flights.get(0).getTenantCode() != null ? flights.get(0).getTenantCode() : "VIDP";
             String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
-            String filename = "archives/raw/" + icao + "/" + timestamp + "/flight_" + java.util.UUID.randomUUID() + ".json";
+            String filename = "archives/raw/" + tenant + "/" + timestamp + "/flight_" + java.util.UUID.randomUUID() + ".json";
             minioService.uploadJson(filename, message);
 
         } catch (Exception e) {

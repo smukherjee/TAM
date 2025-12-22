@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 
 @Repository
 public interface TurnaroundEventRepository extends JpaRepository<TurnaroundEvent, String> {
-    java.util.List<TurnaroundEvent> findByIcaoCodeOrderByEventTimeStampDesc(String icaoCode);
+    java.util.List<TurnaroundEvent> findByTenantCodeOrderByEventTimeStampDesc(String tenantCode);
 
     java.util.List<TurnaroundEvent> findAllByOrderByEventTimeStampDesc();
 
-    @Query("SELECT e FROM TurnaroundEvent e WHERE e.icaoCode = :icaoCode AND e.eventTimeStamp >= :since ORDER BY e.eventTimeStamp DESC")
-    java.util.List<TurnaroundEvent> findRecentByIcaoCode(@Param("icaoCode") String icaoCode,
+    @Query("SELECT e FROM TurnaroundEvent e WHERE e.tenantCode = :tenantCode AND e.eventTimeStamp >= :since ORDER BY e.eventTimeStamp DESC")
+    java.util.List<TurnaroundEvent> findRecentByTenantCode(@Param("tenantCode") String tenantCode,
             @Param("since") LocalDateTime since);
 
     @Query("SELECT e FROM TurnaroundEvent e WHERE e.eventTimeStamp >= :since ORDER BY e.eventTimeStamp DESC")

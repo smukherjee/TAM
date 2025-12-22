@@ -13,13 +13,19 @@ import java.util.UUID;
 @Table(name = "flights")
 public class Flight {
     @Id
-    @JsonProperty("LivePlotId")
-    @Column(name = "live_plot_id")
-    private UUID livePlotId;
+    @Column(name = "id")
+    private UUID id;
+
+    @Column(name = "tenant_code", nullable = false)
+    private String tenantCode;
+
+    @JsonProperty("FlightNumber")
+    @Column(name = "flight_number", nullable = false)
+    private String flightNumber;
 
     @JsonProperty("Time")
-    @Column(name = "time")
-    private Instant time;
+    @Column(name = "timestamp", nullable = false)
+    private Instant timestamp;
 
     @JsonProperty("CallSign")
     @Column(name = "callsign")
@@ -49,58 +55,21 @@ public class Flight {
     @Column(name = "status")
     private String status;
 
-    @JsonProperty("TrackId")
-    @Column(name = "track_id")
-    private String trackId;
+    @Column(name = "created_at")
+    private Instant createdAt;
 
-    @JsonProperty("ModeSId")
-    @Column(name = "mode_s_id")
-    private String modeSId;
-
-    @JsonProperty("FlightLevel")
-    @Column(name = "flight_level")
-    private Double flightLevel;
-
-    @JsonProperty("ROC")
-    @Column(name = "roc")
-    private Double roc;
-
-    @JsonProperty("SSR")
-    @Column(name = "ssr")
-    private String ssr;
-
-    @JsonProperty("SafetyAlert")
-    @Column(name = "safety_alert")
-    private Boolean safetyAlert;
-
-    @JsonProperty("SystemStatus")
-    @Column(name = "system_status")
-    private String systemStatus;
-
-    @JsonProperty("Spi")
-    @Column(name = "spi")
-    private Boolean spi;
-
-    @JsonProperty("UpdateType")
-    @Column(name = "update_type")
-    private String updateType;
-
-    @JsonProperty("icao_code")
-    @Column(name = "icao_code")
-    private String icaoCode;
-
-    @JsonProperty("creation_timestamp")
-    @jakarta.persistence.Transient
-    private Long creationTimestamp;
+    // Extra fields from old model removed to match DB schema
+    // If needed, add them to DB schema first
 
     public Flight() {
     }
 
-    public Flight(UUID livePlotId, Instant time, String callsign, Double latitude, Double longitude, Double speed,
-            Double heading, Double altitude, String status, String trackId, String modeSId, Double flightLevel,
-            Double roc, String ssr, Boolean safetyAlert, String systemStatus, Boolean spi, String updateType) {
-        this.livePlotId = livePlotId;
-        this.time = time;
+    public Flight(UUID id, String tenantCode, String flightNumber, Instant timestamp, String callsign, Double latitude, Double longitude, Double speed,
+            Double heading, Double altitude, String status) {
+        this.id = id;
+        this.tenantCode = tenantCode;
+        this.flightNumber = flightNumber;
+        this.timestamp = timestamp;
         this.callsign = callsign;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -108,31 +77,38 @@ public class Flight {
         this.heading = heading;
         this.altitude = altitude;
         this.status = status;
-        this.trackId = trackId;
-        this.modeSId = modeSId;
-        this.flightLevel = flightLevel;
-        this.roc = roc;
-        this.ssr = ssr;
-        this.safetyAlert = safetyAlert;
-        this.systemStatus = systemStatus;
-        this.spi = spi;
-        this.updateType = updateType;
     }
 
-    public UUID getLivePlotId() {
-        return livePlotId;
+    public UUID getId() {
+        return id;
     }
 
-    public void setLivePlotId(UUID livePlotId) {
-        this.livePlotId = livePlotId;
+    public void setId(UUID id) {
+        this.id = id;
     }
 
-    public Instant getTime() {
-        return time;
+    public String getTenantCode() {
+        return tenantCode;
     }
 
-    public void setTime(Instant time) {
-        this.time = time;
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
+    }
+
+    public String getFlightNumber() {
+        return flightNumber;
+    }
+
+    public void setFlightNumber(String flightNumber) {
+        this.flightNumber = flightNumber;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getCallsign() {
@@ -191,99 +167,21 @@ public class Flight {
         this.status = status;
     }
 
-    public String getTrackId() {
-        return trackId;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
-    public void setTrackId(String trackId) {
-        this.trackId = trackId;
-    }
-
-    public String getModeSId() {
-        return modeSId;
-    }
-
-    public void setModeSId(String modeSId) {
-        this.modeSId = modeSId;
-    }
-
-    public Double getFlightLevel() {
-        return flightLevel;
-    }
-
-    public void setFlightLevel(Double flightLevel) {
-        this.flightLevel = flightLevel;
-    }
-
-    public Double getRoc() {
-        return roc;
-    }
-
-    public void setRoc(Double roc) {
-        this.roc = roc;
-    }
-
-    public String getSsr() {
-        return ssr;
-    }
-
-    public void setSsr(String ssr) {
-        this.ssr = ssr;
-    }
-
-    public Boolean getSafetyAlert() {
-        return safetyAlert;
-    }
-
-    public void setSafetyAlert(Boolean safetyAlert) {
-        this.safetyAlert = safetyAlert;
-    }
-
-    public String getSystemStatus() {
-        return systemStatus;
-    }
-
-    public void setSystemStatus(String systemStatus) {
-        this.systemStatus = systemStatus;
-    }
-
-    public Boolean getSpi() {
-        return spi;
-    }
-
-    public void setSpi(Boolean spi) {
-        this.spi = spi;
-    }
-
-    public String getUpdateType() {
-        return updateType;
-    }
-
-    public void setUpdateType(String updateType) {
-        this.updateType = updateType;
-    }
-
-    public String getIcaoCode() {
-        return icaoCode;
-    }
-
-    public void setIcaoCode(String icaoCode) {
-        this.icaoCode = icaoCode;
-    }
-
-    public Long getCreationTimestamp() {
-        return creationTimestamp;
-    }
-
-    public void setCreationTimestamp(Long creationTimestamp) {
-        this.creationTimestamp = creationTimestamp;
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override
     public String toString() {
         return "Flight{" +
-                "livePlotId=" + livePlotId +
-                ", time=" + time +
+                "id=" + id +
+                ", tenantCode='" + tenantCode + '\'' +
+                ", flightNumber='" + flightNumber + '\'' +
+                ", timestamp=" + timestamp +
                 ", callsign='" + callsign + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
@@ -291,15 +189,6 @@ public class Flight {
                 ", heading=" + heading +
                 ", altitude=" + altitude +
                 ", status='" + status + '\'' +
-                ", trackId='" + trackId + '\'' +
-                ", modeSId='" + modeSId + '\'' +
-                ", flightLevel=" + flightLevel +
-                ", roc=" + roc +
-                ", ssr='" + ssr + '\'' +
-                ", safetyAlert=" + safetyAlert +
-                ", systemStatus='" + systemStatus + '\'' +
-                ", spi=" + spi +
-                ", updateType='" + updateType + '\'' +
                 '}';
     }
 }

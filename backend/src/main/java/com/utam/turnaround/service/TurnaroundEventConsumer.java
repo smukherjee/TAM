@@ -27,7 +27,7 @@ public class TurnaroundEventConsumer {
         try {
             Map<String, Object> event = objectMapper.readValue(message, Map.class);
             Map<String, Object> payload = (Map<String, Object>) event.get("payload");
-            String icaoCode = (String) event.get("icaoCode");
+            String tenantCode = (String) event.getOrDefault("tenantCode", "VIDP");
             
             String flightId = (String) payload.get("flightId");
             String standId = (String) payload.get("standId");
@@ -35,7 +35,7 @@ public class TurnaroundEventConsumer {
 
             TurnaroundSession session = new TurnaroundSession();
             session.setId(UUID.randomUUID());
-            session.setIcaoCode(icaoCode);
+            session.setTenantCode(tenantCode);
             session.setFlightId(flightId);
             session.setStandId(standId);
             session.setStatus(status);

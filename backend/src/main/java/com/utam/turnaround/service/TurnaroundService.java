@@ -21,32 +21,32 @@ public class TurnaroundService {
         this.sessionRepository = sessionRepository;
     }
 
-    public List<TurnaroundSessionSummaryDTO> getAllSessions(String icaoCode) {
-        List<TurnaroundSession> sessions = sessionRepository.findByIcaoCode(icaoCode);
+    public List<TurnaroundSessionSummaryDTO> getAllSessions(String tenantCode) {
+        List<TurnaroundSession> sessions = sessionRepository.findByTenantCode(tenantCode);
         return sessions.stream()
                 .map(this::convertToSummaryDTO)
                 .collect(Collectors.toList());
     }
 
-    public TurnaroundSessionDetailDTO getSessionDetails(UUID id, String icaoCode) {
-        TurnaroundSession session = sessionRepository.findByIdAndIcaoCode(id, icaoCode)
+    public TurnaroundSessionDetailDTO getSessionDetails(UUID id, String tenantCode) {
+        TurnaroundSession session = sessionRepository.findByIdAndTenantCode(id, tenantCode)
                 .orElseThrow(() -> new RuntimeException("Session not found or access denied"));
         return convertToDetailDTO(session);
     }
 
     @org.springframework.transaction.annotation.Transactional
     public void processFlightUpdate(com.utam.model.Flight flight) {
-        String icaoCode = flight.getIcaoCode() != null ? flight.getIcaoCode() : "VIDP";
+        String tenantCode = flight.getTenantCode() != null ? flight.getTenantCode() : "VIDP";
         String flightId = flight.getCallsign();
         
         if (flightId == null) return;
 
-        java.util.Optional<TurnaroundSession> existingSession = sessionRepository.findByFlightIdAndIcaoCode(flightId, icaoCode);
+        java.util.Optional<TurnaroundSession> existingSession = sessionRepository.findByFlightIdAndTenantCode(flightId, tenantCode);
         
         if (existingSession.isEmpty()) {
             TurnaroundSession session = new TurnaroundSession();
             session.setId(UUID.randomUUID());
-            session.setIcaoCode(icaoCode);
+            session.setTenantCode(tenantCode);
             session.setFlightId(flightId);
             session.setStatus("SCHEDULED");
             session.setCreatedAt(java.time.ZonedDateTime.now());
@@ -85,7 +85,7 @@ public class TurnaroundService {
         return new TurnaroundSessionDetailDTO(
                 session.getId(),
                 session.getFlightId(),
-                session.getIcaoCode(),
+                session.getTenantCode(),
                 session.getStandId(),
                 session.getStatus(),
                 session.getSirt(),

@@ -45,15 +45,16 @@ public class VehicleAlertService {
                     VehicleAlert alert = new VehicleAlert();
                     alert.setAlertId(UUID.randomUUID());
                     alert.setType("SPEED_VIOLATION");
-                    alert.setEntityId(vehicle.getVehicleNo());
+                    alert.setEntityId(vehicle.getVehicleId());
                     alert.setValue(vehicle.getSpeed());
-                    alert.setTimestamp(LocalDateTime.now());
+                    alert.setTimestamp(java.time.Instant.now());
                     alert.setLatitude(vehicle.getLatitude());
                     alert.setLongitude(vehicle.getLongitude());
-                    alert.setIcaoCode(vehicle.getIcaoCode());
+                    // Defaulting ICAO to VIDP as it's not in Vehicle entity
+                    alert.setTenantCode(vehicle.getTenantCode() != null ? vehicle.getTenantCode() : "VIDP");
 
                     alertRepository.save(alert);
-                    log.warn("Speed Violation Detected: {} at {} km/h", vehicle.getVehicleNo(), vehicle.getSpeed());
+                    log.warn("Speed Violation Detected: {} at {} km/h", vehicle.getVehicleId(), vehicle.getSpeed());
                 }
             }
         } catch (Exception e) {
@@ -61,9 +62,9 @@ public class VehicleAlertService {
         }
     }
 
-    public List<VehicleAlert> getAllAlerts(String icaoCode) {
-        if (icaoCode != null && !icaoCode.isEmpty()) {
-            return alertRepository.findTop10ByIcaoCodeOrderByTimestampDesc(icaoCode);
+    public List<VehicleAlert> getAllAlerts(String tenantCode) {
+        if (tenantCode != null && !tenantCode.isEmpty()) {
+            return alertRepository.findTop10ByTenantCodeOrderByTimestampDesc(tenantCode);
         }
         return alertRepository.findTop10ByOrderByTimestampDesc();
     }

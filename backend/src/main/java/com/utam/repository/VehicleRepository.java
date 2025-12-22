@@ -5,15 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface VehicleRepository extends JpaRepository<Vehicle, String> {
+public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
 
-    @Query(value = "SELECT DISTINCT ON (vehicle_no) * FROM vehicles WHERE timestamp > :since ORDER BY vehicle_no, timestamp DESC", nativeQuery = true)
-    List<Vehicle> findLatestVehicles(LocalDateTime since);
-
-    @Query(value = "SELECT DISTINCT ON (vehicle_no) * FROM vehicles WHERE timestamp > :since AND icao_code = :icaoCode ORDER BY vehicle_no, timestamp DESC", nativeQuery = true)
-    List<Vehicle> findLatestVehiclesByIcao(LocalDateTime since, String icaoCode);
+    @Query(value = "SELECT DISTINCT ON (vehicle_id) * FROM vehicles WHERE timestamp > :since ORDER BY vehicle_id, timestamp DESC", nativeQuery = true)
+    List<Vehicle> findLatestVehicles(Instant since);
 }

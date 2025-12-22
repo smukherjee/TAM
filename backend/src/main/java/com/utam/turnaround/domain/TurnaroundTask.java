@@ -10,8 +10,8 @@ public class TurnaroundTask {
     @Id
     private UUID id;
 
-    @Column(name = "icao_code", nullable = false)
-    private String icaoCode;
+    @Column(name = "tenant_code", nullable = false)
+    private String tenantCode;
 
     @ManyToOne
     @JoinColumn(name = "session_id")
@@ -40,8 +40,8 @@ public class TurnaroundTask {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public String getIcaoCode() { return icaoCode; }
-    public void setIcaoCode(String icaoCode) { this.icaoCode = icaoCode; }
+    public String getTenantCode() { return tenantCode; }
+    public void setTenantCode(String tenantCode) { this.tenantCode = tenantCode; }
 
     public TurnaroundSession getSession() { return session; }
     public void setSession(TurnaroundSession session) { this.session = session; }

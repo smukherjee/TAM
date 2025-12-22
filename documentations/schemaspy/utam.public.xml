@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="utam" schema="public" type="PostgreSQL - 16.11 (Ubuntu 16.11-1.pgdg22.04+1)">
+   <tables>
+      <table name="audit_logs" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="true" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="audit_logs_tenant_code_fkey" implied="false" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="user_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="audit_logs_user_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="action" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="resource_type" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="resource_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="details" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="ip_address" nullable="true" remarks="" size="45" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="timestamp" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="audit_logs_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_audit_tenant_time" unique="false">
+            <column ascending="true" name="tenant_code"/>
+            <column ascending="false" name="timestamp"/>
+         </index>
+      </table>
+      <table name="flights" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="false" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="flight_number" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="callsign" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="icao24" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="origin" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="destination" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="7" name="latitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="8" name="longitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="9" name="altitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="10" name="speed" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="11" name="heading" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="12" name="vertical_rate" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="13" name="on_ground" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="squawk" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="status" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="16" name="timestamp" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="17" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="timestamp" sequenceNumberInPK="2"/>
+         <index name="flights_pkey" unique="true">
+            <column ascending="true" name="id"/>
+            <column ascending="true" name="timestamp"/>
+         </index>
+         <index name="flights_timestamp_idx" unique="false">
+            <column ascending="false" name="timestamp"/>
+         </index>
+         <index name="idx_flights_flight_number" unique="false">
+            <column ascending="true" name="flight_number"/>
+         </index>
+         <index name="idx_flights_tenant" unique="false">
+            <column ascending="true" name="tenant_code"/>
+            <column ascending="false" name="timestamp"/>
+         </index>
+      </table>
+      <table name="flights_hourly" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" SELECT bucket,&#10;    tenant_code,&#10;    flight_count,&#10;    avg_altitude,&#10;    avg_speed,&#10;    unique_flights&#10;   FROM _timescaledb_internal._materialized_hypertable_5;">
+         <column autoUpdated="false" defaultValue="null" digits="6" id="0" name="bucket" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="true" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="flight_count" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="3" name="avg_altitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="4" name="avg_speed" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="unique_flights" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+      </table>
+      <table name="geography_columns" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" SELECT current_database() AS f_table_catalog,&#10;    n.nspname AS f_table_schema,&#10;    c.relname AS f_table_name,&#10;    a.attname AS f_geography_column,&#10;    postgis_typmod_dims(a.atttypmod) AS coord_dimension,&#10;    postgis_typmod_srid(a.atttypmod) AS srid,&#10;    postgis_typmod_type(a.atttypmod) AS type&#10;   FROM pg_class c,&#10;    pg_attribute a,&#10;    pg_type t,&#10;    pg_namespace n&#10;  WHERE ((t.typname = 'geography'::name) AND (a.attisdropped = false) AND (a.atttypid = t.oid) AND (a.attrelid = c.oid) AND (c.relnamespace = n.oid) AND (c.relkind = ANY (ARRAY['r'::&quot;char&quot;, 'v'::&quot;char&quot;, 'm'::&quot;char&quot;, 'f'::&quot;char&quot;, 'p'::&quot;char&quot;])) AND (NOT pg_is_other_temp_schema(c.relnamespace)) AND has_table_privilege(c.oid, 'SELECT'::text));">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="f_table_catalog" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="f_table_schema" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="f_table_name" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="f_geography_column" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="coord_dimension" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="srid" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="srid" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="spatial_ref_sys"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="type" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+      </table>
+      <table name="geometry_columns" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" SELECT (current_database())::character varying(256) AS f_table_catalog,&#10;    n.nspname AS f_table_schema,&#10;    c.relname AS f_table_name,&#10;    a.attname AS f_geometry_column,&#10;    COALESCE(postgis_typmod_dims(a.atttypmod), sn.ndims, 2) AS coord_dimension,&#10;    COALESCE(NULLIF(postgis_typmod_srid(a.atttypmod), 0), sr.srid, 0) AS srid,&#10;    (replace(replace(COALESCE(NULLIF(upper(postgis_typmod_type(a.atttypmod)), 'GEOMETRY'::text), st.type, 'GEOMETRY'::text), 'ZM'::text, ''::text), 'Z'::text, ''::text))::character varying(30) AS type&#10;   FROM ((((((pg_class c&#10;     JOIN pg_attribute a ON (((a.attrelid = c.oid) AND (NOT a.attisdropped))))&#10;     JOIN pg_namespace n ON ((c.relnamespace = n.oid)))&#10;     JOIN pg_type t ON ((a.atttypid = t.oid)))&#10;     LEFT JOIN ( SELECT s.connamespace,&#10;            s.conrelid,&#10;            s.conkey,&#10;            (regexp_match(s.consrc, 'geometrytype\(\w+\)\s*=\s*''(\w+)'''::text, 'i'::text))[1] AS type&#10;           FROM ( SELECT pg_constraint.connamespace,&#10;                    pg_constraint.conrelid,&#10;                    pg_constraint.conkey,&#10;                    pg_get_constraintdef(pg_constraint.oid) AS consrc&#10;                   FROM pg_constraint) s&#10;          WHERE (s.consrc ~* 'geometrytype\(\w+\)\s*=\s*''\w+'''::text)) st ON (((st.connamespace = n.oid) AND (st.conrelid = c.oid) AND (a.attnum = ANY (st.conkey)))))&#10;     LEFT JOIN ( SELECT s.connamespace,&#10;            s.conrelid,&#10;            s.conkey,&#10;            ((regexp_match(s.consrc, 'ndims\(\w+\)\s*=\s*(\d+)'::text, 'i'::text))[1])::integer AS ndims&#10;           FROM ( SELECT pg_constraint.connamespace,&#10;                    pg_constraint.conrelid,&#10;                    pg_constraint.conkey,&#10;                    pg_get_constraintdef(pg_constraint.oid) AS consrc&#10;                   FROM pg_constraint) s&#10;          WHERE (s.consrc ~* 'ndims\(\w+\)\s*=\s*\d+'::text)) sn ON (((sn.connamespace = n.oid) AND (sn.conrelid = c.oid) AND (a.attnum = ANY (sn.conkey)))))&#10;     LEFT JOIN ( SELECT s.connamespace,&#10;            s.conrelid,&#10;            s.conkey,&#10;            ((regexp_match(s.consrc, 'srid\(\w+\)\s*=\s*(\d+)'::text, 'i'::text))[1])::integer AS srid&#10;           FROM ( SELECT pg_constraint.connamespace,&#10;                    pg_constraint.conrelid,&#10;                    pg_constraint.conkey,&#10;                    pg_get_constraintdef(pg_constraint.oid) AS consrc&#10;                   FROM pg_constraint) s&#10;          WHERE (s.consrc ~* 'srid\(\w+\)\s*=\s*\d+'::text)) sr ON (((sr.connamespace = n.oid) AND (sr.conrelid = c.oid) AND (a.attnum = ANY (sr.conkey)))))&#10;  WHERE ((c.relkind = ANY (ARRAY['r'::&quot;char&quot;, 'v'::&quot;char&quot;, 'm'::&quot;char&quot;, 'f'::&quot;char&quot;, 'p'::&quot;char&quot;])) AND (NOT (c.relname = 'raster_columns'::name)) AND (t.typname = 'geometry'::name) AND (NOT pg_is_other_temp_schema(c.relnamespace)) AND has_table_privilege(c.oid, 'SELECT'::text));">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="f_table_catalog" nullable="true" remarks="" size="256" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="f_table_schema" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="f_table_name" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="f_geometry_column" nullable="true" remarks="" size="2147483647" type="name" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="coord_dimension" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="srid" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="srid" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="spatial_ref_sys"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="type" nullable="true" remarks="" size="30" type="varchar" typeCode="12"/>
+      </table>
+      <table name="platform_settings" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="key" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="value" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="3" name="updated_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="key" sequenceNumberInPK="1"/>
+         <index name="platform_settings_pkey" unique="true">
+            <column ascending="true" name="key"/>
+         </index>
+      </table>
+      <table name="sensor_alerts" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="alert_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="true" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="type" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="entity_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="4" name="value" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="5" name="latitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="6" name="longitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="timestamp" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="alert_id" sequenceNumberInPK="1"/>
+         <primaryKey column="timestamp" sequenceNumberInPK="2"/>
+         <index name="sensor_alerts_pkey" unique="true">
+            <column ascending="true" name="alert_id"/>
+            <column ascending="true" name="timestamp"/>
+         </index>
+         <index name="idx_sensor_alerts_tenant" unique="false">
+            <column ascending="true" name="tenant_code"/>
+            <column ascending="false" name="timestamp"/>
+         </index>
+         <index name="idx_sensor_alerts_type" unique="false">
+            <column ascending="true" name="type"/>
+         </index>
+         <index name="sensor_alerts_timestamp_idx" unique="false">
+            <column ascending="false" name="timestamp"/>
+         </index>
+      </table>
+      <table name="spatial_ref_sys" numRows="8500" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="srid" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <child column="srid" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="geography_columns"/>
+            <child column="srid" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="geometry_columns"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="auth_name" nullable="true" remarks="" size="256" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="auth_srid" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="srtext" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="proj4text" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <primaryKey column="srid" sequenceNumberInPK="1"/>
+         <index name="spatial_ref_sys_pkey" unique="true">
+            <column ascending="true" name="srid"/>
+         </index>
+         <checkConstraint constraint="(((srid &gt; 0) AND (srid &lt;= 998999)))" name="spatial_ref_sys_srid_check"/>
+      </table>
+      <table name="system_metrics" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="6" id="0" name="timestamp" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="service_name" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="metric_name" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="3" name="value" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="tags" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <index name="idx_metrics_service" unique="false">
+            <column ascending="true" name="service_name"/>
+            <column ascending="false" name="timestamp"/>
+         </index>
+         <index name="system_metrics_timestamp_idx" unique="false">
+            <column ascending="false" name="timestamp"/>
+         </index>
+      </table>
+      <table name="tenants" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="code" nullable="false" remarks="" size="4" type="varchar" typeCode="12">
+            <child column="tenant_code" foreignKey="audit_logs_tenant_code_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_logs"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="flights"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="flights_hourly"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="sensor_alerts"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="turnaround_alerts"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="turnaround_events"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="turnaround_sessions"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="turnaround_tasks"/>
+            <child column="tenant_code" foreignKey="users_tenant_code_fkey" implied="false" onDeleteCascade="false" schema="public" table="users"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="vehicle_speed_violations_hourly"/>
+            <child column="tenant_code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="vehicles"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'UTC'::character varying" digits="0" id="2" name="timezone" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'{}'::jsonb" digits="0" id="3" name="config" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="4" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="code" sequenceNumberInPK="1"/>
+         <index name="tenants_pkey" unique="true">
+            <column ascending="true" name="code"/>
+         </index>
+      </table>
+      <table name="turnaround_alerts" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="false" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="session_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="turnaround_alerts_session_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="turnaround_sessions"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="severity" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="message" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="timestamp" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="7" name="is_active" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="turnaround_alerts_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_turnaround_alerts_session" unique="false">
+            <column ascending="true" name="session_id"/>
+         </index>
+      </table>
+      <table name="turnaround_events" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="event_unique_id" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="true" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="camera_id" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="camera_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="activity_type" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="event_type" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="event_time_stamp" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="stand" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="event_unique_id" sequenceNumberInPK="1"/>
+         <primaryKey column="event_time_stamp" sequenceNumberInPK="2"/>
+         <index name="turnaround_events_pkey" unique="true">
+            <column ascending="true" name="event_unique_id"/>
+            <column ascending="true" name="event_time_stamp"/>
+         </index>
+         <index name="idx_turnaround_stand" unique="false">
+            <column ascending="true" name="stand"/>
+         </index>
+         <index name="idx_turnaround_tenant" unique="false">
+            <column ascending="true" name="tenant_code"/>
+         </index>
+         <index name="turnaround_events_event_time_stamp_idx" unique="false">
+            <column ascending="false" name="event_time_stamp"/>
+         </index>
+      </table>
+      <table name="turnaround_sessions" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="session_id" foreignKey="turnaround_alerts_session_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="turnaround_alerts"/>
+            <child column="session_id" foreignKey="turnaround_tasks_session_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="turnaround_tasks"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="false" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="flight_id" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="stand_id" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="sirt" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="eibt" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="aibt" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="tobt" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="8" name="tsat" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="9" name="aobt" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="11" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="12" name="updated_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="turnaround_sessions_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_turnaround_sessions_status" unique="false">
+            <column ascending="true" name="status"/>
+         </index>
+         <index name="idx_turnaround_sessions_tenant" unique="false">
+            <column ascending="true" name="tenant_code"/>
+         </index>
+      </table>
+      <table name="turnaround_tasks" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="false" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="session_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="turnaround_tasks_session_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="turnaround_sessions"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="task_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="planned_start" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="planned_end" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="actual_start" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="8" name="actual_end" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="turnaround_tasks_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_turnaround_tasks_session" unique="false">
+            <column ascending="true" name="session_id"/>
+         </index>
+      </table>
+      <table name="users" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="user_id" foreignKey="audit_logs_user_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="audit_logs"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="username" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="password" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="role" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="tenant_code" nullable="true" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="users_tenant_code_fkey" implied="false" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="5" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="users_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="users_username_key" unique="true">
+            <column ascending="true" name="username"/>
+         </index>
+      </table>
+      <table name="vehicle_speed_violations_hourly" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" SELECT bucket,&#10;    tenant_code,&#10;    vehicle_id,&#10;    violation_count,&#10;    max_speed,&#10;    avg_speed&#10;   FROM _timescaledb_internal._materialized_hypertable_6;">
+         <column autoUpdated="false" defaultValue="null" digits="6" id="0" name="bucket" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="true" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="vehicle_id" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="violation_count" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="4" name="max_speed" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="5" name="avg_speed" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+      </table>
+      <table name="vehicles" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="uuid_generate_v4()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_code" nullable="false" remarks="" size="4" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="public" table="tenants"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="vehicle_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="vehicle_type" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="vehicle_name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="5" name="latitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="6" name="longitude" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="7" name="speed" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="8" name="heading" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="zone" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="status" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="11" name="timestamp" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="12" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="timestamp" sequenceNumberInPK="2"/>
+         <index name="vehicles_pkey" unique="true">
+            <column ascending="true" name="id"/>
+            <column ascending="true" name="timestamp"/>
+         </index>
+         <index name="idx_vehicles_tenant" unique="false">
+            <column ascending="true" name="tenant_code"/>
+            <column ascending="false" name="timestamp"/>
+         </index>
+         <index name="idx_vehicles_vehicle_id" unique="false">
+            <column ascending="true" name="vehicle_id"/>
+         </index>
+         <index name="vehicles_timestamp_idx" unique="false">
+            <column ascending="false" name="timestamp"/>
+         </index>
+      </table>
+   </tables>
+</database>

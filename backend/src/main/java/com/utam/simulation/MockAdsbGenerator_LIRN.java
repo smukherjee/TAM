@@ -45,10 +45,11 @@ public class MockAdsbGenerator_LIRN {
         String callsign = callsigns.get(random.nextInt(callsigns.size()));
 
         Flight flight = new Flight();
-        flight.setLivePlotId(UUID.randomUUID());
-        flight.setTime(Instant.now());
+        flight.setId(UUID.randomUUID());
+        flight.setTimestamp(Instant.now());
         flight.setCallsign(callsign);
-        flight.setIcaoCode(icao);
+        flight.setTenantCode(icao);
+        flight.setFlightNumber(callsign);
 
         // Random lat/lon around LIRN (Naples)
         double baseLat = 40.8844;
@@ -63,16 +64,16 @@ public class MockAdsbGenerator_LIRN {
         flight.setStatus("APPROACHING");
 
         // New fields per JSON signature
-        flight.setTrackId("TRK" + Math.abs(callsign.hashCode() % 1000));
-        flight.setModeSId(Integer.toHexString(callsign.hashCode()).toUpperCase());
-        flight.setFlightLevel(flight.getAltitude() / 100.0);
-        flight.setRoc(random.nextDouble() * 1000 - 500);
-        flight.setSsr(String.format("%04d", random.nextInt(10000)));
-        flight.setSafetyAlert(false);
-        flight.setSystemStatus("OK");
-        flight.setSpi(false);
-        flight.setUpdateType("TRACK_UPDATE");
-        flight.setCreationTimestamp(System.currentTimeMillis());
+        // flight.setTrackId("TRK" + Math.abs(callsign.hashCode() % 1000)); // Removed
+        // flight.setModeSId(Integer.toHexString(callsign.hashCode()).toUpperCase()); // Removed
+        // flight.setFlightLevel(flight.getAltitude() / 100.0); // Removed
+        // flight.setRoc(random.nextDouble() * 1000 - 500); // Removed
+        // flight.setSsr(String.format("%04d", random.nextInt(10000))); // Removed
+        // flight.setSafetyAlert(false); // Removed
+        // flight.setSystemStatus("OK"); // Removed
+        // flight.setSpi(false); // Removed
+        // flight.setUpdateType("TRACK_UPDATE"); // Removed
+        // flight.setCreationTimestamp(System.currentTimeMillis()); // Removed
 
         log.info("Generated LIRN flight data: {}", flight);
 

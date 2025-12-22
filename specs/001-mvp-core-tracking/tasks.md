@@ -73,15 +73,15 @@ description: "Task list for Core MVP Tracking & Alerting"
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create Vehicle entity in `backend/src/main/java/com/utam/model/Vehicle.java`
-- [ ] T021 [P] [US2] Create VehicleRepository in `backend/src/main/java/com/utam/repository/VehicleRepository.java`
-- [ ] T022 [US2] Implement VehicleConsumer to ingest from 'vehicle-raw-json' in `backend/src/main/java/com/utam/service/VehicleConsumer.java`
-- [ ] T023 [US2] Implement VehicleService to save data in `backend/src/main/java/com/utam/service/VehicleService.java`
-- [ ] T024 [US2] Create VehicleController with GET /api/vehicles in `backend/src/main/java/com/utam/controller/VehicleController.java`
-- [ ] T025 [US2] Create Mock TelIT Generator in `backend/src/main/java/com/utam/simulation/MockTelitGenerator.java`
+- [x] T020 [P] [US2] Create Vehicle entity in `backend/src/main/java/com/utam/model/Vehicle.java`
+- [x] T021 [P] [US2] Create VehicleRepository in `backend/src/main/java/com/utam/repository/VehicleRepository.java`
+- [x] T022 [US2] Implement VehicleConsumer to ingest from 'vehicle-raw-json' in `backend/src/main/java/com/utam/service/VehicleConsumer.java`
+- [x] T023 [US2] Implement VehicleService to save data in `backend/src/main/java/com/utam/service/VehicleService.java`
+- [x] T024 [US2] Create VehicleController with GET /api/vehicles in `backend/src/main/java/com/utam/controller/VehicleController.java`
+- [x] T025 [US2] Create Mock TelIT Generator in `backend/src/main/java/com/utam/simulation/MockTelitGenerator.java`
 - [ ] T026 [US2] Create NiFi flow configuration for TelIT in `infrastructure/nifi/flow_telit.json`
-- [ ] T027 [P] [US2] Implement VehicleService client in `frontend/src/services/vehicleService.ts`
-- [ ] T028 [US2] Update Map component to render Vehicle icons in `frontend/src/components/Map/VehicleLayer.tsx`
+- [x] T027 [P] [US2] Implement VehicleService client in `frontend/src/services/vehicleService.ts`
+- [x] T028 [US2] Update Map component to render Vehicle icons in `frontend/src/components/Map/VehicleLayer.tsx`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 

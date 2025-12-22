@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository("TurnaroundAlertRepository")
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
-    List<Alert> findByIcaoCode(String icaoCode);
+    List<Alert> findByTenantCode(String tenantCode);
     List<Alert> findBySessionId(UUID sessionId);
-    List<Alert> findByIcaoCodeAndIsActiveTrue(String icaoCode);
+    List<Alert> findByTenantCodeAndIsActiveTrue(String tenantCode);
 }

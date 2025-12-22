@@ -43,14 +43,14 @@ public class CVEventConsumer {
             String flightId = (String) event.get("flight_id");
             String eventType = (String) event.get("event_type"); // e.g., "bridge_connect", "baggage_start"
             String timestampStr = (String) event.get("timestamp");
-            String icaoCode = (String) event.getOrDefault("icao_code", "VIDP");
+            String tenantCode = (String) event.getOrDefault("tenant_code", "VIDP");
 
             if (flightId == null) {
                 logger.warn("CV event missing flight_id: {}", message);
                 return;
             }
 
-            Optional<TurnaroundSession> sessionOpt = sessionRepository.findByFlightIdAndIcaoCode(flightId, icaoCode);
+            Optional<TurnaroundSession> sessionOpt = sessionRepository.findByFlightIdAndTenantCode(flightId, tenantCode);
             if (sessionOpt.isEmpty()) {
                 logger.warn("No active session found for flight {}", flightId);
                 return;
@@ -107,7 +107,7 @@ public class CVEventConsumer {
             task = new TurnaroundTask();
             task.setId(UUID.randomUUID());
             task.setSession(session);
-            task.setIcaoCode(session.getIcaoCode()); // Set ICAO code
+            task.setTenantCode(session.getTenantCode()); // Set Tenant code
             task.setTaskType(taskType);
             task.setStatus("IN_PROGRESS");
             task.setPlannedStart(session.getSirt() != null ? session.getSirt() : ZonedDateTime.now()); 

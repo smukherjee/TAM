@@ -1,13 +1,14 @@
 package com.utam.model;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String username;
@@ -18,14 +19,14 @@ public class User {
     @Column(nullable = false)
     private String role;
 
-    @Column(name = "icao_code")
-    private String icaoCode;
+    @Column(name = "tenant_code")
+    private String tenantCode;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -53,11 +54,11 @@ public class User {
         this.role = role;
     }
 
-    public String getIcaoCode() {
-        return icaoCode;
+    public String getTenantCode() {
+        return tenantCode;
     }
 
-    public void setIcaoCode(String icaoCode) {
-        this.icaoCode = icaoCode;
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
     }
 }

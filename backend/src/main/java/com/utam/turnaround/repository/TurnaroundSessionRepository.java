@@ -9,8 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface TurnaroundSessionRepository extends JpaRepository<TurnaroundSession, UUID> {
-    List<TurnaroundSession> findByIcaoCode(String icaoCode);
-    List<TurnaroundSession> findByIcaoCodeAndStatus(String icaoCode, String status);
-    Optional<TurnaroundSession> findByIdAndIcaoCode(UUID id, String icaoCode);
-    Optional<TurnaroundSession> findByFlightIdAndIcaoCode(String flightId, String icaoCode);
+    List<TurnaroundSession> findByTenantCode(String tenantCode);
+    List<TurnaroundSession> findByTenantCodeAndStatus(String tenantCode, String status);
+    Optional<TurnaroundSession> findByIdAndTenantCode(UUID id, String tenantCode);
+    Optional<TurnaroundSession> findByFlightIdAndTenantCode(String flightId, String tenantCode);
 }

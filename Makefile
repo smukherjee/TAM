@@ -10,6 +10,7 @@ help:
 	@echo ""
 	@echo "Infrastructure:"
 	@echo "  make dev-up       - Start all dev services (Redpanda, NiFi, TimescaleDB, etc.)"
+	@echo "  make setup-nifi   - Configure NiFi flows (Run after NiFi is ready)"
 	@echo "  make dev-down     - Stop all services"
 	@echo "  make dev-logs     - Tail logs from all services"
 	@echo "  make dev-ps       - Show running containers"
@@ -47,6 +48,10 @@ dev-up:
 
 dev-up-build:
 	docker-compose -f docker-compose.dev.yml up -d --build
+
+setup-nifi:
+	@echo "Configuring NiFi flows..."
+	@bash infrastructure/nifi/setup-nifi.sh
 
 dev-down:
 	docker-compose -f docker-compose.dev.yml down
@@ -98,6 +103,21 @@ clean:
 reset:
 	docker-compose -f docker-compose.dev.yml down -v
 	@echo "All containers stopped and volumes deleted"
+
+# Reset only the database (preserves other services)
+db-reset:
+	docker-compose -f docker-compose.dev.yml stop timescaledb
+	docker-compose -f docker-compose.dev.yml rm -f -v timescaledb
+	docker volume rm tam-core-refactor_timescaledb_data || docker volume rm tam_timescaledb_data || true
+	docker-compose -f docker-compose.dev.yml up -d timescaledb
+	@echo "Database reset and re-initializing..."
+
+# Run SchemaSpy to generate DB documentation
+schema-audit:
+	@echo "Generating Database Schema Documentation..."
+	mkdir -p documentations/schemaspy
+	docker-compose -f docker-compose.dev.yml --profile tools up schemaspy
+	@echo "Documentation generated at: documentations/schemaspy/index.html"
 
 # Show Kafka topics
 topics:

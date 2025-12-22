@@ -11,8 +11,8 @@ public class TurnaroundSession {
     @Id
     private UUID id;
 
-    @Column(name = "icao_code", nullable = false)
-    private String icaoCode;
+    @Column(name = "tenant_code", nullable = false)
+    private String tenantCode;
 
     @Column(name = "flight_id", nullable = false)
     private String flightId;
@@ -47,8 +47,8 @@ public class TurnaroundSession {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public String getIcaoCode() { return icaoCode; }
-    public void setIcaoCode(String icaoCode) { this.icaoCode = icaoCode; }
+    public String getTenantCode() { return tenantCode; }
+    public void setTenantCode(String tenantCode) { this.tenantCode = tenantCode; }
 
     public String getFlightId() { return flightId; }
     public void setFlightId(String flightId) { this.flightId = flightId; }

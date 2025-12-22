@@ -12,9 +12,9 @@ import java.util.UUID;
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, UUID> {
 
-    @Query(value = "SELECT DISTINCT ON (callsign) * FROM flights WHERE time > :since ORDER BY callsign, time DESC", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT ON (callsign) * FROM flights WHERE timestamp > :since ORDER BY callsign, timestamp DESC", nativeQuery = true)
     List<Flight> findLatestFlights(Instant since);
 
-    @Query(value = "SELECT DISTINCT ON (callsign) * FROM flights WHERE time > :since AND icao_code = :icaoCode ORDER BY callsign, time DESC", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT ON (callsign) * FROM flights WHERE timestamp > :since AND tenant_code = :icaoCode ORDER BY callsign, timestamp DESC", nativeQuery = true)
     List<Flight> findLatestFlightsByIcao(Instant since, String icaoCode);
 }

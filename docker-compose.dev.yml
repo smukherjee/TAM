@@ -8,7 +8,6 @@ services:
   # ============================================
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.2.4
-    container_name: tam-redpanda
     command:
       - redpanda start
       - --smp 1
@@ -37,7 +36,6 @@ services:
   # Redpanda Console (UI for Kafka topics)
   redpanda-console:
     image: docker.redpanda.com/redpandadata/console:v2.7.2
-    container_name: tam-redpanda-console
     depends_on:
       redpanda:
         condition: service_healthy
@@ -53,7 +51,6 @@ services:
   # ============================================
   nifi:
     image: apache/nifi:1.25.0
-    container_name: tam-nifi
     ports:
       - "8091:8080"       # NiFi Web UI
       - "8092:8092"       # ListenHTTP for ADSB data
@@ -83,7 +80,6 @@ services:
   # ============================================
   ksqldb-server:
     image: confluentinc/ksqldb-server:0.29.0
-    container_name: tam-ksqldb
     depends_on:
       redpanda:
         condition: service_healthy
@@ -99,7 +95,6 @@ services:
 
   ksqldb-cli:
     image: confluentinc/ksqldb-cli:0.29.0
-    container_name: tam-ksqldb-cli
     depends_on:
       - ksqldb-server
     entrypoint: /bin/sh
@@ -110,8 +105,7 @@ services:
   # DATA STORAGE - TimescaleDB (PostgreSQL)
   # ============================================
   timescaledb:
-    image: timescale/timescaledb:latest-pg16
-    container_name: tam-timescaledb
+    image: timescale/timescaledb-ha:pg16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -132,7 +126,6 @@ services:
   # ============================================
   minio:
     image: minio/minio:latest
-    container_name: tam-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -151,7 +144,6 @@ services:
   # Create default buckets on startup
   minio-init:
     image: minio/mc
-    container_name: tam-minio-init
     depends_on:
       minio:
         condition: service_healthy
@@ -169,7 +161,6 @@ services:
   # ============================================
   redis:
     image: redis:7-alpine
-    container_name: tam-redis
     ports:
       - "6379:6379"
     volumes:
@@ -185,7 +176,6 @@ services:
   # ============================================
   backend:
     build: ./backend
-    container_name: tam-backend
     ports:
       - "8080:8080"
     environment:
@@ -218,7 +208,6 @@ services:
   # ============================================
   frontend:
     build: ./frontend
-    container_name: tam-frontend
     ports:
       - "3000:80"
     depends_on:
@@ -231,7 +220,6 @@ services:
   # ============================================
   prometheus:
     image: prom/prometheus:v2.48.0
-    container_name: tam-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -247,7 +235,6 @@ services:
   # ============================================
   grafana:
     image: grafana/grafana:10.2.2
-    container_name: tam-grafana
     ports:
       - "3001:3000"
     environment:
@@ -268,7 +255,6 @@ services:
   # ============================================
   loki:
     image: grafana/loki:2.9.2
-    container_name: tam-loki
     ports:
       - "3100:3100"
     volumes:
@@ -280,7 +266,6 @@ services:
   # ============================================
   superset:
     image: apache/superset:3.0.0
-    container_name: tam-superset
     ports:
       - "8089:8088"
     environment:
@@ -299,6 +284,35 @@ services:
       superset init &&
       superset run -h 0.0.0.0 -p 8088
       "
+
+  # ============================================
+  # DOCUMENTATION - SchemaSpy
+  # ============================================
+  schemaspy:
+    image: schemaspy/schemaspy:latest
+    profiles: ["tools"] # Only run when explicitly requested
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    command:
+      - -t
+      - pgsql
+      - -host
+      - timescaledb
+      - -port
+      - "5432"
+      - -db
+      - utam
+      - -u
+      - postgres
+      - -p
+      - password
+      - -s
+      - public
+      - -imageformat
+      - svg
+    volumes:
+      - ./documentations/schemaspy:/output
 
 # ============================================
 # VOLUMES

@@ -1,0 +1,13 @@
+system_metrics
+platform_settings
+turnaround_tasks
+turnaround_alerts
+audit_logs
+vehicles
+turnaround_events
+sensor_alerts
+flights
+users
+turnaround_sessions
+spatial_ref_sys
+tenants

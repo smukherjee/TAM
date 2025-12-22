@@ -28,6 +28,7 @@ SELECT create_hypertable('flights', 'time', if_not_exists => TRUE);
 
 -- Vehicles Table
 CREATE TABLE IF NOT EXISTS vehicles (
+    id UUID,
     gpsactualtime TIMESTAMPTZ NOT NULL,
     vehicle_no VARCHAR(255),
     vehicletype VARCHAR(255),

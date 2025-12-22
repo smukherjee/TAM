@@ -21,7 +21,7 @@ public class TurnaroundRuleEngine {
         if ("ON_BLOCK".equals(session.getStatus())) {
             Alert alert = new Alert();
             alert.setId(UUID.randomUUID());
-            alert.setIcaoCode(session.getIcaoCode());
+            alert.setTenantCode(session.getTenantCode());
             alert.setSession(session);
             alert.setSeverity("MEDIUM");
             alert.setType("PROCESS_DELAY");

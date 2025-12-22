@@ -10,10 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class VehicleService {
@@ -62,35 +64,47 @@ public class VehicleService {
             }
 
             for (Vehicle vehicle : vehicles) {
+                // Ensure ID is generated if missing
+                if (vehicle.getId() == null) {
+                    vehicle.setId(UUID.randomUUID());
+                }
+
                 // Ensure timestamp is set if missing
                 if (vehicle.getTimestamp() == null) {
-                    vehicle.setTimestamp(LocalDateTime.now());
+                    vehicle.setTimestamp(Instant.now());
                 }
 
-                if (vehicle.getCreationTimestamp() != null) {
-                    long latency = System.currentTimeMillis() - vehicle.getCreationTimestamp();
-                    latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
+                // Set default tenant if missing
+                if (vehicle.getTenantCode() == null) {
+                    vehicle.setTenantCode("VIDP");
                 }
 
-                // WebSocket Push
-                String icao = vehicle.getIcaoCode() != null ? vehicle.getIcaoCode() : "VIDP";
-                messagingTemplate.convertAndSend("/topic/vehicles/" + icao, vehicle);
+                // Latency calculation
+                long latency = System.currentTimeMillis() - vehicle.getTimestamp().toEpochMilli();
+                latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
+
+                // WebSocket Push - Defaulting ICAO to VIDP
+                String tenant = vehicle.getTenantCode() != null ? vehicle.getTenantCode() : "VIDP"; 
+                messagingTemplate.convertAndSend("/topic/vehicles/" + tenant, vehicle);
 
                 // Redis Cache
-                if (vehicle.getVehicleNo() != null) {
-                    String redisKey = "vehicle:" + icao + ":" + vehicle.getVehicleNo();
+                if (vehicle.getVehicleId() != null) {
+                    String redisKey = "vehicle:" + tenant + ":" + vehicle.getVehicleId();
                     redisService.set(redisKey, vehicle, 300, java.util.concurrent.TimeUnit.SECONDS);
-                    redisService.addToSet("active_vehicles:" + icao, vehicle.getVehicleNo());
+                    redisService.addToSet("active_vehicles:" + tenant, vehicle.getVehicleId());
                 }
 
-                logger.info("Consumed vehicle from Kafka: {}", vehicle.getVehicleNo());
+                logger.info("Consumed vehicle from Kafka: {}", vehicle.getVehicleId());
                 vehicleRepository.save(vehicle);
             }
 
             // Archive to MinIO
-            String icao = !vehicles.isEmpty() && vehicles.get(0).getIcaoCode() != null ? vehicles.get(0).getIcaoCode() : "VIDP";
-            String timestamp = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
-            String filename = "archives/raw/" + icao + "/" + timestamp + "/vehicle_" + java.util.UUID.randomUUID() + ".json";
+            String tenant = "VIDP";
+            if (!vehicles.isEmpty() && vehicles.get(0).getTenantCode() != null) {
+                tenant = vehicles.get(0).getTenantCode();
+            }
+            String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
+            String filename = "archives/raw/" + tenant + "/" + timestamp + "/vehicle_" + UUID.randomUUID() + ".json";
             minioService.uploadJson(filename, message);
 
         } catch (Exception e) {
@@ -117,10 +131,7 @@ public class VehicleService {
         }
 
         // Fallback to DB
-        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
-        if (icaoCode != null && !icaoCode.isEmpty()) {
-            return vehicleRepository.findLatestVehiclesByIcao(fiveMinutesAgo, icaoCode);
-        }
+        Instant fiveMinutesAgo = Instant.now().minus(5, ChronoUnit.MINUTES);
         return vehicleRepository.findLatestVehicles(fiveMinutesAgo);
     }
 }

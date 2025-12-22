@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Repository
 public interface VehicleAlertRepository extends JpaRepository<VehicleAlert, UUID> {
-    List<VehicleAlert> findTop10ByIcaoCodeOrderByTimestampDesc(String icaoCode);
+    List<VehicleAlert> findTop10ByTenantCodeOrderByTimestampDesc(String tenantCode);
 
     List<VehicleAlert> findTop10ByOrderByTimestampDesc();
 }

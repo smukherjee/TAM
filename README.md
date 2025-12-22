@@ -20,7 +20,24 @@ UTAM is a real-time tracking system for flights and ground vehicles, featuring s
 
 ## Setup & Run
 
-You can run the application in two ways: **Full Docker Deployment** (easiest) or **Local Development**.
+For detailed instructions, please refer to the [SETUP_GUIDE.md](SETUP_GUIDE.md).
+
+### Quick Start
+
+1.  **Start Infrastructure**:
+    ```bash
+    make dev-up
+    ```
+
+2.  **Configure NiFi** (Wait ~60s for NiFi to start first):
+    ```bash
+    make setup-nifi
+    ```
+
+3.  **Access Services**:
+    - **Frontend**: [http://localhost:3000](http://localhost:3000)
+    - **Backend API**: [http://localhost:8080](http://localhost:8080)
+    - **NiFi UI**: [http://localhost:8091/nifi](http://localhost:8091/nifi)
 
 ### Option 1: Full Docker Deployment
 

@@ -1,0 +1,4 @@
+com.tam.platform.config.PlatformContextAutoConfiguration
+com.tam.platform.event.EventBusAutoConfiguration
+com.tam.platform.storage.StorageAutoConfiguration
+com.tam.platform.config.PlatformServicesAutoConfiguration
