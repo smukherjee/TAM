@@ -3,6 +3,7 @@ package com.utam.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.model.Flight;
+import com.utam.turnaround.service.TurnaroundService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -23,18 +24,21 @@ public class FlightConsumer {
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
     private final RedisService redisService;
     private final MinioService minioService;
+    private final TurnaroundService turnaroundService;
 
     public FlightConsumer(FlightService flightService, ObjectMapper objectMapper,
             io.micrometer.core.instrument.MeterRegistry registry,
             org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate,
             RedisService redisService,
-            MinioService minioService) {
+            MinioService minioService,
+            TurnaroundService turnaroundService) {
         this.flightService = flightService;
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.messagingTemplate = messagingTemplate;
         this.redisService = redisService;
         this.minioService = minioService;
+        this.turnaroundService = turnaroundService;
 
         this.latencyTimer = io.micrometer.core.instrument.Timer.builder("pipeline.latency.seconds")
                 .tag("type", "flight")
@@ -79,6 +83,15 @@ public class FlightConsumer {
             }
 
             flightService.saveAll(flights);
+
+            // Process Turnaround Sessions
+            for (Flight flight : flights) {
+                try {
+                    turnaroundService.processFlightUpdate(flight);
+                } catch (Exception e) {
+                    logger.error("Error processing turnaround session for flight {}: {}", flight.getCallsign(), e.getMessage());
+                }
+            }
 
             // Archive to MinIO
             String icao = !flights.isEmpty() && flights.get(0).getIcaoCode() != null ? flights.get(0).getIcaoCode() : "VIDP";

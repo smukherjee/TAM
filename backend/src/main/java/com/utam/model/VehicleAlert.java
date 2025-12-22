@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "alerts")
-public class Alert {
+@Table(name = "vehicle_alerts")
+public class VehicleAlert {
 
     @Id
     @Column(name = "alert_id")
@@ -36,19 +36,10 @@ public class Alert {
     @Column(name = "icao_code")
     private String icaoCode;
 
-    public String getIcaoCode() {
-        return icaoCode;
+    public VehicleAlert() {
     }
 
-    public void setIcaoCode(String icaoCode) {
-        this.icaoCode = icaoCode;
-    }
-
-    public Alert() {
-    }
-
-    public Alert(UUID alertId, String type, String entityId, Double value, LocalDateTime timestamp, Double latitude,
-            Double longitude) {
+    public VehicleAlert(UUID alertId, String type, String entityId, Double value, LocalDateTime timestamp, Double latitude, Double longitude) {
         this.alertId = alertId;
         this.type = type;
         this.entityId = entityId;
@@ -114,9 +105,17 @@ public class Alert {
         this.longitude = longitude;
     }
 
+    public String getIcaoCode() {
+        return icaoCode;
+    }
+
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
+    }
+
     @Override
     public String toString() {
-        return "Alert{" +
+        return "VehicleAlert{" +
                 "alertId=" + alertId +
                 ", type='" + type + '\'' +
                 ", entityId='" + entityId + '\'' +

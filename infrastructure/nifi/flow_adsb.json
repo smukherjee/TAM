@@ -13,7 +13,7 @@
       "name": "PublishKafka_2_6",
       "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
       "properties": {
-        "Kafka Brokers": "kafka:29092",
+        "Kafka Brokers": "redpanda:29092",
         "Topic Name": "flight-raw-json",
         "Delivery Guarantee": "Best Effort"
       }

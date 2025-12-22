@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './components/Layout/MainLayout';
 import MapPage from './pages/MapPage';
 import TurnaroundPage from './pages/TurnaroundPage';
+import TurnaroundDetailPage from './pages/TurnaroundDetailPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import PipelinePage from './pages/PipelinePage';
 import LoginPage from './pages/LoginPage';
@@ -31,6 +32,13 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <TurnaroundPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/turnaround/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <TurnaroundDetailPage />
           </MainLayout>
         </ProtectedRoute>
       } />

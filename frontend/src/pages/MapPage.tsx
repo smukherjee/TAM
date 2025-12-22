@@ -54,7 +54,7 @@ const MapPage: React.FC = () => {
 
     const fetchAlerts = async () => {
         try {
-            const response = await api.get<Alert[]>('/alerts');
+            const response = await api.get<Alert[]>('/vehicle-alerts');
             setAlerts(response.data);
         } catch (error) {
             console.error('Error fetching alerts:', error);
