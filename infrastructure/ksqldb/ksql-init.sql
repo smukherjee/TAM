@@ -6,7 +6,7 @@
 -- =========================================================
 -- 1. FLIGHT STREAM - Raw flight data from Kafka
 -- =========================================================
-CREATE STREAM IF NOT EXISTS flights_stream (
+CREATE STREAM IF NOT EXISTS flights_stream_raw (
     LivePlotId VARCHAR KEY,
     Time DOUBLE,
     CallSign VARCHAR,
@@ -26,14 +26,22 @@ CREATE STREAM IF NOT EXISTS flights_stream (
     Spi BOOLEAN,
     UpdateType VARCHAR
 ) WITH (
-    KAFKA_TOPIC = 'flight-raw-json',
+    KAFKA_TOPIC = 'tam.*.flight-raw-json',
     VALUE_FORMAT = 'JSON'
 );
+
+CREATE STREAM IF NOT EXISTS flights_stream AS
+    SELECT *,
+           HEADER('X-Tenant-ID') AS tenant_id,
+           HEADER('X-Domain-ID') AS domain_id,
+           HEADER('X-Correlation-ID') AS correlation_id
+    FROM flights_stream_raw
+    EMIT CHANGES;
 
 -- =========================================================
 -- 2. VEHICLE STREAM - Raw vehicle data from Kafka
 -- =========================================================
-CREATE STREAM IF NOT EXISTS vehicles_stream (
+CREATE STREAM IF NOT EXISTS vehicles_stream_raw (
     vehicle_no VARCHAR KEY,
     vehicletype VARCHAR,
     latitude VARCHAR,
@@ -53,9 +61,17 @@ CREATE STREAM IF NOT EXISTS vehicles_stream (
     angle VARCHAR,
     location VARCHAR
 ) WITH (
-    KAFKA_TOPIC = 'vehicle-raw-json',
+    KAFKA_TOPIC = 'tam.*.vehicle-raw-json',
     VALUE_FORMAT = 'JSON'
 );
+
+CREATE STREAM IF NOT EXISTS vehicles_stream AS
+    SELECT *,
+           HEADER('X-Tenant-ID') AS tenant_id,
+           HEADER('X-Domain-ID') AS domain_id,
+           HEADER('X-Correlation-ID') AS correlation_id
+    FROM vehicles_stream_raw
+    EMIT CHANGES;
 
 -- =========================================================
 -- 3. SPEED VIOLATIONS STREAM - CEP: Vehicles exceeding 70 km/h

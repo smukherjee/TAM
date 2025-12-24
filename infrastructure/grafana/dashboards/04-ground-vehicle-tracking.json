@@ -154,7 +154,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT vehicle_no) as count FROM vehicles WHERE timestamp >= NOW() - INTERVAL '5 minutes';",
+                    "rawSql": "SELECT COUNT(DISTINCT vehicle_id) as count FROM vehicles WHERE timestamp >= NOW() - INTERVAL '5 minutes';",
                     "refId": "A"
                 }
             ],
@@ -220,7 +220,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  type,\n  COUNT(DISTINCT vehicle_no) as count\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '5 minutes'\nGROUP BY type;",
+                    "rawSql": "SELECT \n  vehicle_type,\n  COUNT(DISTINCT vehicle_id) as count\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '5 minutes'\nGROUP BY vehicle_type;",
                     "refId": "A"
                 }
             ],
@@ -283,7 +283,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  vehicle_no,\n  type,\n  status,\n  location,\n  speed,\n  timestamp as last_update\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '30 minutes'\nORDER BY timestamp DESC\nLIMIT 20;",
+                    "rawSql": "SELECT \n  vehicle_id,\n  vehicle_type,\n  status,\n  zone,\n  speed,\n  timestamp as last_update\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '30 minutes'\nORDER BY timestamp DESC\nLIMIT 20;",
                     "refId": "A"
                 }
             ],

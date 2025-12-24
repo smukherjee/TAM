@@ -31,7 +31,7 @@ Since this is a POC, the system MUST rely on mock data generators for ADSB (Flig
 Strict adherence to the defined stack:
 
 - Ingestion: Apache NiFi (Containerized)
-- Backend Processing/API: Spring Boot 3.x (Java 17+)
+- Backend Processing/API: Spring Boot 3.x (Java 21+)
 - Frontend: React 18+ with TypeScript
 - Message Broker: Apache Kafka (single node)
 - Database: PostgreSQL 16+ with TimescaleDB extension

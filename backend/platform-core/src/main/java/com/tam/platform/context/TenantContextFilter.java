@@ -1,5 +1,7 @@
 package com.tam.platform.context;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +27,12 @@ public class TenantContextFilter extends OncePerRequestFilter {
     public static final String HEADER_ROLES = "X-Roles";
     public static final String HEADER_CORRELATION_ID = "X-Correlation-ID";
 
+    private final MeterRegistry meterRegistry;
+
+    public TenantContextFilter(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -47,6 +55,9 @@ public class TenantContextFilter extends OncePerRequestFilter {
 
             TenantContext context = new TenantContext(tenantId, domainId, roles, correlationId, null, null, null);
             TenantContextService.set(context);
+            
+            // Increment tenant request counter
+            meterRegistry.counter("tenant.requests", "tenant", tenantId != null ? tenantId : "unknown").increment();
             
             // Add correlation ID to response for debugging
             response.setHeader(HEADER_CORRELATION_ID, correlationId);

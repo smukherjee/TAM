@@ -124,6 +124,12 @@ To configure the simulation URLs (e.g., if NiFi is running on a different host/p
 - `GET /api/alerts`: Retrieve generated alerts (e.g., speed violations).
 - `GET /api/cv/events`: Retrieve computer vision events.
 
+## Testing and Verification
+
+For comprehensive manual testing and verification of all system components, refer to [sanitytest.md](sanitytest.md).
+
+This includes detailed checklists for each service, integration tests, performance verification, and troubleshooting steps.
+
 ## Troubleshooting
 
 - **NiFi Connection Refused**: Ensure the Docker container is running and port 8091 is accessible.

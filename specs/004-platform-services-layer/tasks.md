@@ -58,7 +58,7 @@ description: "Task list for Platform Services Layer"
 - [x] T021 [Storage] Define `ObjectStorageService` interface
 - [x] T022 [Storage] Implement `MinioStorageService` using MinIO Java SDK
 - [x] T023 [Storage] Implement presigned URL generation
-- [ ] T033 [Storage] Implement RawDataArchiver to consume events and write to Object Storage (FR-024)
+- [x] T033 [Storage] Implement RawDataArchiver to consume events and write to Object Storage (FR-024)
 
 ## Phase 3: Integration & Verification
 
@@ -70,7 +70,7 @@ description: "Task list for Platform Services Layer"
 - [x] T027 [Test] Verify Circuit Breaker behavior (simulate Redis down)
 - [x] T028 [Test] Verify Event Bus fallback behavior
 - [x] T030 [Health] Implement `PlatformHealthIndicator` exposing status of Kafka, Redis, and MinIO connections (FR-012)
-- [ ] T034 [Observability] Implement custom metrics (Cache Hit/Miss, Tenant Request Count) and verify Trace propagation (FR-016)
-- [ ] T035 [Observability] Update Grafana dashboards to support multi-tenancy (add `$tenant` variable, filter SQL/Prometheus queries) and align with new Platform metrics
-- [ ] T036 [Data] Update ksqlDB scripts (`ksql-init.sql`) to handle domain-prefixed topics and extract tenant context from headers (FR-022)
-- [ ] T037 [Data] Update NiFi setup scripts (`setup-flows.sh`) to inject `X-Tenant-ID` header and use domain-prefixed topics (FR-022)
+- [x] T034 [Observability] Implement custom metrics (Cache Hit/Miss, Tenant Request Count) and verify Trace propagation (FR-016)
+- [x] T035 [Observability] Update Grafana dashboards to support multi-tenancy (add `$tenant` variable, filter SQL/Prometheus queries) and align with new Platform metrics
+- [x] T036 [Data] Update ksqlDB scripts (`ksql-init.sql`) to handle domain-prefixed topics and extract tenant context from headers (FR-022)
+- [x] T037 [Data] Update NiFi setup scripts (`setup-flows.sh`) to inject `X-Tenant-ID` header and use domain-prefixed topics (FR-022)

@@ -3,7 +3,7 @@
 **Feature Branch**: `004-platform-services-layer`  
 **Created**: 2025-12-22  
 **Status**: Draft  
-**Input**: Extract core platform services layer to decouple business domains from infrastructure concerns, implementing TenantContextService, EventBus, CacheService, and foundational platform abstractions for multi-tenant scalability
+**Input**: Design core platform services layer to decouple business domains from infrastructure concerns, implementing TenantContextService, EventBus, CacheService, and foundational platform abstractions for multi-tenant scalability. Target Java 21+ for virtual threads and ScopedValue support.
 
 ## User Scenarios & Testing
 
@@ -61,7 +61,7 @@ Development team needs to add distributed tracing and audit logging across all d
 
 System administrator onboards a new airport (tenant) with custom configuration, data isolation, and specific business rules without code deployment.
 
-**Why this priority**: Multi-tenancy is a core architectural requirement. Current scattered `icaoCode` handling makes tenant isolation fragile and configuration difficult.
+**Why this priority**: Multi-tenancy is a core architectural requirement. Current scattered `tenantId` handling makes tenant isolation fragile and configuration difficult.
 
 **Independent Test**: Onboard new tenant "LIRN" with custom speed limits, cache TTL, and feature flags. Verify complete data isolation from existing "VIDP" tenant and custom behavior without code changes.
 
@@ -152,11 +152,11 @@ Developer writes unit tests for domain logic without starting Kafka, Redis, or d
 - **FR-021**: System MUST support domain-scoped database routing where each business domain (e.g., TAM, ResourceMgmt) maps to its own database via ConfigurationService; TenantContext includes domainId which platform uses to route queries to correct datasource
 - **FR-022**: EventBus MUST use domain-prefixed topic naming convention `{domain}.{tenant}.{eventType}` for Kafka topics to enable clear separation across domains while sharing infrastructure
 - **FR-023**: ConfigurationService MUST support hierarchical tenant-scoped parameters in format `{domain}.{tenant}.{key}` enabling per-tenant business rule thresholds (e.g., alert speed limits) with hot-reload support
-- **FR-024**: System MUST provide a RawDataArchiver service that consumes domain events and archives them to ObjectStorageService for audit and replay purposes
+- **FR-024**: System MUST provide a RawDataArchiver service that consumes domain events and archives them to ObjectStorageService for audit and replay purposes. Archive format MUST be Parquet files with tenant-isolated buckets (e.g., `tenant-{tenantId}-archive`). Data MUST be retained for 6 months with automatic cleanup. No failure recovery implemented for MVP.
 
 ### Key Entities
 
-- **TenantContext**: Represents the current execution scope containing domain ID (e.g., "tam", "resource-mgmt"), tenant ID (icaoCode), tenant status (ENABLED/DISABLED), timezone, locale, custom metadata, and user information. Provides thread-local access pattern for request-scoped isolation using Java 21 ScopedValue for virtual thread compatibility. Special "SYSTEM" tenant ID is used for background jobs and non-user operations. Tenant deletion is modeled as DISABLED status with read-only access to historical data and no new writes. Domain ID is used for database routing and Kafka topic prefixing.
+- **TenantContext**: Represents the current execution scope containing domain ID (e.g., "tam", "resource-mgmt"), tenant ID (tenantId), tenant status (ENABLED/DISABLED), timezone, locale, custom metadata, and user information. Provides thread-local access pattern for request-scoped isolation using Java 21 ScopedValue for virtual thread compatibility. Special "SYSTEM" tenant ID is used for background jobs and non-user operations. Tenant deletion is modeled as DISABLED status with read-only access to historical data and no new writes. Domain ID is used for database routing and Kafka topic prefixing.
 
 - **DomainEvent**: Base abstraction for all business events containing event ID, type, timestamp, tenant context, correlation ID for tracing, and serializable payload. Supports both synchronous and asynchronous processing.
 
@@ -193,10 +193,10 @@ The following performance targets are intentionally deferred and will be validat
 ## Assumptions
 
 - Spring Boot framework continues to be the application runtime
-- Java 21 is the target JVM version providing virtual threads for async processing
+- Java 21+ is the target JVM version providing virtual threads for async processing
 - Existing database schema remains PostgreSQL/TimescaleDB (no migration to NoSQL)
 - Current Kafka topic structure is compatible with EventBus abstraction
-- Tenant identifier (icaoCode) uniquely identifies each airport deployment
+- Tenant identifier (tenantId) uniquely identifies each airport deployment
 - Network latency between services is under 10ms for synchronous operations
 - Cache eviction policies (LRU) are acceptable for all use cases
 - Event ordering is FIFO per tenant per event type (e.g., FlightUpdated events for VIDP are ordered, but different event types may interleave)

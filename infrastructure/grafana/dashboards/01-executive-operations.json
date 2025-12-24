@@ -304,7 +304,7 @@
                     "editorMode": "code",
                     "format": "time_series",
                     "rawQuery": true,
-                    "rawSql": "SELECT\n  time_bucket('5 minutes', event_time_stamp) AS time,\n  icao_code,\n  COUNT(*) as events\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '6 hours'\nGROUP BY time, icao_code\nORDER BY time;",
+                    "rawSql": "SELECT\n  time_bucket('5 minutes', event_time_stamp) AS time,\n  tenant_code,\n  COUNT(*) as events\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '6 hours'\nGROUP BY time, tenant_code\nORDER BY time;",
                     "refId": "A"
                 }
             ],

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Source code (if publishing compiled)
+src/
+
+# Tests
+tests/
+test/
+*.test.js
+*.spec.js
+
+# Config files
+.env*
+.env
+.gitignore
+.prettierignore
+.eslintignore
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log*
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# Coverage
+coverage/
+
+# Temporary
+*.tmp

@@ -155,7 +155,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT callsign) as count FROM flights WHERE time >= NOW() - INTERVAL '5 minutes';",
+                    "rawSql": "SELECT COUNT(DISTINCT callsign) as count FROM flights WHERE timestamp >= NOW() - INTERVAL '5 minutes';",
                     "refId": "A"
                 }
             ],
@@ -218,7 +218,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  callsign,\n  status,\n  altitude,\n  speed\nFROM flights\nWHERE time >= NOW() - INTERVAL '10 minutes'\nORDER BY time DESC\nLIMIT 10;",
+                    "rawSql": "SELECT \n  callsign,\n  status,\n  altitude,\n  speed\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '10 minutes'\nORDER BY timestamp DESC\nLIMIT 10;",
                     "refId": "A"
                 }
             ],
@@ -289,7 +289,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  status,\n  COUNT(*) as count\nFROM flights\nWHERE time >= NOW() - INTERVAL '1 hour'\nGROUP BY status;",
+                    "rawSql": "SELECT \n  status,\n  COUNT(*) as count\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '1 hour'\nGROUP BY status;",
                     "refId": "A"
                 }
             ],
@@ -377,7 +377,7 @@
                     "editorMode": "code",
                     "format": "time_series",
                     "rawQuery": true,
-                    "rawSql": "SELECT\n  time_bucket('5 minutes', time) AS time,\n  icao_code,\n  COUNT(*) as updates\nFROM flights\nWHERE time >= NOW() - INTERVAL '6 hours'\nGROUP BY time_bucket('5 minutes', time), icao_code\nORDER BY time;",
+                    "rawSql": "SELECT\n  time_bucket('5 minutes', timestamp) AS time,\n  tenant_code,\n  COUNT(*) as updates\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '6 hours'\nGROUP BY time_bucket('5 minutes', timestamp), tenant_code\nORDER BY time;",
                     "refId": "A"
                 }
             ],

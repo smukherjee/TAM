@@ -317,7 +317,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(*) as count FROM flights WHERE time >= NOW() - INTERVAL '5 minutes';",
+                    "rawSql": "SELECT COUNT(*) as count FROM flights WHERE timestamp >= NOW() - INTERVAL '5 minutes';",
                     "refId": "A"
                 }
             ],
@@ -379,7 +379,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT icao_code) as count FROM turnaround_events WHERE event_time_stamp >= NOW() - INTERVAL '1 hour';",
+                    "rawSql": "SELECT COUNT(DISTINCT tenant_code) as count FROM turnaround_events WHERE event_time_stamp >= NOW() - INTERVAL '1 hour';",
                     "refId": "A"
                 }
             ],

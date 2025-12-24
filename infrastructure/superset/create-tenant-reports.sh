@@ -30,8 +30,8 @@ for TENANT in "VIDP" "LIRN"; do
     LOWER=$(echo "$TENANT" | tr '[:upper:]' '[:lower:]')
     echo "   📍 Tenant: $TENANT"
     
-    DS_F=$(create_dataset "flights_$LOWER" "SELECT * FROM flights WHERE icao_code = '$TENANT'")
-    DS_V=$(create_dataset "vehicles_$LOWER" "SELECT * FROM vehicles WHERE icao_code = '$TENANT'")
+    DS_F=$(create_dataset "flights_$LOWER" "SELECT * FROM flights WHERE tenant_code = '$TENANT'")
+    DS_V=$(create_dataset "vehicles_$LOWER" "SELECT * FROM vehicles WHERE tenant_code = '$TENANT'")
     
     # Use explicit ad-hoc metric to avoid "Field may not be null" error
     METRIC_COUNT='{"expressionType": "SQL", "sqlExpression": "COUNT(*)", "label": "Count"}'

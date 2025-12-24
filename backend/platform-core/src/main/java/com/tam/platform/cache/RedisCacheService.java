@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.tam.platform.context.TenantContext;
 import com.tam.platform.context.TenantContextService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,12 +29,22 @@ public class RedisCacheService implements CacheService {
     private final Cache<String, Object> localCache;
     private static final String CB_NAME = "cacheService";
 
-    public RedisCacheService(RedisTemplate<String, Object> redisTemplate) {
+    private final Counter cacheHitCounter;
+    private final Counter cacheMissCounter;
+
+    public RedisCacheService(RedisTemplate<String, Object> redisTemplate, MeterRegistry meterRegistry) {
         this.redisTemplate = redisTemplate;
         this.localCache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofMinutes(5))
                 .maximumSize(10_000)
                 .build();
+
+        this.cacheHitCounter = Counter.builder("cache.hits")
+                .description("Number of cache hits")
+                .register(meterRegistry);
+        this.cacheMissCounter = Counter.builder("cache.misses")
+                .description("Number of cache misses")
+                .register(meterRegistry);
     }
 
     @Override
@@ -44,6 +56,7 @@ public class RedisCacheService implements CacheService {
         Object localValue = localCache.getIfPresent(scopedKey);
         if (localValue != null && type.isInstance(localValue)) {
             log.trace("L1 Cache hit for key: {}", scopedKey);
+            cacheHitCounter.increment();
             return Optional.of(type.cast(localValue));
         }
 
@@ -52,8 +65,10 @@ public class RedisCacheService implements CacheService {
         if (value != null && type.isInstance(value)) {
             log.trace("L2 Cache hit for key: {}", scopedKey);
             localCache.put(scopedKey, value);
+            cacheHitCounter.increment();
             return Optional.of(type.cast(value));
         }
+        cacheMissCounter.increment();
         return Optional.empty();
     }
 

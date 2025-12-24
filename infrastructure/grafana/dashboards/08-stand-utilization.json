@@ -161,7 +161,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  stand,\n  icao_code as airport,\n  COUNT(*) as event_count,\n  MAX(event_time_stamp) as last_event\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '24 hours'\nGROUP BY stand, icao_code\nORDER BY event_count DESC\nLIMIT 20;",
+                    "rawSql": "SELECT \n  stand,\n  tenant_code as airport,\n  COUNT(*) as event_count,\n  MAX(event_time_stamp) as last_event\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '24 hours'\nGROUP BY stand, tenant_code\nORDER BY event_count DESC\nLIMIT 20;",
                     "refId": "A"
                 }
             ],

@@ -13,11 +13,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class TurnaroundService {
+public class TurnaroundSessionService {
 
     private final TurnaroundSessionRepository sessionRepository;
 
-    public TurnaroundService(TurnaroundSessionRepository sessionRepository) {
+    public TurnaroundSessionService(TurnaroundSessionRepository sessionRepository) {
         this.sessionRepository = sessionRepository;
     }
 

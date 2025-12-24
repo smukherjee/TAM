@@ -112,7 +112,9 @@ create_publish_kafka() {
                         \"bootstrap.servers\":\"$REDPANDA_BROKERS\",
                         \"topic\":\"$TOPIC\",
                         \"acks\":\"1\",
-                        \"use-transactions\":\"false\"
+                        \"use-transactions\":\"false\",
+                        \"headers.X-Tenant-ID\":\"vidp\",
+                        \"headers.X-Domain-ID\":\"tam\"
                     },
                     \"autoTerminatedRelationships\":[\"success\",\"failure\"]
                 }
@@ -171,7 +173,7 @@ echo "📁 Root Process Group ID: $ROOT_PG_ID"
 echo "📦 Configuring ADSB Ingestion..."
 ADSB_PG=$(create_process_group "$ROOT_PG_ID" "ADSB Ingestion" 100 100)
 ADSB_HTTP=$(create_listen_http "$ADSB_PG" "Listen ADSB HTTP" "8092" "adsb-ingest")
-ADSB_KAFKA=$(create_publish_kafka "$ADSB_PG" "Publish to flight-raw-json" "flight-raw-json")
+ADSB_KAFKA=$(create_publish_kafka "$ADSB_PG" "Publish to tam.vidp.flight-raw-json" "tam.vidp.flight-raw-json")
 connect_processors "$ADSB_PG" "$ADSB_HTTP" "$ADSB_KAFKA"
 start_process_group "$ADSB_PG"
 
@@ -179,7 +181,7 @@ start_process_group "$ADSB_PG"
 echo "📦 Configuring Vehicle Ingestion..."
 VEHICLE_PG=$(create_process_group "$ROOT_PG_ID" "Vehicle Ingestion" 100 300)
 VEHICLE_HTTP=$(create_listen_http "$VEHICLE_PG" "Listen Vehicle HTTP" "8093" "vehicle-ingest")
-VEHICLE_KAFKA=$(create_publish_kafka "$VEHICLE_PG" "Publish to vehicle-raw-json" "vehicle-raw-json")
+VEHICLE_KAFKA=$(create_publish_kafka "$VEHICLE_PG" "Publish to tam.vidp.vehicle-raw-json" "tam.vidp.vehicle-raw-json")
 connect_processors "$VEHICLE_PG" "$VEHICLE_HTTP" "$VEHICLE_KAFKA"
 start_process_group "$VEHICLE_PG"
 
@@ -187,7 +189,7 @@ start_process_group "$VEHICLE_PG"
 echo "📦 Configuring CV Event Ingestion..."
 CV_PG=$(create_process_group "$ROOT_PG_ID" "CV Event Ingestion" 100 500)
 CV_HTTP=$(create_listen_http "$CV_PG" "Listen CV HTTP" "8094" "cv-event-ingest")
-CV_KAFKA=$(create_publish_kafka "$CV_PG" "Publish to turnaround-raw-json" "turnaround-raw-json")
+CV_KAFKA=$(create_publish_kafka "$CV_PG" "Publish to tam.vidp.turnaround-raw-json" "tam.vidp.turnaround-raw-json")
 connect_processors "$CV_PG" "$CV_HTTP" "$CV_KAFKA"
 start_process_group "$CV_PG"
 
