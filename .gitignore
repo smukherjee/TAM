@@ -36,3 +36,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.iml
+
+# Large local artifacts (keep out of Git)
+documentations/Videos/

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Service
+@Service("turnaroundManagementService")
 public class TurnaroundService {
 
     private final TurnaroundSessionRepository sessionRepository;

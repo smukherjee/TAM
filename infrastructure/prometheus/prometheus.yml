@@ -46,4 +46,4 @@ scrape_configs:
   - job_name: 'nifi'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['tam-nifi:9092']
+      - targets: ['nifi:9092']

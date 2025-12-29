@@ -1,0 +1,757 @@
+# TAM Codebase Code Smell Analysis Report
+
+## Executive Summary
+
+This report identifies code smells, architectural issues, and security vulnerabilities in the TAM (Turnaround Management System) codebase. The analysis covers both backend (Spring Boot) and frontend (React) components.
+
+### Key Findings
+- **12+ Code Smells** identified across backend and frontend
+- **5 Architectural Issues** requiring attention
+- **8 Security Vulnerabilities** needing immediate remediation
+- **Performance Optimization** opportunities
+- **Maintainability Improvements** needed
+
+## 1. Backend Code Smells
+
+### 1.1. Hardcoded Values and Magic Numbers
+
+**File**: `TurnaroundEventConsumer.java`
+**Issue**: Hardcoded stand assignment and default values
+```java
+session.setStandId("A1"); // Default stand - CODE SMELL: Hardcoded value
+```
+
+**File**: `TurnaroundService.java`
+**Issue**: Hardcoded default tenant code
+```java
+String tenantCode = flight.getTenantCode() != null ? flight.getTenantCode() : "VIDP";
+```
+
+**Impact**: 
+- Reduces flexibility and configurability
+- Makes the system less adaptable to different airport configurations
+- Requires code changes for different deployments
+
+**Recommendation**: 
+- Move to configuration files or database-driven configuration
+- Implement proper default value management
+- Use constants with clear naming
+
+### 1.2. Excessive Debug Logging
+
+**File**: `TurnaroundEventConsumer.java`
+**Issue**: Multiple `System.out.println` statements in production code
+```java
+System.out.println("TurnaroundEventConsumer received message: " + message.substring(0, Math.min(200, message.length())) + "...");
+System.out.println("Message starts with quote: " + message.startsWith("\"") + ", ends with quote: " + message.endsWith("\""));
+System.out.println("DOUBLE-SERIALIZED! Deserializing twice...");
+System.out.println("After first deserialization: " + actualMessage.substring(0, Math.min(100, actualMessage.length())));
+System.out.println("Processing: flightId=" + flightId + ", standId=" + standId + ", status=" + status);
+System.out.println("✅ Saved turnaround session: " + session.getId() + " for flight " + flightId + " status=" + status);
+```
+
+**Impact**: 
+- Performance overhead in production
+- Clutters logs with unnecessary information
+- Makes it harder to find actual issues
+- Security risk (potential sensitive data exposure)
+
+**Recommendation**: 
+- Use proper logging framework (SLF4J/Logback)
+- Implement appropriate log levels (DEBUG, INFO, WARN, ERROR)
+- Remove debug logging from production code
+- Use structured logging for better analysis
+
+### 1.3. Error Handling Issues
+
+**File**: `TurnaroundEventConsumer.java`
+**Issue**: Broad exception catching and swallowing
+```java
+} catch (Exception e) {
+    System.err.println("Error processing turnaround event: " + e.getMessage());
+}
+```
+
+**File**: `TurnaroundService.java`
+**Issue**: Generic exception throwing
+```java
+.orElseThrow(() -> new RuntimeException("Session not found or access denied"));
+```
+
+**Impact**: 
+- Loses valuable debugging information
+- Makes error tracking difficult
+- Can hide critical system failures
+- Poor user experience with generic error messages
+
+**Recommendation**: 
+- Use specific exception types
+- Implement proper error logging with stack traces
+- Provide meaningful error messages to users
+- Consider custom exception hierarchy
+
+### 1.4. Code Duplication
+
+**File**: `TurnaroundEventConsumer.java`
+**Issue**: Repeated timestamp parsing logic
+```java
+// Multiple similar try-catch blocks for parsing different timestamp fields
+try {
+    if (payload.containsKey("eibt")) {
+        session.setEibt(ZonedDateTime.parse((String) payload.get("eibt")));
+    }
+    // ... repeated for multiple fields
+} catch (Exception parseEx) {
+    // ...
+}
+```
+
+**Impact**: 
+- Increases maintenance effort
+- Risk of inconsistencies when fixing bugs
+- Larger codebase size
+- Violates DRY principle
+
+**Recommendation**: 
+- Extract common parsing logic to utility methods
+- Use reflection or configuration-driven parsing
+- Implement consistent error handling pattern
+
+### 1.5. Poor Error Messages
+
+**File**: `TurnaroundService.java`
+**Issue**: Generic error messages
+```java
+throw new RuntimeException("Session not found or access denied");
+```
+
+**Impact**: 
+- Difficult to diagnose issues
+- Poor user experience
+- Hard to implement proper error handling in calling code
+
+**Recommendation**: 
+- Provide specific error messages
+- Include relevant context (ID, tenant, etc.)
+- Consider internationalization
+
+### 1.6. Inconsistent Null Handling
+
+**File**: `TurnaroundService.java`
+**Issue**: Inconsistent null checks
+```java
+if (flightId == null) return; // Silent return
+// vs
+.orElseThrow(() -> new RuntimeException("Session not found or access denied"));
+```
+
+**Impact**: 
+- Unpredictable behavior
+- Hard to debug issues
+- Inconsistent API contracts
+
+**Recommendation**: 
+- Use Optional consistently
+- Implement clear null handling strategy
+- Document behavior in JavaDoc
+
+## 2. Frontend Code Smells
+
+### 2.1. Type Safety Issues
+
+**File**: `AuthContext.tsx`
+**Issue**: Use of `any` type
+```typescript
+login: (credentials: any) => Promise<void>;
+// and
+const login = async (credentials: any) => {
+```
+
+**Impact**: 
+- Loses TypeScript benefits
+- Runtime errors instead of compile-time catching
+- Poor IDE support and autocompletion
+- Harder to refactor
+
+**Recommendation**: 
+- Define proper interfaces for credentials
+- Use TypeScript's type system effectively
+- Implement runtime validation
+
+### 2.2. Console Logging in Production
+
+**File**: Multiple frontend files
+**Issue**: `console.log` statements in production code
+```typescript
+console.log("User logged in:", user);
+console.log("API response:", response);
+```
+
+**Impact**: 
+- Performance overhead
+- Security risk (sensitive data exposure)
+- Clutters browser console
+- Poor user experience
+
+**Recommendation**: 
+- Remove console logging from production
+- Use proper logging framework if needed
+- Implement feature flags for debug logging
+
+### 2.3. Hardcoded Configuration
+
+**File**: `TurnaroundGantt.tsx`
+**Issue**: Hardcoded activity configurations
+```typescript
+const ACTIVITY_CONFIG: { [key: string]: { color: string, label: string } } = {
+    "passenger boarding bridge": { color: "#3b82f6", label: "Passenger Boarding Bridge" },
+    // ... many more hardcoded entries
+};
+```
+
+**Impact**: 
+- Difficult to maintain and update
+- Not configurable per deployment
+- Hard to internationalize
+- Violates separation of concerns
+
+**Recommendation**: 
+- Move to configuration files or API
+- Implement database-driven configuration
+- Consider internationalization support
+
+### 2.4. Complex State Management
+
+**File**: Various React components
+**Issue**: Local state management in complex components
+```typescript
+const [events, setEvents] = useState<TurnaroundEvent[]>([]);
+const [selectedStand, setSelectedStand] = useState<string>('');
+const [filteredEvents, setFilteredEvents] = useState<TurnaroundEvent[]>([]);
+const [isLoading, setIsLoading] = useState<boolean>(false);
+```
+
+**Impact**: 
+- Hard to debug state changes
+- Difficult to test
+- State synchronization issues
+- Prop drilling in component hierarchy
+
+**Recommendation**: 
+- Consider state management library (Redux, Zustand)
+- Implement proper state management pattern
+- Use context API for global state
+- Consider React Query for server state
+
+### 2.5. Inconsistent Error Handling
+
+**File**: Multiple API service files
+**Issue**: Inconsistent error handling patterns
+```typescript
+// Some files throw errors
+throw new Error(response.message || 'Login failed');
+
+// Others silently fail
+if (!response.success) return;
+
+// Others use different patterns
+if (error) console.error(error);
+```
+
+**Impact**: 
+- Unpredictable error behavior
+- Hard to implement consistent UI error handling
+- Difficult to test error scenarios
+
+**Recommendation**: 
+- Implement consistent error handling strategy
+- Use standardized error objects
+- Provide clear error boundaries
+
+## 3. Architectural Issues
+
+### 3.1. Monolithic Service Structure
+
+**Issue**: Single Spring Boot application with multiple responsibilities
+- Flight management
+- Turnaround management  
+- Alert management
+- Vehicle tracking
+- User management
+
+**Impact**: 
+- Difficult to scale individual components
+- Single point of failure
+- Harder to deploy independently
+- Team coordination challenges
+
+**Recommendation**: 
+- Consider microservices architecture
+- Implement domain-driven design
+- Use bounded contexts
+- Implement proper service boundaries
+
+### 3.2. Tight Coupling
+
+**Issue**: Direct dependencies between components
+- TurnaroundService directly depends on repositories
+- Controllers directly call services
+- No interface abstraction
+
+**Impact**: 
+- Hard to test in isolation
+- Difficult to modify components
+- Poor separation of concerns
+
+**Recommendation**: 
+- Implement dependency injection properly
+- Use interfaces for service contracts
+- Consider hexagonal architecture
+- Implement proper layer separation
+
+### 3.3. Inconsistent API Design
+
+**Issue**: Mixed API patterns
+- Some endpoints use RESTful conventions
+- Others use RPC-style
+- Inconsistent naming conventions
+- Mixed parameter styles (path vs query)
+
+**Impact**: 
+- Hard for API consumers
+- Difficult to document
+- Inconsistent client implementations
+
+**Recommendation**: 
+- Standardize on RESTful conventions
+- Implement consistent naming
+- Use OpenAPI/Swagger documentation
+- Implement API versioning
+
+### 3.4. Lack of Proper Caching
+
+**Issue**: No caching strategy for frequently accessed data
+- Flight data
+- Turnaround sessions
+- Stand information
+- Alert data
+
+**Impact**: 
+- Performance bottlenecks
+- Database load
+- Slow response times
+
+**Recommendation**: 
+- Implement Redis caching
+- Use Spring Cache abstraction
+- Implement proper cache invalidation
+- Consider CDN for static assets
+
+### 3.5. Poor Internationalization Support
+
+**Issue**: Hardcoded strings and labels
+- Error messages
+- UI labels
+- Date/time formats
+- Number formats
+
+**Impact**: 
+- Difficult to localize
+- Hard to maintain translations
+- Poor user experience for international users
+
+**Recommendation**: 
+- Implement proper i18n framework
+- Externalize all strings
+- Use locale-aware formatting
+- Consider timezone handling
+
+## 4. Security Vulnerabilities
+
+### 4.1. Hardcoded Credentials
+
+**File**: `SecurityConfig.java`
+**Issue**: Hardcoded admin credentials
+```java
+UserDetails user = User.withDefaultPasswordEncoder()
+        .username("admin")
+        .password("admin")
+        .roles("USER")
+        .build();
+```
+
+**Severity**: **CRITICAL**
+
+**Impact**: 
+- Easy to exploit
+- Compromises entire system
+- Violates security best practices
+
+**Recommendation**: 
+- Use proper password encoding (BCrypt)
+- Store credentials in secure vault
+- Implement proper user management
+- Use environment variables for secrets
+
+### 4.2. CSRF Protection Disabled
+
+**File**: `SecurityConfig.java`
+**Issue**: CSRF protection disabled
+```java
+.csrf(AbstractHttpConfigurer::disable)
+```
+
+**Severity**: **HIGH**
+
+**Impact**: 
+- Vulnerable to CSRF attacks
+- Session hijacking risk
+- Unauthorized actions
+
+**Recommendation**: 
+- Enable CSRF protection
+- Use proper CSRF tokens
+- Implement SameSite cookie attributes
+
+### 4.3. Overly Permissive CORS
+
+**File**: `SecurityConfig.java`
+**Issue**: Broad CORS configuration
+```java
+.requestMatchers("/**").permitAll()
+.setAllowedOrigins(List.of("http://localhost:3000"))
+```
+
+**Severity**: **MEDIUM**
+
+**Impact**: 
+- Potential for CORS-based attacks
+- Data leakage risk
+- Unauthorized API access
+
+**Recommendation**: 
+- Restrict CORS to specific origins
+- Implement proper origin validation
+- Use dynamic CORS configuration
+
+### 4.4. Insecure Password Storage
+
+**File**: `AuthContext.tsx` (Frontend)
+**Issue**: Password storage in localStorage
+```typescript
+localStorage.setItem('user', JSON.stringify(userData));
+```
+
+**Severity**: **HIGH**
+
+**Impact**: 
+- XSS vulnerability
+- Session hijacking
+- Credential theft
+
+**Recommendation**: 
+- Use HttpOnly, Secure cookies
+- Implement proper session management
+- Use short-lived JWT tokens
+- Consider token rotation
+
+### 4.5. Lack of Input Validation
+
+**Issue**: No proper input validation
+- Flight data
+- User input
+- API parameters
+- File uploads
+
+**Severity**: **HIGH**
+
+**Impact**: 
+- SQL injection risk
+- XSS vulnerabilities
+- Data corruption
+- System crashes
+
+**Recommendation**: 
+- Implement proper input validation
+- Use validation frameworks
+- Sanitize all inputs
+- Implement API schema validation
+
+### 4.6. Missing Rate Limiting
+
+**Issue**: No rate limiting on API endpoints
+- Authentication endpoints
+- Data access endpoints
+- Public APIs
+
+**Severity**: **MEDIUM**
+
+**Impact**: 
+- DDoS vulnerability
+- Brute force attacks
+- Resource exhaustion
+
+**Recommendation**: 
+- Implement rate limiting
+- Use Spring Security rate limiting
+- Consider API gateway protection
+
+### 4.7. Insecure Error Handling
+
+**Issue**: Detailed error messages exposed
+- Stack traces in responses
+- Internal error details
+- Database errors
+
+**Severity**: **MEDIUM**
+
+**Impact**: 
+- Information disclosure
+- Easier exploitation
+- Poor user experience
+
+**Recommendation**: 
+- Implement proper error handling
+- Use generic error messages
+- Log detailed errors server-side
+- Implement error boundaries
+
+### 4.8. Missing Security Headers
+
+**Issue**: No security headers configured
+- CSP (Content Security Policy)
+- X-Frame-Options
+- X-Content-Type-Options
+- Referrer-Policy
+
+**Severity**: **MEDIUM**
+
+**Impact**: 
+- XSS vulnerabilities
+- Clickjacking risk
+- MIME sniffing attacks
+
+**Recommendation**: 
+- Implement security headers
+- Use Spring Security headers
+- Configure proper CSP
+
+## 5. Performance Issues
+
+### 5.1. N+1 Query Problem
+
+**Issue**: Potential N+1 queries in data access
+- Turnaround sessions with tasks
+- Flight data with related entities
+- Alert data with associations
+
+**Impact**: 
+- Database performance issues
+- Slow API responses
+- Scalability problems
+
+**Recommendation**: 
+- Implement JPA fetch joins
+- Use batch fetching
+- Consider GraphQL for complex queries
+
+### 5.2. Inefficient Data Processing
+
+**Issue**: Manual data processing in memory
+- Large dataset processing
+- Complex transformations
+- Multiple iterations
+
+**Impact**: 
+- High memory usage
+- Slow processing
+- Potential timeouts
+
+**Recommendation**: 
+- Use stream processing
+- Implement pagination
+- Consider database-level processing
+
+### 5.3. Lack of Connection Pooling
+
+**Issue**: No explicit connection pooling configuration
+- Database connections
+- Kafka connections
+- HTTP clients
+
+**Impact**: 
+- Resource exhaustion
+- Performance bottlenecks
+- Connection leaks
+
+**Recommendation**: 
+- Configure HikariCP properly
+- Implement connection pooling
+- Set appropriate pool sizes
+
+## 6. Testing Issues
+
+### 6.1. Lack of Unit Tests
+
+**Issue**: Minimal unit test coverage
+- Business logic
+- Service layer
+- Utility functions
+
+**Impact**: 
+- Hard to verify correctness
+- Difficult to refactor
+- Regression risks
+
+**Recommendation**: 
+- Implement JUnit 5 tests
+- Use Mockito for mocking
+- Aim for 80%+ coverage
+
+### 6.2. No Integration Tests
+
+**Issue**: Missing integration test coverage
+- API endpoints
+- Database interactions
+- Service integration
+
+**Impact**: 
+- Hard to verify system behavior
+- Integration issues in production
+- Difficult to test complex scenarios
+
+**Recommendation**: 
+- Implement Spring Boot integration tests
+- Use TestContainers for database testing
+- Test API contracts
+
+### 6.3. No End-to-End Tests
+
+**Issue**: Missing E2E test coverage
+- User workflows
+- Complete system behavior
+- UI interactions
+
+**Impact**: 
+- Hard to verify user experience
+- Regression risks in UI
+- Difficult to test complex workflows
+
+**Recommendation**: 
+- Implement Cypress/Playwright tests
+- Test critical user journeys
+- Automate regression testing
+
+## 7. Documentation Issues
+
+### 7.1. Missing API Documentation
+
+**Issue**: No comprehensive API documentation
+- Endpoint descriptions
+- Request/response formats
+- Error codes
+- Usage examples
+
+**Impact**: 
+- Hard for developers to use API
+- Inconsistent client implementations
+- Difficult to onboard new developers
+
+**Recommendation**: 
+- Implement Swagger/OpenAPI
+- Document all endpoints
+- Provide usage examples
+
+### 7.2. Incomplete Code Comments
+
+**Issue**: Minimal code documentation
+- Complex algorithms
+- Business logic
+- Non-obvious implementations
+
+**Impact**: 
+- Hard to understand code
+- Difficult to maintain
+- Steeper learning curve
+
+**Recommendation**: 
+- Add JavaDoc comments
+- Document complex logic
+- Explain business rules
+
+### 7.3. Missing Architecture Documentation
+
+**Issue**: No architecture documentation
+- System overview
+- Component diagrams
+- Data flow diagrams
+- Deployment architecture
+
+**Impact**: 
+- Hard to understand system structure
+- Difficult to make architectural decisions
+- Risk of inconsistent implementations
+
+**Recommendation**: 
+- Create architecture diagrams
+- Document system components
+- Explain data flows
+
+## 8. Recommendations Summary
+
+### 8.1. Immediate Actions (High Priority)
+
+| Issue | Action | Owner |
+|-------|--------|-------|
+| Hardcoded credentials | Implement proper authentication | Security Team |
+| CSRF protection | Enable CSRF in SecurityConfig | Backend Team |
+| Input validation | Implement validation framework | Backend Team |
+| Remove debug logging | Clean up System.out.println | Backend Team |
+| Fix TypeScript `any` | Proper typing in frontend | Frontend Team |
+
+### 8.2. Short-term Improvements (Medium Priority)
+
+| Issue | Action | Owner |
+|-------|--------|-------|
+| Implement proper error handling | Standardize exceptions | Backend Team |
+| Add unit tests | JUnit 5 + Mockito | QA Team |
+| API documentation | Swagger/OpenAPI | Backend Team |
+| Remove console.log | Clean frontend code | Frontend Team |
+| Implement caching | Redis integration | Backend Team |
+
+### 8.3. Long-term Improvements (Low Priority)
+
+| Issue | Action | Owner |
+|-------|--------|-------|
+| Microservices architecture | Domain-driven design | Architecture Team |
+| Proper i18n support | Internationalization framework | Frontend Team |
+| State management | Redux/Zustand | Frontend Team |
+| E2E testing | Cypress/Playwright | QA Team |
+| Architecture documentation | System diagrams | Architecture Team |
+
+## 9. Code Quality Metrics
+
+### Current State
+- **Code Smells**: 12+ identified
+- **Security Issues**: 8 critical/high
+- **Test Coverage**: Minimal/None
+- **Documentation**: Incomplete
+- **Architecture**: Monolithic with tight coupling
+
+### Target State
+- **Code Smells**: <5 remaining
+- **Security Issues**: All critical/high resolved
+- **Test Coverage**: 80%+ unit, 60%+ integration
+- **Documentation**: Complete API and architecture docs
+- **Architecture**: Modular with clear boundaries
+
+## 10. Conclusion
+
+The TAM codebase shows good foundational architecture but has several code quality and security issues that need attention. The most critical issues are:
+
+1. **Security vulnerabilities** (hardcoded credentials, CSRF, input validation)
+2. **Code smells** (debug logging, hardcoded values, type safety)
+3. **Lack of testing** (minimal test coverage)
+4. **Documentation gaps** (missing API and architecture docs)
+
+Addressing these issues will significantly improve code quality, security, and maintainability of the TAM system. The recommendations provide a clear roadmap for incremental improvement.
