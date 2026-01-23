@@ -43,7 +43,14 @@ public class MockAdsbGenerator {
     @Scheduled(fixedRate = 2000) // Every 2 seconds
     public void generateFlightData() {
         String callsign = callsigns.get(random.nextInt(callsigns.size()));
-        String tenant = airports.get(random.nextInt(airports.size()));
+        
+        // Map flights to their correct airports
+        String tenant;
+        if (callsign.equals("EK500") || callsign.equals("QF1")) {
+            tenant = "YBBN"; // Emirates and Qantas flights go to Brisbane
+        } else {
+            tenant = "VIDP"; // AI101, BA249, LH760 go to Delhi
+        }
 
         Flight flight = new Flight();
         flight.setId(UUID.randomUUID());
@@ -52,9 +59,15 @@ public class MockAdsbGenerator {
         flight.setTenantCode(tenant);
         flight.setFlightNumber(callsign); // Assuming flight number same as callsign for mock
 
-        // Random lat/lon around IGIA (New Delhi)
-        double baseLat = 28.5562;
-        double baseLon = 77.1000;
+        // Set lat/lon based on tenant
+        double baseLat, baseLon;
+        if (tenant.equals("YBBN")) {
+            baseLat = -27.3842; // Brisbane
+            baseLon = 153.1175;
+        } else {
+            baseLat = 28.5562; // Delhi
+            baseLon = 77.1000;
+        }
 
         flight.setLatitude(baseLat + (random.nextDouble() - 0.5) * 2); // +/- 1 degree
         flight.setLongitude(baseLon + (random.nextDouble() - 0.5) * 2);

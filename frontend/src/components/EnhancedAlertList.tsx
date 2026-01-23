@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AlertTriangle, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { useThrottle } from '../hooks/useDebounce';
+import { useDraggable } from '../hooks/useDraggable';
 import './MapIcons.css';
 
 interface Alert {
@@ -18,15 +20,20 @@ interface EnhancedAlertListProps {
 
 const EnhancedAlertList: React.FC<EnhancedAlertListProps> = ({ alerts, onDismiss }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const { handleMouseDown, style: draggableStyle } = useDraggable(window.innerWidth - 370, 20);
   const [filter, setFilter] = useState<'all' | 'critical' | 'warning' | 'info'>('all');
 
-  const groupedAlerts = {
-    critical: alerts.filter(a => a.severity === 'critical'),
-    warning: alerts.filter(a => a.severity === 'warning'),
-    info: alerts.filter(a => a.severity === 'info'),
-  };
+  // Throttle alerts to prevent excessive re-renders (max 2 updates per second)
+  const throttledAlerts = useThrottle(alerts, 500);
 
-  const filteredAlerts = filter === 'all' ? alerts : groupedAlerts[filter];
+  // Memoize grouped alerts calculation
+  const groupedAlerts = useMemo(() => ({
+    critical: throttledAlerts.filter(a => a.severity === 'critical'),
+    warning: throttledAlerts.filter(a => a.severity === 'warning'),
+    info: throttledAlerts.filter(a => a.severity === 'info'),
+  }), [throttledAlerts]);
+
+  const filteredAlerts = filter === 'all' ? throttledAlerts : groupedAlerts[filter];
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -41,27 +48,29 @@ const EnhancedAlertList: React.FC<EnhancedAlertListProps> = ({ alerts, onDismiss
     return <AlertTriangle className="w-4 h-4" />;
   };
 
-  if (alerts.length === 0) {
+  if (throttledAlerts.length === 0) {
     return null;
   }
 
   return (
-    <div className="enhanced-alert-list glass-panel" style={{ 
-      position: 'absolute', 
-      top: '20px', 
-      right: '20px', 
-      width: '350px',
-      maxHeight: collapsed ? '60px' : '500px',
-      overflow: 'hidden',
-      zIndex: 1000,
-      padding: '16px',
-    }}>
+    <div 
+      className="enhanced-alert-list glass-panel" 
+      style={{ 
+        ...draggableStyle,
+        width: '350px',
+        maxHeight: collapsed ? '60px' : '500px',
+        overflow: 'hidden',
+        zIndex: 1000,
+        padding: '16px',
+      }}
+      onMouseDown={handleMouseDown}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-amber-400" />
           <h3 className="text-white font-semibold">
-            Active Alerts ({alerts.length})
+            Active Alerts ({throttledAlerts.length})
           </h3>
         </div>
         <button

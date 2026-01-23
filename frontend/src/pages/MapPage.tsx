@@ -24,6 +24,7 @@ const MapPage: React.FC = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [layers, setLayers] = useState({ vehicles: true, flights: true, alerts: true });
+    const [mapTheme, setMapTheme] = useState<'dark' | 'light'>('dark');
     const icao = user?.icaoCode || 'VIDP';
 
     const getCenter = (): [number, number] => {
@@ -87,6 +88,10 @@ const MapPage: React.FC = () => {
         setLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
     };
 
+    const handleThemeToggle = () => {
+        setMapTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    };
+
     const handleAlertDismiss = (alertId: string) => {
         setAlerts(prev => prev.filter(a => a.alertId !== alertId));
     };
@@ -103,7 +108,7 @@ const MapPage: React.FC = () => {
     return (
         <div className="h-full flex flex-col">
             <div className="flex-1 relative">
-                <MapComponent center={getCenter()} zoom={14}>
+                <MapComponent center={getCenter()} zoom={14} theme={mapTheme}>
                     {layers.flights && <FlightLayer />}
                     {layers.vehicles && <VehicleLayer vehicles={vehicles} />}
                 </MapComponent>
@@ -112,6 +117,8 @@ const MapPage: React.FC = () => {
                 <MapControlPanel
                     layers={layers}
                     onLayerToggle={handleLayerToggle}
+                    theme={mapTheme}
+                    onThemeToggle={handleThemeToggle}
                 />
                 
                 {/* Enhanced Alert List */}

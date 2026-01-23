@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Marker } from 'react-leaflet';
 import { FlightDisplay, getActiveFlights } from '../../services/flightService';
 import { useAuth } from '../../context/AuthContext';
 import { webSocketService } from '../../services/WebSocketService';
 import { createAircraftIcon, AircraftIconOptions } from '../MapIcons';
 import { FlightInfoCard } from '../InfoCards';
+import { useThrottle } from '../../hooks/useDebounce';
 import '../MapIcons.css';
 
 interface FlightDisplayWithTimestamp extends FlightDisplay {
@@ -21,7 +22,7 @@ const FlightLayer: React.FC = () => {
         const fetchFlights = async () => {
             const data = await getActiveFlights();
             const now = Date.now();
-            console.log('FlightLayer: Fetched initial flights:', data.length);
+            console.log('FlightLayer: Fetched initial flights for', icao, ':', data.length);
             setFlights(data.map(f => ({ ...f, lastUpdated: now })));
         };
 
@@ -74,45 +75,61 @@ const FlightLayer: React.FC = () => {
         };
     }, [icao]);
 
-    console.log('FlightLayer: Rendering', flights.length, 'flights');
+    // Throttle flight updates to prevent excessive re-renders
+    const throttledFlights = useThrottle(flights, 1000); // Update UI max once per second
+
+    // Memoize flight markers to prevent unnecessary re-creation
+    const flightMarkers = useMemo(() => {
+        console.log('FlightLayer: Rendering', throttledFlights.length, 'flights');
+        
+        return throttledFlights.map(flight => {
+            try {
+                // Null-safe property access
+                if (!flight.latitude || !flight.longitude || !flight.callsign) {
+                    console.warn('FlightLayer: Skipping flight with missing data', flight);
+                    return null;
+                }
+                
+                const isSelected = selectedFlight?.callsign === flight.callsign;
+                const iconOptions: AircraftIconOptions = {
+                    heading: flight.heading || 0,
+                    status: isSelected ? 'taxiing' : // Highlight selected flight with different status
+                           flight.altitude > 1000 ? 'airborne' : 
+                           flight.altitude > 100 ? 'taxiing' : 'landed'
+                };
+                const icon = createAircraftIcon(iconOptions);
+                
+                return (
+                    <Marker 
+                        key={flight.callsign} 
+                        position={[flight.latitude, flight.longitude]} 
+                        icon={icon}
+                        zIndexOffset={isSelected ? 1000 : 0}
+                        eventHandlers={{
+                            click: () => setSelectedFlight(flight),
+                        }}
+                    />
+                );
+            } catch (error) {
+                console.error('FlightLayer: Error rendering flight', flight?.callsign, error);
+                return null;
+            }
+        }).filter(marker => marker !== null);
+    }, [throttledFlights, selectedFlight]);
     
     return (
         <>
-            {flights.map(flight => {
-                console.log('FlightLayer: Rendering flight', flight.callsign, 'at', flight.latitude, flight.longitude);
-                try {
-                    const iconOptions: AircraftIconOptions = {
-                        heading: flight.heading || 0,
-                        status: flight.altitude > 1000 ? 'airborne' : flight.altitude > 100 ? 'taxiing' : 'landed'
-                    };
-                    const icon = createAircraftIcon(iconOptions);
-                    console.log('FlightLayer: Created icon for', flight.callsign, icon);
-                    return (
-                        <Marker 
-                            key={flight.callsign} 
-                            position={[flight.latitude, flight.longitude]} 
-                            icon={icon}
-                            eventHandlers={{
-                                mouseover: () => setSelectedFlight(flight),
-                                mouseout: () => setSelectedFlight(null)
-                            }}
-                        />
-                    );
-                } catch (error) {
-                    console.error('FlightLayer: Error rendering flight', flight.callsign, error);
-                    return null;
-                }
-            })}
+            {flightMarkers}
             {selectedFlight && (
                 <FlightInfoCard
                     flight={{
-                        id: selectedFlight.livePlotId.toString(),
-                        callsign: selectedFlight.callsign,
+                        id: selectedFlight.livePlotId?.toString() || selectedFlight.callsign || 'unknown',
+                        callsign: selectedFlight.callsign || 'Unknown',
                         status: selectedFlight.altitude > 1000 ? 'airborne' : 'landed',
-                        altitude: selectedFlight.altitude,
-                        speed: selectedFlight.speed,
-                        heading: selectedFlight.heading,
-                        lastUpdate: new Date(selectedFlight.time)
+                        altitude: selectedFlight.altitude || 0,
+                        speed: selectedFlight.speed || 0,
+                        heading: selectedFlight.heading || 0,
+                        lastUpdate: new Date(selectedFlight.time || Date.now())
                     }}
                     onClose={() => setSelectedFlight(null)}
                 />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Marker, Popup } from 'react-leaflet';
+import { Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { Vehicle } from '../../services/vehicleService';
 import { createVehicleIcon, VehicleIconOptions } from '../MapIcons';
@@ -47,7 +47,14 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
     return (
         <>
             {vehicles.map(vehicle => {
+                const isSelected = selectedVehicle?.vehicle_no === vehicle.vehicle_no;
                 const iconOptions = getVehicleTypeAndStatus(vehicle);
+                
+                // Change status to 'warning' for selected vehicle to make it stand out
+                if (isSelected) {
+                    iconOptions.status = 'warning';
+                }
+                
                 return (
                     <Marker 
                         key={vehicle.vehicle_no} 
@@ -56,20 +63,8 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
                         eventHandlers={{
                             click: () => setSelectedVehicle(vehicle)
                         }}
-                    >
-                        <Popup>
-                            <div>
-                                <h3>{vehicle.vehicle_name} ({vehicle.vehicle_no})</h3>
-                                <p><strong>Type:</strong> {vehicle.vehicletype}</p>
-                                <p><strong>Company:</strong> {vehicle.company}</p>
-                                <p><strong>Status:</strong> {vehicle.status}</p>
-                                <p><strong>Speed:</strong> {vehicle.speed.toFixed(1)} km/h</p>
-                                <p><strong>Ignition:</strong> {vehicle.ign}</p>
-                                <p><strong>Location:</strong> {vehicle.location}</p>
-                                <p><strong>Last Update:</strong> {vehicle.gpsactualtime}</p>
-                            </div>
-                        </Popup>
-                </Marker>
+                        zIndexOffset={isSelected ? 1000 : 0}
+                    />
                 );
             })}
             {selectedVehicle && (

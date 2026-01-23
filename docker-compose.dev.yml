@@ -76,32 +76,6 @@ services:
       start_period: 60s
 
   # ============================================
-  # STREAM PROCESSING - ksqlDB
-  # ============================================
-  ksqldb-server:
-    image: confluentinc/ksqldb-server:0.29.0
-    depends_on:
-      redpanda:
-        condition: service_healthy
-    ports:
-      - "8088:8088"
-    environment:
-      KSQL_BOOTSTRAP_SERVERS: redpanda:29092
-      KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_KSQL_SERVICE_ID: tam_ksqldb
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://redpanda:8081
-      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
-
-  ksqldb-cli:
-    image: confluentinc/ksqldb-cli:0.29.0
-    depends_on:
-      - ksqldb-server
-    entrypoint: /bin/sh
-    tty: true
-    stdin_open: true
-
-  # ============================================
   # DATA STORAGE - TimescaleDB (PostgreSQL)
   # ============================================
   timescaledb:

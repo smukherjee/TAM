@@ -38,6 +38,7 @@ export interface FlightDisplay {
 
 export const getActiveFlights = async (): Promise<FlightDisplay[]> => {
   try {
+    // Don't pass headers here - the api interceptor already adds X-User-ICAO from localStorage
     const response = await api.get(API_URL);
     if (response.data.success && Array.isArray(response.data.data)) {
       // Map API response to display format

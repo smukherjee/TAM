@@ -37,11 +37,6 @@ scrape_configs:
   #   static_configs:
   #     - targets: ['redis-exporter:9121']
 
-  # ksqlDB
-  - job_name: 'ksqldb'
-    static_configs:
-      - targets: ['ksqldb-server:8088']
-
   # NiFi (Prometheus Reporting Task)
   - job_name: 'nifi'
     metrics_path: '/metrics'

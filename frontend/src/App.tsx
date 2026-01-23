@@ -16,7 +16,7 @@ import TagsListPage from './pages/TagsListPage';
 import LocationsListPage from './pages/LocationsListPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { user, isLoading } = useAuth();
   if (isLoading) return <div className="h-screen flex items-center justify-center bg-gray-900 text-white">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;

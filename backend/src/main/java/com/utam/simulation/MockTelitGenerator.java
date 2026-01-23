@@ -27,7 +27,8 @@ public class MockTelitGenerator {
     @Value("${simulation.vehicle-url}")
     private String ingestionUrl;
 
-    private final List<String> airports = Arrays.asList("VIDP", "VABB", "VOBL", "YBBN");
+    // VIDP (Delhi) only - YBBN has its own generator
+    private final String icao = "VIDP";
 
     private static class VehicleConfig {
         String no;
@@ -59,7 +60,6 @@ public class MockTelitGenerator {
     @Scheduled(fixedRate = 3000) // Every 3 seconds
     public void generateVehicleData() {
         VehicleConfig config = configs.get(random.nextInt(configs.size()));
-        String tenant = airports.get(random.nextInt(airports.size()));
 
         Vehicle vehicle = new Vehicle();
         vehicle.setId(UUID.randomUUID());
@@ -67,7 +67,7 @@ public class MockTelitGenerator {
         vehicle.setVehicleId(config.no);
         vehicle.setVehicleType(config.type);
 
-        vehicle.setTenantCode(tenant);
+        vehicle.setTenantCode(icao); // Always VIDP for this generator
         
         vehicle.setTimestamp(Instant.now());
 

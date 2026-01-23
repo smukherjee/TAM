@@ -23,14 +23,12 @@ help:
 	@echo "Utils:"
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make reset        - Stop services and delete all volumes"
-	@echo "  make ksql         - Open ksqlDB CLI"
 	@echo ""
 	@echo "Service URLs:"
 	@echo "  Frontend:         http://localhost:3000"
 	@echo "  Backend API:      http://localhost:8080"
 	@echo "  NiFi:             http://localhost:8091"
 	@echo "  Redpanda Console: http://localhost:8090"
-	@echo "  ksqlDB:           http://localhost:8088"
 	@echo "  Superset:         http://localhost:8089"
 	@echo "  Grafana:          http://localhost:3001"
 	@echo "  Prometheus:       http://localhost:9090"
@@ -73,7 +71,7 @@ dev-ps:
 
 # Start only infrastructure (no app build)
 infra-up:
-	docker-compose -f docker-compose.dev.yml up -d redpanda redpanda-console nifi timescaledb minio minio-init redis ksqldb-server prometheus grafana loki
+	docker-compose -f docker-compose.dev.yml up -d redpanda redpanda-console nifi timescaledb minio minio-init redis prometheus grafana loki
 
 # ============================================
 # Build Commands
@@ -87,13 +85,6 @@ frontend-build:
 
 build-all: backend-build frontend-build
 	@echo "Build complete!"
-
-# ============================================
-# ksqlDB Commands
-# ============================================
-
-ksql:
-	docker-compose -f docker-compose.dev.yml exec ksqldb-cli ksql http://ksqldb-server:8088
 
 # ============================================
 # Utility Commands

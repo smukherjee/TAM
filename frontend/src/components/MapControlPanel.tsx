@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Layers, Filter, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { Layers, Filter, ChevronDown, ChevronUp, Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { useDraggable } from '../hooks/useDraggable';
 import './MapIcons.css';
 
 interface MapControlPanelProps {
@@ -9,6 +10,8 @@ interface MapControlPanelProps {
     alerts: boolean;
   };
   onLayerToggle: (layer: 'vehicles' | 'flights' | 'alerts') => void;
+  theme?: 'dark' | 'light';
+  onThemeToggle?: () => void;
   vehicleTypes?: string[]; // Reserved for future use
   onVehicleFilter?: (types: string[]) => void;
   timeRange?: { start: Date; end: Date }; // Reserved for future use
@@ -18,13 +21,16 @@ interface MapControlPanelProps {
 const MapControlPanel: React.FC<MapControlPanelProps> = ({
   layers,
   onLayerToggle,
+  theme = 'dark',
+  onThemeToggle,
   // vehicleTypes, // Reserved for future use
   onVehicleFilter,
   // timeRange, // Reserved for future use
   // onTimeRangeChange, // Reserved for future use
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [selectedVehicleTypes, setSelectedVehicleTypes] = useState<string[]>([]);
+  const { handleMouseDown, style } = useDraggable(20, 20);
 
   const allVehicleTypes = ['bus', 'fuel_truck', 'tug', 'belt_loader', 'catering', 'other'];
 
@@ -37,14 +43,16 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   };
 
   return (
-    <div className="map-control-panel glass-panel" style={{
-      position: 'absolute',
-      top: '20px',
-      left: '20px',
-      width: '280px',
-      zIndex: 1000,
-      padding: '16px',
-    }}>
+    <div 
+      className="map-control-panel glass-panel" 
+      style={{
+        ...style,
+        width: '280px',
+        zIndex: 1000,
+        padding: '16px',
+      }}
+      onMouseDown={handleMouseDown}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -61,6 +69,35 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
 
       {!collapsed && (
         <div className="space-y-4">
+          {/* Theme Toggle */}
+          {onThemeToggle && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                {theme === 'dark' ? <Moon className="w-4 h-4 text-gray-400" /> : <Sun className="w-4 h-4 text-gray-400" />}
+                <span className="text-sm font-medium text-gray-300">Map Theme</span>
+              </div>
+              <button
+                onClick={onThemeToggle}
+                className="w-full flex items-center justify-between p-2 rounded bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+              >
+                <span className="text-sm text-gray-300 flex items-center gap-2">
+                  {theme === 'dark' ? (
+                    <><Moon className="w-4 h-4" /> Dark Mode</>
+                  ) : (
+                    <><Sun className="w-4 h-4" /> Light Mode</>
+                  )}
+                </span>
+                <div className={`w-10 h-5 rounded-full transition-colors ${
+                  theme === 'dark' ? 'bg-blue-600' : 'bg-gray-600'
+                } relative`}>
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                    theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </div>
+              </button>
+            </div>
+          )}
+
           {/* Layer Toggles */}
           <div>
             <div className="flex items-center gap-2 mb-2">

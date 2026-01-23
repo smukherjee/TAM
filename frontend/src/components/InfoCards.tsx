@@ -1,5 +1,6 @@
 import React from 'react';
 import { Truck, Plane, MapPin, Clock, Activity } from 'lucide-react';
+import { useDraggable } from '../hooks/useDraggable';
 import './MapIcons.css';
 
 interface VehicleInfoCardProps {
@@ -30,11 +31,14 @@ interface FlightInfoCardProps {
 }
 
 export const VehicleInfoCard: React.FC<VehicleInfoCardProps> = ({ vehicle, onClose }) => {
+  const { handleMouseDown, style: draggableStyle } = useDraggable(20, window.innerHeight - 300);
+  
   return (
-    <div className="info-card glass-panel" style={{
-      position: 'absolute',
-      bottom: '20px',
-      left: '20px',
+    <div 
+      className="info-card glass-panel" 
+      onMouseDown={handleMouseDown}
+      style={{
+      ...draggableStyle,
       width: '320px',
       zIndex: 1000,
       padding: '16px',
@@ -107,11 +111,14 @@ export const VehicleInfoCard: React.FC<VehicleInfoCardProps> = ({ vehicle, onClo
 };
 
 export const FlightInfoCard: React.FC<FlightInfoCardProps> = ({ flight, onClose }) => {
+  const { handleMouseDown, style: draggableStyle } = useDraggable(20, window.innerHeight - 300);
+  
   return (
-    <div className="info-card glass-panel" style={{
-      position: 'absolute',
-      bottom: '20px',
-      left: '20px',
+    <div 
+      className="info-card glass-panel" 
+      onMouseDown={handleMouseDown}
+      style={{
+      ...draggableStyle,
       width: '320px',
       zIndex: 1000,
       padding: '16px',
