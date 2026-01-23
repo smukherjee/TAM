@@ -1,0 +1,140 @@
+/* Vehicle and Aircraft Icon Styles */
+.vehicle-icon,
+.aircraft-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.vehicle-icon-wrapper,
+.aircraft-icon-wrapper {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.vehicle-icon:hover .vehicle-icon-wrapper,
+.aircraft-icon:hover .aircraft-icon-wrapper {
+  transform: scale(1.15);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Pulse animation for alerts */
+@keyframes map-icon-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.map-icon-pulse .vehicle-icon-wrapper,
+.map-icon-pulse .aircraft-icon-wrapper {
+  animation: map-icon-pulse 1.5s ease-in-out infinite;
+}
+
+/* Smooth rotation for aircraft */
+.aircraft-icon svg {
+  transition: transform 0.5s ease;
+}
+
+/* Dark theme styles for map controls */
+.map-control-panel,
+.enhanced-alert-list,
+.info-card {
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Glassmorphism effect */
+.glass-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.9),
+    rgba(31, 41, 55, 0.8)
+  );
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+/* Smooth transitions */
+.map-control-panel,
+.enhanced-alert-list,
+.info-card {
+  transition: all 0.3s ease;
+}
+
+.map-control-panel:hover,
+.enhanced-alert-list:hover,
+.info-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Bounce animation for new alerts */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.alert-item-new {
+  animation: bounce-in 0.4s ease-out;
+}
+
+/* Status indicator dots */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-dot.active,
+.status-dot.airborne {
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+.status-dot.alert {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-dot.warning {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.status-dot.idle,
+.status-dot.landed {
+  background: #6b7280;
+}
+
+.status-dot.taxiing {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

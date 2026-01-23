@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import MapComponent from '../components/Map/MapComponent';
 import FlightLayer from '../components/Map/FlightLayer';
 import VehicleLayer from '../components/Map/VehicleLayer';
-import AlertList from '../components/Alerts/AlertList';
+import EnhancedAlertList from '../components/EnhancedAlertList';
+import MapControlPanel from '../components/MapControlPanel';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { webSocketService } from '../services/WebSocketService';
@@ -22,6 +23,7 @@ const MapPage: React.FC = () => {
     const { user } = useAuth();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [layers, setLayers] = useState({ vehicles: true, flights: true, alerts: true });
     const icao = user?.icaoCode || 'VIDP';
 
     const getCenter = (): [number, number] => {
@@ -81,18 +83,44 @@ const MapPage: React.FC = () => {
         };
     }, [icao]);
 
+    const handleLayerToggle = (layer: 'vehicles' | 'flights' | 'alerts') => {
+        setLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
+    };
+
+    const handleAlertDismiss = (alertId: string) => {
+        setAlerts(prev => prev.filter(a => a.alertId !== alertId));
+    };
+
+    const enhancedAlerts = alerts.map(a => ({
+        id: a.alertId,
+        vehicleId: a.entityId,
+        message: `${a.type}: ${a.value}`,
+        severity: a.type.toLowerCase().includes('critical') ? 'critical' as const : 
+                  a.type.toLowerCase().includes('warning') ? 'warning' as const : 'info' as const,
+        timestamp: new Date(a.timestamp)
+    }));
+
     return (
         <div className="h-full flex flex-col">
             <div className="flex-1 relative">
                 <MapComponent center={getCenter()} zoom={14}>
-                    <FlightLayer />
-                    <VehicleLayer vehicles={vehicles} />
+                    {layers.flights && <FlightLayer />}
+                    {layers.vehicles && <VehicleLayer vehicles={vehicles} />}
                 </MapComponent>
                 
-                {/* Overlay Alerts */}
-                <div className="absolute top-4 right-4 w-96 z-[1000]">
-                    <AlertList alerts={alerts} />
-                </div>
+                {/* Map Control Panel */}
+                <MapControlPanel
+                    layers={layers}
+                    onLayerToggle={handleLayerToggle}
+                />
+                
+                {/* Enhanced Alert List */}
+                {layers.alerts && (
+                    <EnhancedAlertList
+                        alerts={enhancedAlerts}
+                        onDismiss={handleAlertDismiss}
+                    />
+                )}
             </div>
         </div>
     );

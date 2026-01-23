@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import { FlightDisplay, getActiveFlights, Flight } from '../../services/flightService';
+import { Marker } from 'react-leaflet';
+import { FlightDisplay, getActiveFlights } from '../../services/flightService';
 import { useAuth } from '../../context/AuthContext';
 import { webSocketService } from '../../services/WebSocketService';
-
-const planeIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">✈️</div>',
-    className: 'custom-plane-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
+import { createAircraftIcon, AircraftIconOptions } from '../MapIcons';
+import { FlightInfoCard } from '../InfoCards';
+import '../MapIcons.css';
 
 interface FlightDisplayWithTimestamp extends FlightDisplay {
     lastUpdated: number;
@@ -18,6 +13,7 @@ interface FlightDisplayWithTimestamp extends FlightDisplay {
 
 const FlightLayer: React.FC = () => {
     const [flights, setFlights] = useState<FlightDisplayWithTimestamp[]>([]);
+    const [selectedFlight, setSelectedFlight] = useState<FlightDisplayWithTimestamp | null>(null);
     const { user } = useAuth();
     const icao = user?.icaoCode || 'VIDP';
 
@@ -25,23 +21,26 @@ const FlightLayer: React.FC = () => {
         const fetchFlights = async () => {
             const data = await getActiveFlights();
             const now = Date.now();
+            console.log('FlightLayer: Fetched initial flights:', data.length);
             setFlights(data.map(f => ({ ...f, lastUpdated: now })));
         };
 
         fetchFlights();
 
         // Subscribe to WebSocket
-        const subscription = webSocketService.subscribe(`/topic/flights/${icao}`, (msg: Flight) => {
+        console.log('FlightLayer: Subscribing to /topic/flights/' + icao);
+        const subscription = webSocketService.subscribe(`/topic/flights/${icao}`, (msg: any) => {
+            console.log('FlightLayer: Received flight via WebSocket:', msg);
             const flightDisplay: FlightDisplayWithTimestamp = {
-                livePlotId: msg.LivePlotId,
-                callsign: msg.CallSign,
-                latitude: msg.Lat,
-                longitude: msg.Lon,
-                speed: msg.Speed,
-                heading: msg.Heading,
-                altitude: msg.Altitude,
-                status: msg.Status,
-                time: msg.Time,
+                livePlotId: msg.LivePlotId || msg.id || msg.livePlotId || 'unknown',
+                callsign: msg.CallSign || msg.callsign,
+                latitude: msg.Lat || msg.latitude,
+                longitude: msg.Lon || msg.longitude,
+                speed: msg.Speed || msg.speed,
+                heading: msg.Heading || msg.heading,
+                altitude: msg.Altitude || msg.altitude,
+                status: msg.Status || msg.status || 'AIRBORNE',
+                time: msg.Time || msg.time || msg.timestamp,
                 lastUpdated: Date.now()
             };
 
@@ -53,9 +52,11 @@ const FlightLayer: React.FC = () => {
                     // Update existing flight
                     const newFlights = [...prev];
                     newFlights[index] = flightDisplay;
+                    console.log('FlightLayer: Updated flight', flightDisplay.callsign, 'Total flights:', newFlights.length);
                     return newFlights;
                 } else {
                     // Add new flight
+                    console.log('FlightLayer: Added new flight', flightDisplay.callsign, 'Total flights:', prev.length + 1);
                     return [...prev, flightDisplay];
                 }
             });
@@ -73,21 +74,49 @@ const FlightLayer: React.FC = () => {
         };
     }, [icao]);
 
+    console.log('FlightLayer: Rendering', flights.length, 'flights');
+    
     return (
         <>
-            {flights.map(flight => (
-                <Marker key={flight.callsign} position={[flight.latitude, flight.longitude]} icon={planeIcon}>
-                    <Popup>
-                        <div>
-                            <h3>{flight.callsign}</h3>
-                            <p><strong>Lat/Lon:</strong> {flight.latitude.toFixed(4)}, {flight.longitude.toFixed(4)}</p>
-                            <p><strong>Altitude:</strong> {flight.altitude?.toFixed(0)} ft</p>
-                            <p><strong>Speed:</strong> {flight.speed.toFixed(0)} kts</p>
-                            <p><strong>Heading:</strong> {flight.heading.toFixed(0)}°</p>
-                        </div>
-                    </Popup>
-                </Marker>
-            ))}
+            {flights.map(flight => {
+                console.log('FlightLayer: Rendering flight', flight.callsign, 'at', flight.latitude, flight.longitude);
+                try {
+                    const iconOptions: AircraftIconOptions = {
+                        heading: flight.heading || 0,
+                        status: flight.altitude > 1000 ? 'airborne' : flight.altitude > 100 ? 'taxiing' : 'landed'
+                    };
+                    const icon = createAircraftIcon(iconOptions);
+                    console.log('FlightLayer: Created icon for', flight.callsign, icon);
+                    return (
+                        <Marker 
+                            key={flight.callsign} 
+                            position={[flight.latitude, flight.longitude]} 
+                            icon={icon}
+                            eventHandlers={{
+                                mouseover: () => setSelectedFlight(flight),
+                                mouseout: () => setSelectedFlight(null)
+                            }}
+                        />
+                    );
+                } catch (error) {
+                    console.error('FlightLayer: Error rendering flight', flight.callsign, error);
+                    return null;
+                }
+            })}
+            {selectedFlight && (
+                <FlightInfoCard
+                    flight={{
+                        id: selectedFlight.livePlotId.toString(),
+                        callsign: selectedFlight.callsign,
+                        status: selectedFlight.altitude > 1000 ? 'airborne' : 'landed',
+                        altitude: selectedFlight.altitude,
+                        speed: selectedFlight.speed,
+                        heading: selectedFlight.heading,
+                        lastUpdate: new Date(selectedFlight.time)
+                    }}
+                    onClose={() => setSelectedFlight(null)}
+                />
+            )}
         </>
     );
 };

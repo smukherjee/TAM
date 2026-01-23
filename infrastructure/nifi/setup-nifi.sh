@@ -36,6 +36,39 @@ get_pg_id_by_name() {
         jq -r ".processGroups[] | select(.component.name == \"$NAME\") | .id"
 }
 
+create_http_context_map() {
+    local PG_ID=$1
+    
+    # Check if exists
+    local EXISTING=$(curl -s "$NIFI_URL/flow/process-groups/$PG_ID/controller-services" | \
+        jq -r '.controllerServices[] | select(.component.type == "org.apache.nifi.http.StandardHttpContextMap") | .id')
+    
+    if [ -n "$EXISTING" ]; then
+        echo "$EXISTING"
+        return
+    fi
+    
+    # Create
+    local ID=$(curl -s -X POST "$NIFI_URL/process-groups/$PG_ID/controller-services" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "revision":{"version":0},
+            "component":{
+                "type":"org.apache.nifi.http.StandardHttpContextMap",
+                "name":"HttpContextMap"
+            }
+        }' | jq -r '.id')
+    
+    # Enable it
+    sleep 1
+    local VER=$(curl -s "$NIFI_URL/controller-services/$ID" | jq -r '.revision.version')
+    curl -s -X PUT "$NIFI_URL/controller-services/$ID/run-status" \
+        -H "Content-Type: application/json" \
+        -d "{\"revision\":{\"version\":$VER},\"state\":\"ENABLED\"}" > /dev/null
+    
+    echo "$ID"
+}
+
 create_process_group() {
     local PARENT_ID=$1
     local NAME=$2
@@ -60,10 +93,28 @@ create_listen_http() {
     local NAME=$2
     local PORT=$3
     local BASE_PATH=$4
+    local HTTP_CONTEXT_MAP_ID=$5
     
     # Check if exists
     local EXISTING=$(curl -s "$NIFI_URL/process-groups/$PG_ID/processors" | jq -r ".processors[] | select(.component.name == \"$NAME\") | .id")
     if [ -n "$EXISTING" ]; then
+        # Update to use HttpContextMap
+        local VER=$(curl -s "$NIFI_URL/processors/$EXISTING" | jq -r '.revision.version')
+        curl -s -X PUT "$NIFI_URL/processors/$EXISTING" \
+            -H "Content-Type: application/json" \
+            -d "{
+                \"revision\":{\"version\":$VER},
+                \"component\":{
+                    \"id\":\"$EXISTING\",
+                    \"config\":{
+                        \"properties\":{
+                            \"Listening Port\":\"$PORT\",
+                            \"Base Path\":\"$BASE_PATH\",
+                            \"HTTP Context Map\":\"$HTTP_CONTEXT_MAP_ID\"
+                        }
+                    }
+                }
+            }" > /dev/null
         echo "$EXISTING"
         return
     fi
@@ -79,7 +130,8 @@ create_listen_http() {
                 \"config\":{
                     \"properties\":{
                         \"Listening Port\":\"$PORT\",
-                        \"Base Path\":\"$BASE_PATH\"
+                        \"Base Path\":\"$BASE_PATH\",
+                        \"HTTP Context Map\":\"$HTTP_CONTEXT_MAP_ID\"
                     }
                 }
             }
@@ -196,10 +248,15 @@ check_prereqs
 ROOT_PG_ID=$(get_root_pg)
 echo "📁 Root Process Group ID: $ROOT_PG_ID"
 
+# Create HttpContextMap controller service (required for ListenHTTP)
+echo "🔧 Creating HttpContextMap controller service..."
+HTTP_CONTEXT_MAP_ID=$(create_http_context_map "$ROOT_PG_ID")
+echo "   ✅ HttpContextMap ID: $HTTP_CONTEXT_MAP_ID"
+
 # 1. ADSB Ingestion
 echo "📦 Configuring ADSB Ingestion..."
 ADSB_PG=$(create_process_group "$ROOT_PG_ID" "ADSB Ingestion" 100 100)
-ADSB_HTTP=$(create_listen_http "$ADSB_PG" "Listen ADSB HTTP" "8092" "adsb-ingest")
+ADSB_HTTP=$(create_listen_http "$ADSB_PG" "Listen ADSB HTTP" "8092" "adsb-ingest" "$HTTP_CONTEXT_MAP_ID")
 ADSB_KAFKA=$(create_publish_kafka "$ADSB_PG" "Publish to flight-raw-json" "flight-raw-json")
 connect_processors "$ADSB_PG" "$ADSB_HTTP" "$ADSB_KAFKA"
 start_process_group "$ADSB_PG"
@@ -207,7 +264,7 @@ start_process_group "$ADSB_PG"
 # 2. Vehicle Ingestion
 echo "📦 Configuring Vehicle Ingestion..."
 VEHICLE_PG=$(create_process_group "$ROOT_PG_ID" "Vehicle Ingestion" 100 300)
-VEHICLE_HTTP=$(create_listen_http "$VEHICLE_PG" "Listen Vehicle HTTP" "8093" "vehicle-ingest")
+VEHICLE_HTTP=$(create_listen_http "$VEHICLE_PG" "Listen Vehicle HTTP" "8093" "vehicle-ingest" "$HTTP_CONTEXT_MAP_ID")
 VEHICLE_KAFKA=$(create_publish_kafka "$VEHICLE_PG" "Publish to vehicle-raw-json" "vehicle-raw-json")
 connect_processors "$VEHICLE_PG" "$VEHICLE_HTTP" "$VEHICLE_KAFKA"
 start_process_group "$VEHICLE_PG"
@@ -215,7 +272,7 @@ start_process_group "$VEHICLE_PG"
 # 3. CV Event Ingestion
 echo "📦 Configuring CV Event Ingestion..."
 CV_PG=$(create_process_group "$ROOT_PG_ID" "CV Event Ingestion" 100 500)
-CV_HTTP=$(create_listen_http "$CV_PG" "Listen CV HTTP" "8094" "cv-event-ingest")
+CV_HTTP=$(create_listen_http "$CV_PG" "Listen CV HTTP" "8094" "cv-event-ingest" "$HTTP_CONTEXT_MAP_ID")
 CV_KAFKA=$(create_publish_kafka "$CV_PG" "Publish to turnaround-raw-json" "turnaround-raw-json")
 connect_processors "$CV_PG" "$CV_HTTP" "$CV_KAFKA"
 start_process_group "$CV_PG"

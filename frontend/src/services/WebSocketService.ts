@@ -43,6 +43,7 @@ class WebSocketService {
     }
 
     subscribe(topic: string, callback: (message: any) => void): { unsubscribe: () => void } {
+        console.log('[WebSocket] Subscribing to topic:', topic);
         // Always track the subscription so we can re-subscribe on reconnect
         const subscriptionRecord = { 
             topic, 
@@ -53,13 +54,18 @@ class WebSocketService {
 
         if (this.client.connected) {
             subscriptionRecord.subscription = this.client.subscribe(topic, (message: IMessage) => {
+                console.log('[WebSocket] Received message on topic:', topic, 'Body:', message.body);
                 try {
                     const body = JSON.parse(message.body);
+                    console.log('[WebSocket] Parsed message:', body);
                     callback(body);
                 } catch (e) {
                     console.error('Error parsing WebSocket message', e);
                 }
             });
+            console.log('[WebSocket] Successfully subscribed to:', topic);
+        } else {
+            console.log('[WebSocket] Not connected yet, subscription will be processed when connected');
         }
 
         return {

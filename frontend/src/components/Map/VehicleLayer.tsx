@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Vehicle } from '../../services/vehicleService';
+import { createVehicleIcon, VehicleIconOptions } from '../MapIcons';
+import { VehicleInfoCard } from '../InfoCards';
+import '../MapIcons.css';
 
 // Fix for default marker icon (if not already handled globally)
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -16,61 +19,22 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const busIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">🚌</div>',
-    className: 'custom-bus-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
-
-const truckIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">🚛</div>',
-    className: 'custom-truck-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
-
-const carIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">🚗</div>',
-    className: 'custom-car-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
-
-const suvIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">🚙</div>',
-    className: 'custom-suv-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
-
-const gseIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">🚜</div>',
-    className: 'custom-gse-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
-
-const cateringIcon = L.divIcon({
-    html: '<div style="font-size: 24px; line-height: 1;">🍱</div>',
-    className: 'custom-catering-icon',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-});
-
-const getIconForType = (type: string) => {
-    if (!type) return carIcon;
-    const lowerType = type.toLowerCase();
+const getVehicleTypeAndStatus = (vehicle: Vehicle): VehicleIconOptions => {
+    const lowerType = (vehicle.vehicletype || '').toLowerCase();
+    let type: VehicleIconOptions['type'] = 'other';
     
-    if (lowerType.includes('bus')) return busIcon;
-    if (lowerType.includes('truck')) return truckIcon;
-    if (lowerType.includes('suv')) return suvIcon;
-    if (lowerType.includes('compactor')) return gseIcon;
-    if (lowerType.includes('headunit')) return cateringIcon; // TajSats
-    if (lowerType.includes('catering')) return cateringIcon;
-    if (lowerType.includes('tug')) return gseIcon;
+    if (lowerType.includes('bus')) type = 'bus';
+    else if (lowerType.includes('truck') || lowerType.includes('fuel')) type = 'fuel_truck';
+    else if (lowerType.includes('tug')) type = 'tug';
+    else if (lowerType.includes('compactor') || lowerType.includes('belt')) type = 'belt_loader';
+    else if (lowerType.includes('catering') || lowerType.includes('headunit')) type = 'catering';
     
-    return carIcon; // Default
+    // Determine status based on vehicle data
+    let status: VehicleIconOptions['status'] = 'idle';
+    if (vehicle.ign === 'ON' && vehicle.speed > 5) status = 'active';
+    else if (vehicle.speed > 20) status = 'warning'; // Example: speeding
+    
+    return { type, status };
 };
 
 interface VehicleLayerProps {
@@ -78,28 +42,49 @@ interface VehicleLayerProps {
 }
 
 const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
+    const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+
     return (
         <>
-            {vehicles.map(vehicle => (
-                <Marker 
-                    key={vehicle.vehicle_no} 
-                    position={[vehicle.latitude, vehicle.longitude]} 
-                    icon={getIconForType(vehicle.vehicletype)}
-                >
-                    <Popup>
-                        <div>
-                            <h3>{vehicle.vehicle_name} ({vehicle.vehicle_no})</h3>
-                            <p><strong>Type:</strong> {vehicle.vehicletype}</p>
-                            <p><strong>Company:</strong> {vehicle.company}</p>
-                            <p><strong>Status:</strong> {vehicle.status}</p>
-                            <p><strong>Speed:</strong> {vehicle.speed.toFixed(1)} km/h</p>
-                            <p><strong>Ignition:</strong> {vehicle.ign}</p>
-                            <p><strong>Location:</strong> {vehicle.location}</p>
-                            <p><strong>Last Update:</strong> {vehicle.gpsactualtime}</p>
-                        </div>
-                    </Popup>
+            {vehicles.map(vehicle => {
+                const iconOptions = getVehicleTypeAndStatus(vehicle);
+                return (
+                    <Marker 
+                        key={vehicle.vehicle_no} 
+                        position={[vehicle.latitude, vehicle.longitude]} 
+                        icon={createVehicleIcon(iconOptions)}
+                        eventHandlers={{
+                            click: () => setSelectedVehicle(vehicle)
+                        }}
+                    >
+                        <Popup>
+                            <div>
+                                <h3>{vehicle.vehicle_name} ({vehicle.vehicle_no})</h3>
+                                <p><strong>Type:</strong> {vehicle.vehicletype}</p>
+                                <p><strong>Company:</strong> {vehicle.company}</p>
+                                <p><strong>Status:</strong> {vehicle.status}</p>
+                                <p><strong>Speed:</strong> {vehicle.speed.toFixed(1)} km/h</p>
+                                <p><strong>Ignition:</strong> {vehicle.ign}</p>
+                                <p><strong>Location:</strong> {vehicle.location}</p>
+                                <p><strong>Last Update:</strong> {vehicle.gpsactualtime}</p>
+                            </div>
+                        </Popup>
                 </Marker>
-            ))}
+                );
+            })}
+            {selectedVehicle && (
+                <VehicleInfoCard
+                    vehicle={{
+                        id: selectedVehicle.vehicle_no,
+                        type: selectedVehicle.vehicletype,
+                        status: selectedVehicle.ign === 'ON' ? 'active' : 'idle',
+                        location: { lat: selectedVehicle.latitude, lng: selectedVehicle.longitude },
+                        speed: selectedVehicle.speed,
+                        lastUpdate: new Date(selectedVehicle.gpsactualtime)
+                    }}
+                    onClose={() => setSelectedVehicle(null)}
+                />
+            )}
         </>
     );
 };
