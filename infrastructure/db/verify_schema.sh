@@ -13,7 +13,7 @@ echo "========================================================"
 echo -e "\n[1] Checking Table Existence (Should see 13 tables)..."
 docker exec $DB_CONTAINER psql -U $DB_USER -d $DB_NAME -c "\dt"
 
-echo -e "\n[2] Checking Seeded Tenants (Should see VIDP and LIRN)..."
+echo -e "\n[2] Checking Seeded Tenants (Should see VIDP, LIRN, and YBBN)..."
 docker exec $DB_CONTAINER psql -U $DB_USER -d $DB_NAME -c "SELECT code, name, timezone FROM tenants;"
 
 echo -e "\n[3] Checking Seeded Users (Should see 6 users linked to tenants)..."

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,36 +38,76 @@ public class CVEventConsumer {
     @Transactional
     public void consume(String message) {
         try {
-            // Assuming message is JSON for now, even if topic says avro (NiFi publishes JSON)
-            Map<String, Object> event = objectMapper.readValue(message, Map.class);
-            logger.info("Received CV event: {}", event);
-
-            String flightId = (String) event.get("flight_id");
-            String eventType = (String) event.get("event_type"); // e.g., "bridge_connect", "baggage_start"
-            String timestampStr = (String) event.get("timestamp");
-            String tenantCode = (String) event.getOrDefault("tenant_code", "VIDP");
-
-            if (flightId == null) {
-                logger.warn("CV event missing flight_id: {}", message);
+            // Topic contains mixed schemas (camera CV events + flight turnaround events).
+            // Handle arrays (camera CV batches) without throwing; only process events that carry flight_id.
+            if (message == null || message.isBlank()) {
                 return;
             }
 
-            Optional<TurnaroundSession> sessionOpt = sessionRepository.findByFlightIdAndTenantCode(flightId, tenantCode);
-            if (sessionOpt.isEmpty()) {
-                logger.warn("No active session found for flight {}", flightId);
-                return;
+            if (message.trim().startsWith("[")) {
+                List<Map<String, Object>> events = objectMapper.readValue(message, List.class);
+                for (Map<String, Object> event : events) {
+                    processOne(event);
+                }
+            } else {
+                Map<String, Object> event = objectMapper.readValue(message, Map.class);
+                processOne(event);
             }
-
-            TurnaroundSession session = sessionOpt.get();
-            updateSessionWithEvent(session, eventType, timestampStr);
-            sessionRepository.save(session);
 
         } catch (Exception e) {
             logger.error("Error processing CV event: {}", message, e);
         }
     }
 
+    private void processOne(Map<String, Object> event) {
+        if (event == null || event.isEmpty()) {
+            return;
+        }
+
+        String flightId = (String) (event.containsKey("flight_id") ? event.get("flight_id") : event.get("flightId"));
+        String eventType = (String) (event.containsKey("event_type") ? event.get("event_type") : event.get("eventType"));
+        String timestampStr = (String) event.getOrDefault("timestamp", event.get("eventTimeStamp"));
+
+        // Prefer explicit tenant_code; fall back to icao_code for now (VIDP/LIRN/YBBN), else default.
+        String tenantCode = (String) event.getOrDefault("tenant_code", event.getOrDefault("icao_code", "VIDP"));
+
+        // Optional stand fields; default to A1 for demo data.
+        String standId = (String) event.getOrDefault("stand", event.getOrDefault("stand_id", "A1"));
+
+        if (flightId == null || flightId.isBlank()) {
+            // Camera events don't have flight_id; ignore quietly to avoid log spam.
+            return;
+        }
+
+        logger.info("Received CV event for flight {}: {}", flightId, event);
+
+        Optional<TurnaroundSession> sessionOpt = sessionRepository.findByFlightIdAndTenantCode(flightId, tenantCode);
+        TurnaroundSession session;
+        if (sessionOpt.isPresent()) {
+            session = sessionOpt.get();
+        } else {
+            // Auto-create a session so turnaround data can be generated from CV events alone.
+            session = new TurnaroundSession();
+            session.setId(UUID.randomUUID());
+            session.setTenantCode(tenantCode);
+            session.setFlightId(flightId);
+            session.setStandId(standId);
+            session.setStatus("SCHEDULED");
+            session.setCreatedAt(ZonedDateTime.now());
+            session.setUpdatedAt(ZonedDateTime.now());
+            session = sessionRepository.save(session);
+            logger.info("Created new turnaround session {} for flight {} (tenant={})", session.getId(), flightId, tenantCode);
+        }
+
+        updateSessionWithEvent(session, eventType, timestampStr);
+        session.setUpdatedAt(ZonedDateTime.now());
+        sessionRepository.save(session);
+    }
+
     private void updateSessionWithEvent(TurnaroundSession session, String eventType, String timestampStr) {
+        if (eventType == null || timestampStr == null) {
+            return;
+        }
         ZonedDateTime timestamp = ZonedDateTime.parse(timestampStr); // Ensure format matches
 
         // Map CV events to Tasks
@@ -96,6 +138,9 @@ public class CVEventConsumer {
     }
 
     private void updateTask(TurnaroundSession session, String taskType, String eventType, ZonedDateTime timestamp) {
+        if (session.getTasks() == null) {
+            session.setTasks(new ArrayList<>());
+        }
         Optional<TurnaroundTask> taskOpt = session.getTasks().stream()
                 .filter(t -> t.getTaskType().equals(taskType))
                 .findFirst();

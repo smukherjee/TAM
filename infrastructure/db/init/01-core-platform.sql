@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS tenants (
 -- Seed Tenants
 INSERT INTO tenants (code, name, timezone) VALUES
 ('VIDP', 'Indira Gandhi International Airport', 'Asia/Kolkata'),
-('LIRN', 'Naples International Airport', 'Europe/Rome')
+('LIRN', 'Naples International Airport', 'Europe/Rome'),
+('YBBN', 'Brisbane International Airport', 'Australia/Brisbane')
 ON CONFLICT (code) DO NOTHING;
 
 -- 3. Users & Roles
@@ -38,7 +39,10 @@ INSERT INTO users (username, password, role, tenant_code) VALUES
 ('user_vidp', 'user', 'AIRPORT_USER', 'VIDP'),
 ('admin_lirn', 'admin', 'ADMIN', 'LIRN'),
 ('gh_lirn', 'gh', 'GH', 'LIRN'),
-('user_lirn', 'user', 'AIRPORT_USER', 'LIRN')
+('user_lirn', 'user', 'AIRPORT_USER', 'LIRN'),
+('admin_ybbn', 'admin', 'ADMIN', 'YBBN'),
+('gh_ybbn', 'gh', 'GH', 'YBBN'),
+('user_ybbn', 'user', 'AIRPORT_USER', 'YBBN')
 ON CONFLICT (username) DO NOTHING;
 
 -- 4. Audit Logs (Traceability)

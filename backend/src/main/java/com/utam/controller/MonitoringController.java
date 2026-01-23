@@ -90,7 +90,12 @@ public class MonitoringController {
                 "simulator_events_generated_total{type=\"turnaround\",icao=\"LIRN\"}");
         double lirnSourceRate = calculateRate("lirn_source", lirnSourceCount, now);
 
-        // 3. ADSB Flight Tracking
+        // 3. Turnaround (YBBN)
+        double ybbnSourceCount = getPrometheusMetric(
+                "simulator_events_generated_total{type=\"turnaround\",icao=\"YBBN\"}");
+        double ybbnSourceRate = calculateRate("ybbn_source", ybbnSourceCount, now);
+
+        // 4. ADSB Flight Tracking
         double adsbSourceCount = getPrometheusMetric("simulator_events_generated_total{type=\"flight\"}");
         double adsbSourceRate = calculateRate("adsb_source", adsbSourceCount, now);
 
@@ -105,6 +110,7 @@ public class MonitoringController {
         // Calculate health based on last data time
         String vidpHealth = calculateHealth("vidp_source");
         String lirnHealth = calculateHealth("lirn_source");
+        String ybbnHealth = calculateHealth("ybbn_source");
         String adsbHealth = calculateHealth("adsb_source");
         String vehicleHealth = calculateHealth("vehicle_source");
 
@@ -115,6 +121,7 @@ public class MonitoringController {
         // Create wrapper helpers
         statusList.add(createStatus("Turnaround (VIDP)", "turnaround", "VIDP", turnaroundLag));
         statusList.add(createStatus("Turnaround (LIRN)", "turnaround", "LIRN", turnaroundLag));
+        statusList.add(createStatus("Turnaround (YBBN)", "turnaround", "YBBN", turnaroundLag));
         statusList.add(createStatus("ADSB Flight Tracking", "flight", null, 0));
         statusList.add(createStatus("Vehicle Tracking", "vehicle", null, 0));
 

@@ -34,13 +34,32 @@ sleep 2
 
 echo "🔎 Checking Kafka Topics..."
 
+get_redpanda_container() {
+  # Prefer docker compose service lookup (works across project names)
+  local cid
+  cid=$(docker compose ps -q redpanda 2>/dev/null || true)
+  if [ -n "${cid}" ]; then
+    echo "${cid}"
+    return
+  fi
+
+  # Fallbacks (older naming)
+  if docker ps --format '{{.Names}}' | grep -q '^tam-redpanda-1$'; then
+    echo 'tam-redpanda-1'
+    return
+  fi
+  echo 'tam-redpanda'
+}
+
+RP_CONTAINER=$(get_redpanda_container)
+
 # Check ADSB
 echo "--- flight-raw-json ---"
-docker exec tam-redpanda rpk topic consume flight-raw-json --num 20 --offset -20 2>/dev/null | grep "NIFI-VERIFY" || echo "❌ Not Found"
+docker exec "${RP_CONTAINER}" rpk topic consume flight-raw-json --num 20 --offset -20 2>/dev/null | grep "NIFI-VERIFY" || echo "❌ Not Found"
 
 # Check Vehicle
 echo "--- vehicle-raw-json ---"
-docker exec tam-redpanda rpk topic consume vehicle-raw-json --num 20 --offset -20 2>/dev/null | grep "NIFI-VEH-1" || echo "❌ Not Found"
+docker exec "${RP_CONTAINER}" rpk topic consume vehicle-raw-json --num 20 --offset -20 2>/dev/null | grep "NIFI-VEH-1" || echo "❌ Not Found"
 
 echo "🧪 Sending CV Event data..."
 curl -s -X POST http://localhost:8094/cv-event-ingest \
@@ -54,4 +73,4 @@ curl -s -X POST http://localhost:8094/cv-event-ingest \
   }]'
 
 echo "--- turnaround-raw-json ---"
-docker exec tam-redpanda rpk topic consume turnaround-raw-json --num 5 --offset -5 2>/dev/null | grep "NIFI_TEST_ACTIVITY" || echo "❌ Not Found"
+docker exec "${RP_CONTAINER}" rpk topic consume turnaround-raw-json --num 5 --offset -5 2>/dev/null | grep "NIFI_TEST_ACTIVITY" || echo "❌ Not Found"

@@ -1,7 +1,7 @@
 # TAM Platform - Development Makefile
 # Commands to manage the development infrastructure
 
-.PHONY: help dev-up dev-down dev-logs dev-ps backend-build frontend-build clean reset
+.PHONY: help dev-up dev-up-only dev-down dev-logs dev-ps backend-build frontend-build clean reset
 
 # Default target
 help:
@@ -41,6 +41,9 @@ help:
 # ============================================
 
 dev-up:
+	@bash infrastructure/dev-up-all.sh
+
+dev-up-only:
 	docker-compose -f docker-compose.dev.yml up -d
 	@echo ""
 	@echo "Services starting... Check with 'make dev-ps'"
@@ -77,7 +80,7 @@ infra-up:
 # ============================================
 
 backend-build:
-	cd backend && ./mvnw clean package -DskipTests
+	cd backend && mvn clean package -DskipTests
 
 frontend-build:
 	cd frontend && npm install && npm run build
@@ -97,7 +100,7 @@ ksql:
 # ============================================
 
 clean:
-	cd backend && ./mvnw clean
+	cd backend && mvn clean
 	cd frontend && rm -rf node_modules dist
 
 reset:

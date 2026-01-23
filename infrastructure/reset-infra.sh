@@ -9,6 +9,29 @@ NIFI_URL="http://localhost:8091/nifi-api"
 TARGET=${1:-all}
 FORCE=false
 
+wait_for_http_ok() {
+    local url="$1"
+    local timeout_seconds="${2:-120}"
+    local sleep_seconds="${3:-2}"
+
+    local start_ts
+    start_ts=$(date +%s)
+
+    while true; do
+        if curl -fsS "$url" > /dev/null; then
+            return 0
+        fi
+
+        local now_ts
+        now_ts=$(date +%s)
+        if (( now_ts - start_ts >= timeout_seconds )); then
+            return 1
+        fi
+
+        sleep "$sleep_seconds"
+    done
+}
+
 if [[ "$*" == *"--force"* ]]; then
     FORCE=true
 fi
@@ -21,9 +44,9 @@ echo "🧨 Starting TAM Infrastructure Reset (Target: $TARGET, Force: $FORCE)...
 
 reset_nifi() {
     echo "🧨 [NiFi] Resetting Flows..."
-    
-    if ! curl -s "$NIFI_URL/flow/about" > /dev/null; then
-        echo "   ⚠️ NiFi is not reachable. Cannot reset."
+
+    if ! wait_for_http_ok "$NIFI_URL/flow/about" 120 2; then
+        echo "   ⚠️ NiFi is not reachable at $NIFI_URL after waiting. Cannot reset."
         return
     fi
 

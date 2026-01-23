@@ -26,7 +26,7 @@ create_chart() {
     echo "$RESP" | jq -r '.id'
 }
 
-for TENANT in "VIDP" "LIRN"; do
+for TENANT in "VIDP" "LIRN" "YBBN"; do
     LOWER=$(echo "$TENANT" | tr '[:upper:]' '[:lower:]')
     echo "   📍 Tenant: $TENANT"
     

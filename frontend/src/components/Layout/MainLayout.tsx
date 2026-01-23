@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network } from 'lucide-react';
+import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isOpen, setIsOpen] = useState(true);
+    const [assetMenuOpen, setAssetMenuOpen] = useState(false);
     const { user, logout } = useAuth();
 
     // Logic for role-based access
@@ -12,6 +13,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const showMap = role === 'ADMIN' || role === 'GH';
     const showTurnaround = role === 'ADMIN' || role === 'GH';
     const showReports = role === 'ADMIN' || role === 'AIRPORT_USER';
+    const showAssets = role === 'ADMIN' || role === 'GH';
     const showPipeline = role === 'ADMIN';
 
     return (
@@ -44,6 +46,31 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </div>
 
                     {showMap && <NavItem to="/" icon={<Map size={20} />} label="Live Map" isOpen={isOpen} />}
+                    {showAssets && (
+                        <>
+                            <div
+                                onClick={() => setAssetMenuOpen(!assetMenuOpen)}
+                                className="flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-gray-700 text-gray-300 hover:text-white group mb-1"
+                            >
+                                <div className="flex items-center space-x-3">
+                                    <Package size={20} className="shrink-0" />
+                                    {isOpen && <span className="font-medium text-sm">Asset Management</span>}
+                                </div>
+                                {isOpen && (
+                                    assetMenuOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+                                )}
+                            </div>
+                            {assetMenuOpen && isOpen && (
+                                <div className="ml-6 space-y-1 border-l-2 border-gray-700 pl-3 mb-2">
+                                    <SubNavItem to="/assets/list" label="Assets" />
+                                    <SubNavItem to="/assets/kits" label="Kits" />
+                                    <SubNavItem to="/assets/categories" label="Categories" />
+                                    <SubNavItem to="/assets/tags" label="Tags" />
+                                    <SubNavItem to="/assets/locations" label="Locations" />
+                                </div>
+                            )}
+                        </>
+                    )}
                     {showTurnaround && <NavItem to="/turnaround" icon={<Activity size={20} />} label="Turnaround" isOpen={isOpen} />}
                     {showReports && <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics" isOpen={isOpen} />}
                     {showPipeline && <NavItem to="/pipeline" icon={<Network size={20} />} label="Observability" isOpen={isOpen} />}
@@ -103,5 +130,22 @@ const NavItem = ({ to, icon, label, isOpen }: { to: string; icon: React.ReactNod
         </span>
     </NavLink>
 );
+
+const SubNavItem: React.FC<{ to: string; label: string }> = ({ to, label }) => {
+    return (
+        <NavLink
+            to={to}
+            className={({ isActive }) =>
+                `block px-3 py-2 rounded-md transition-all duration-200 text-sm ${
+                    isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                }`
+            }
+        >
+            {label}
+        </NavLink>
+    );
+};
 
 export default MainLayout;

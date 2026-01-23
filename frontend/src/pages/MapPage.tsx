@@ -27,6 +27,7 @@ const MapPage: React.FC = () => {
     const getCenter = (): [number, number] => {
         if (user?.icaoCode === 'VABB') return [19.0896, 72.8656];
         if (user?.icaoCode === 'LIRN') return [40.8844, 14.2908];
+        if (user?.icaoCode === 'YBBN') return [-27.3842, 153.1175]; // Brisbane
         return [28.5562, 77.1000]; // Default VIDP
     };
 

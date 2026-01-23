@@ -9,6 +9,29 @@ NIFI_URL="http://localhost:8091/nifi-api"
 SUPERSET_URL="http://localhost:8089"
 TARGET=${1:-all}
 
+wait_for_http_ok() {
+    local url="$1"
+    local timeout_seconds="${2:-120}"
+    local sleep_seconds="${3:-2}"
+
+    local start_ts
+    start_ts=$(date +%s)
+
+    while true; do
+        if curl -fsS "$url" > /dev/null; then
+            return 0
+        fi
+
+        local now_ts
+        now_ts=$(date +%s)
+        if (( now_ts - start_ts >= timeout_seconds )); then
+            return 1
+        fi
+
+        sleep "$sleep_seconds"
+    done
+}
+
 echo "🔧 Starting TAM Infrastructure Repair..."
 
 # -----------------------------------------------------------------------------
@@ -17,9 +40,9 @@ echo "🔧 Starting TAM Infrastructure Repair..."
 
 repair_nifi() {
     echo "🔧 [NiFi] Checking for issues..."
-    
-    if ! curl -s "$NIFI_URL/flow/about" > /dev/null; then
-        echo "   ⚠️ NiFi is not reachable at $NIFI_URL. Skipping NiFi repairs."
+
+    if ! wait_for_http_ok "$NIFI_URL/flow/about" 120 2; then
+        echo "   ⚠️ NiFi is not reachable at $NIFI_URL after waiting. Skipping NiFi repairs."
         return
     fi
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-UTAM is a real-time tracking system for flights and ground vehicles, featuring speed violation alerts and turnaround management. It uses a modern tech stack with Apache NiFi for data ingestion, Kafka for streaming, Spring Boot for backend processing, and React for the frontend dashboard.
+UTAM is a real-time tracking system for flights and ground vehicles, featuring speed violation alerts and turnaround management. The platform supports multi-tenant deployments for Delhi (VIDP), Naples (LIRN), and Brisbane (YBBN). It uses a modern tech stack with Apache NiFi for data ingestion, Kafka for streaming, Spring Boot for backend processing, and React for the frontend dashboard.
 
 ## Tech Stack
 
@@ -35,7 +35,7 @@ For detailed instructions, please refer to the [SETUP_GUIDE.md](SETUP_GUIDE.md).
     ```
 
 3.  **Access Services**:
-    - **Frontend**: [http://localhost:3000](http://localhost:3000)
+    - **Frontend**: [http://localhost:3000](http://localhost:3000) (Login: `admin_vidp / admin`, `admin_lirn / admin`, or `admin_ybbn / admin`)
     - **Backend API**: [http://localhost:8080](http://localhost:8080)
     - **NiFi UI**: [http://localhost:8091/nifi](http://localhost:8091/nifi)
 

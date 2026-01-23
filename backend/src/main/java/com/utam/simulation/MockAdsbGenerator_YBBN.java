@@ -16,9 +16,9 @@ import java.util.Random;
 import java.util.UUID;
 
 @Component
-public class MockAdsbGenerator {
+public class MockAdsbGenerator_YBBN {
 
-    private static final Logger log = LoggerFactory.getLogger(MockAdsbGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(MockAdsbGenerator_YBBN.class);
 
     private final RestTemplate restTemplate;
     private final Random random = new Random();
@@ -27,34 +27,33 @@ public class MockAdsbGenerator {
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
 
-    // Simulated flights
-    private final List<String> callsigns = Arrays.asList("AI101", "BA249", "LH760", "EK500", "QF1");
-    private final List<String> airports = Arrays.asList("VIDP", "YBBN");
+    // Simulated flights for Brisbane
+    private final List<String> callsigns = Arrays.asList("QF401", "VA823", "JQ520", "NZ175", "SQ245");
+    private final String icao = "YBBN";
 
-    public MockAdsbGenerator(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockAdsbGenerator_YBBN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
         this.restTemplate = restTemplate;
         this.flightCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
                 .tag("type", "flight")
-                .tag("icao", "VIDP")
-                .description("Number of mock flight events generated")
+                .tag("icao", "YBBN")
+                .description("Number of mock flight events generated for YBBN")
                 .register(registry);
     }
 
     @Scheduled(fixedRate = 2000) // Every 2 seconds
     public void generateFlightData() {
         String callsign = callsigns.get(random.nextInt(callsigns.size()));
-        String tenant = airports.get(random.nextInt(airports.size()));
 
         Flight flight = new Flight();
         flight.setId(UUID.randomUUID());
         flight.setTimestamp(Instant.now());
         flight.setCallsign(callsign);
-        flight.setTenantCode(tenant);
-        flight.setFlightNumber(callsign); // Assuming flight number same as callsign for mock
+        flight.setTenantCode(icao);
+        flight.setFlightNumber(callsign);
 
-        // Random lat/lon around IGIA (New Delhi)
-        double baseLat = 28.5562;
-        double baseLon = 77.1000;
+        // Random lat/lon around YBBN (Brisbane)
+        double baseLat = -27.3842;
+        double baseLon = 153.1175;
 
         flight.setLatitude(baseLat + (random.nextDouble() - 0.5) * 2); // +/- 1 degree
         flight.setLongitude(baseLon + (random.nextDouble() - 0.5) * 2);
@@ -64,25 +63,13 @@ public class MockAdsbGenerator {
         flight.setAltitude(10000.0 + random.nextDouble() * 30000); // 10000-40000 ft
         flight.setStatus("AIRBORNE");
 
-        // New fields per JSON signature
-        // flight.setTrackId("TRK" + Math.abs(callsign.hashCode() % 1000)); // Removed
-        // flight.setModeSId(Integer.toHexString(callsign.hashCode()).toUpperCase()); // Removed
-        // flight.setFlightLevel(flight.getAltitude() / 100.0); // Removed
-        // flight.setRoc(random.nextDouble() * 2000 - 1000); // +/- 1000 fpm // Removed
-        // flight.setSsr(String.format("%04d", random.nextInt(10000))); // Removed
-        // flight.setSafetyAlert(false); // Removed
-        // flight.setSystemStatus("OK"); // Removed
-        // flight.setSpi(false); // Removed
-        // flight.setUpdateType("TRACK_UPDATE"); // Removed
-        // flight.setCreationTimestamp(System.currentTimeMillis()); // Removed
-
-        log.info("Generated flight data: {}", flight);
+        log.info("Generated YBBN flight data: {}", flight);
 
         try {
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(flight), Void.class);
             flightCounter.increment();
         } catch (Exception e) {
-            log.error("Failed to send flight data to ingestion layer: {}", e.getMessage());
+            log.error("Failed to send YBBN flight data to ingestion layer: {}", e.getMessage());
         }
     }
 }

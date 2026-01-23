@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
                     </button>
                 </form>
                 <div className="mt-4 text-center text-gray-500 text-xs">
-                    Try: admin_vidp / admin or gh_vidp / gh
+                    Try: admin_vidp / admin, gh_lirn / gh, or admin_ybbn / admin
                 </div>
             </div>
         </div>

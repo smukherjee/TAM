@@ -8,6 +8,12 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import PipelinePage from './pages/PipelinePage';
 import LoginPage from './pages/LoginPage';
 import PlatformAdminPage from './pages/PlatformAdminPage';
+import AssetManagementPage from './pages/AssetManagementPage';
+import AssetsListPage from './pages/AssetsListPage';
+import KitsListPage from './pages/KitsListPage';
+import CategoriesListPage from './pages/CategoriesListPage';
+import TagsListPage from './pages/TagsListPage';
+import LocationsListPage from './pages/LocationsListPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -46,6 +52,48 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <AnalyticsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/assets" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AssetManagementPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/assets/list" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AssetsListPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/assets/kits" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <KitsListPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/assets/categories" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CategoriesListPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/assets/tags" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <TagsListPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/assets/locations" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <LocationsListPage />
           </MainLayout>
         </ProtectedRoute>
       } />

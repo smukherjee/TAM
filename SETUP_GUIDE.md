@@ -37,7 +37,7 @@ The easiest way to run the platform is using the provided Makefile and Docker Co
     *If you don't have Make, run:* `bash infrastructure/nifi/setup-nifi.sh`
 
 4.  **Verify Data Flow**
-    - **Frontend**: [http://localhost:3000](http://localhost:3000) - Should show moving aircraft/vehicles.
+    - **Frontend**: [http://localhost:3000](http://localhost:3000) - Login with `admin_vidp / admin`, `admin_lirn / admin`, or `admin_ybbn / admin`. Should show moving aircraft/vehicles.
     - **NiFi UI**: [http://localhost:8091/nifi](http://localhost:8091/nifi) - Should show 3 process groups (ADSB, Vehicle, CV Event).
     - **Redpanda Console**: [http://localhost:8090](http://localhost:8090) - Should show topics like `flight-raw-json` receiving data.
 
@@ -54,8 +54,8 @@ The `docker-compose.dev.yml` file defines the entire infrastructure.
 ### 2. Database (TimescaleDB)
 
 The database is automatically initialized using scripts in `infrastructure/db/init/`.
-- `01-init-schema.sql`: Creates tables and hypertables.
-- `02-multi-tenant.sql`: Sets up tenant data.
+- `01-core-platform.sql`: Creates tables, hypertables, and seeds tenant data (VIDP, LIRN, YBBN).
+- Seeds three users per tenant: `admin_<tenant> / admin`, `gh_<tenant> / gh`, `user_<tenant> / user`.
 
 If you need to reset the DB:
 ```bash

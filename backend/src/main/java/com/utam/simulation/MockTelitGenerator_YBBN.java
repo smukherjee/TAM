@@ -3,7 +3,6 @@ package com.utam.simulation;
 import com.utam.model.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -16,18 +15,18 @@ import java.util.Random;
 import java.util.UUID;
 
 @Component
-public class MockTelitGenerator {
+public class MockTelitGenerator_YBBN {
 
-    private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator_YBBN.class);
 
     private final RestTemplate restTemplate;
     private final Random random = new Random();
     private final io.micrometer.core.instrument.Counter vehicleCounter;
 
-    @Value("${simulation.vehicle-url}")
+    @org.springframework.beans.factory.annotation.Value("${simulation.vehicle-url}")
     private String ingestionUrl;
 
-    private final List<String> airports = Arrays.asList("VIDP", "VABB", "VOBL", "YBBN");
+    private final String icao = "YBBN";
 
     private static class VehicleConfig {
         String no;
@@ -42,57 +41,50 @@ public class MockTelitGenerator {
     }
 
     private final List<VehicleConfig> configs = Arrays.asList(
-            new VehicleConfig("DL1GC0001", "Tug 1", "Tug"),
-            new VehicleConfig("DL1GC0002", "Bus 1", "Bus"),
-            new VehicleConfig("DL1GC0003", "Fuel Truck 1", "Fuel Truck"),
-            new VehicleConfig("DL1GC0004", "Catering 1", "Catering Truck"),
-            new VehicleConfig("DL1GC0005", "Baggage 1", "Baggage Loader")
+            new VehicleConfig("BNE-TUG-01", "Brisbane Tug 1", "Tug"),
+            new VehicleConfig("BNE-BUS-01", "Brisbane Bus 1", "Bus"),
+            new VehicleConfig("BNE-FUEL-01", "Brisbane Fuel 1", "Fuel Truck"),
+            new VehicleConfig("BNE-CAT-01", "Brisbane Catering 1", "Catering Truck"),
+            new VehicleConfig("BNE-BAG-01", "Brisbane Baggage 1", "Baggage Loader")
     );
 
-    public MockTelitGenerator(io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockTelitGenerator_YBBN(io.micrometer.core.instrument.MeterRegistry registry) {
         this.restTemplate = new RestTemplate();
         this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulation.vehicles.generated")
-                .description("Number of simulated vehicle events")
+                .tag("icao", "YBBN")
+                .description("Number of simulated vehicle events for YBBN")
                 .register(registry);
     }
 
     @Scheduled(fixedRate = 3000) // Every 3 seconds
     public void generateVehicleData() {
         VehicleConfig config = configs.get(random.nextInt(configs.size()));
-        String tenant = airports.get(random.nextInt(airports.size()));
 
         Vehicle vehicle = new Vehicle();
         vehicle.setId(UUID.randomUUID());
-        // vehicle.setVehicleName(config.name); // Removed from entity
         vehicle.setVehicleId(config.no);
         vehicle.setVehicleType(config.type);
-
-        vehicle.setTenantCode(tenant);
-        
+        vehicle.setTenantCode(icao);
         vehicle.setTimestamp(Instant.now());
-
         vehicle.setStatus(random.nextBoolean() ? "RUNNING" : "IDLE");
 
-        // Random lat/lon around IGIA (New Delhi)
-        double baseLat = 28.5562;
-        double baseLon = 77.1000;
+        // Random lat/lon around YBBN
+        double baseLat = -27.3842;
+        double baseLon = 153.1175;
 
         vehicle.setLatitude(baseLat + (random.nextDouble() - 0.5) * 0.02);
         vehicle.setLongitude(baseLon + (random.nextDouble() - 0.5) * 0.02);
 
         // Generate speed between 0 and 100 km/h to trigger alerts (> 70 km/h)
         vehicle.setSpeed(random.nextDouble() * 100);
-        
-        // vehicle.setIgn("ON"); // Removed from entity
-        // vehicle.setLocation("IGIA, New Delhi"); // Removed from entity
 
-        log.info("Generated vehicle data: {}", vehicle);
+        log.info("Generated YBBN vehicle data: {}", vehicle);
 
         try {
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(vehicle), Void.class);
             vehicleCounter.increment();
         } catch (Exception e) {
-            log.error("Failed to send simulated vehicle data: {}", e.getMessage());
+            log.error("Failed to send simulated YBBN vehicle data: {}", e.getMessage());
         }
     }
 }
