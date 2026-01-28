@@ -130,25 +130,25 @@
 
 ### Backend API - Universal Asset Map (US5)
 
-- [ ] T027 [BE] Create `AssetLocationDTO.java`
-  - [ ] Fields: assetId, assetIdentifier, name, category, latitude, longitude
-  - [ ] Fields: status, currentZone, speed, lastUpdated, owner
-  - [ ] Add @Data, @Builder, @AllArgsConstructor annotations
-  - [ ] Add validation annotations
-- [ ] T028 [BE] Create `AssetLocationService.java`
-  - [ ] Method: `getAllLiveAssets(tenantCode, filters)` - Query asset_location_register
-  - [ ] Method: `getLiveAssetById(assetId)` - Single asset details
-  - [ ] Method: `getAssetsInZone(zoneId)` - Filter by zone
-  - [ ] Method: `getAssetsByCategory(category)` - Filter by category
-  - [ ] Implement caching with @Cacheable (5 second TTL)
-  - [ ] Optimize query with JOIN to assets and zones tables
-- [ ] T029 [BE] Create `AssetLocationController.java`
-  - [ ] `GET /api/tracking/assets/live` - All live assets
-  - [ ] Query params: tenantCode, category, status, zone
-  - [ ] Response: AssetLocationResponse with assets array + count
-  - [ ] `GET /api/tracking/assets/live/{assetId}` - Single asset
-  - [ ] Add @PreAuthorize for role-based access
-  - [ ] Add @ApiOperation Swagger docs
+- [x] T027 [BE] Create `AssetLocationDTO.java`
+  - [x] Fields: assetId, assetIdentifier, name, category, latitude, longitude
+  - [x] Fields: status, currentZone, speed, lastUpdated, owner
+  - [x] Add @Data, @Builder, @AllArgsConstructor annotations
+  - [x] Add validation annotations
+- [x] T028 [BE] Create `AssetLocationService.java`
+  - [x] Method: `getAllLiveAssets(tenantCode, filters)` - Query asset_location_register
+  - [x] Method: `getLiveAssetById(assetId)` - Single asset details
+  - [x] Method: `getAssetsInZone(zoneId)` - Filter by zone
+  - [x] Method: `getAssetsByCategory(category)` - Filter by category
+  - [x] Implement caching with @Cacheable (5 second TTL)
+  - [x] Optimize query with JOIN to assets and zones tables
+- [x] T029 [BE] Create `AssetLocationController.java`
+  - [x] `GET /api/tracking/assets/live` - All live assets
+  - [x] Query params: tenantCode, category, status, zone
+  - [x] Response: AssetLocationResponse with assets array + count
+  - [x] `GET /api/tracking/assets/live/{assetId}` - Single asset
+  - [x] Add @PreAuthorize for role-based access
+  - [x] Add @ApiOperation Swagger docs
 - [ ] T030 [BE] Enhance WebSocket for live asset updates
   - [ ] Create `AssetLocationWebSocketService.java`
   - [ ] Broadcast to `/topic/assets/live/{tenantCode}`

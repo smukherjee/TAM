@@ -39,6 +39,11 @@ spring:
       concurrency: 3
       ack-mode: record
       type: single
+  cache:
+    type: caffeine
+    cache-names: liveAssets,liveAsset
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5s
   data:
     redis:
       host: localhost
@@ -112,6 +117,11 @@ spring:
       ack-mode: record
       # Enable JSON deserialization
       type: single
+  cache:
+    type: caffeine
+    cache-names: liveAssets,liveAsset
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5s
   data:
     redis:
       host: ${REDIS_HOST:redis}
