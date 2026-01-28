@@ -192,44 +192,44 @@
 
 ### Frontend - Universal Asset Map (US5)
 
-- [ ] T036 [FE] Create `frontend/src/pages/AirsideMapPage.tsx`
-  - [ ] Page layout: map (100% width) + filter panel (collapsible sidebar)
-  - [ ] Fetch live assets on mount using React Query
-  - [ ] WebSocket subscription for real-time updates
-  - [ ] Handle loading/error states with spinners/messages
-  - [ ] Pass filtered assets to UniversalAssetMap component
-- [ ] T037 [FE] Create `frontend/src/components/Tracking/UniversalAssetMap.tsx`
-  - [ ] Leaflet map component (react-leaflet)
-  - [ ] Set initial center based on tenant (VIDP, LIRN, YBBN)
-  - [ ] Render asset markers from props
-  - [ ] Implement marker clustering (react-leaflet-cluster) for zoom < 15
-  - [ ] Zone boundaries layer with toggle control
-  - [ ] Handle marker click → show AssetPopup
-  - [ ] Smooth marker position animation using react-spring
-  - [ ] Zoom controls, scale bar, attribution
-- [ ] T038 [FE] Create `frontend/src/components/Tracking/AssetMarker.tsx`
-  - [ ] Custom SVG markers color-coded by category
-  - [ ] Colors: Emergency=Red, Fueling=Orange, Cargo=Blue, GSE=Green, Transport=Purple, Power=Yellow, Services=Teal
-  - [ ] Marker states: solid (In Use), hollow (Available), gray (Maintenance), black w/ X (Out of Service)
-  - [ ] Size scales with zoom level (12px at z14, 24px at z18)
-  - [ ] Pulse animation for moving assets (speed > 0)
-  - [ ] Use DivIcon for custom HTML/SVG content
-- [ ] T039 [FE] Create `frontend/src/components/Tracking/AssetPopup.tsx`
-  - [ ] Leaflet Popup component
-  - [ ] Display: Asset ID, Name, Category badge, Status badge
-  - [ ] Display: Current Zone, Speed (if moving), Last Updated (relative time)
-  - [ ] \"View Movement Trail\" button → navigate to TrailPage with assetId
-  - [ ] \"View in Register\" button → navigate to AssetDetails page
-  - [ ] Styling with Tailwind CSS
-- [ ] T040 [FE] Create `frontend/src/components/Tracking/AssetFilterPanel.tsx`
-  - [ ] Collapsible sidebar panel
-  - [ ] Category multi-select checkboxes (Emergency, Fueling, etc.)
-  - [ ] Owner/tenant dropdown (visible for ADMIN role only)
-  - [ ] Zone dropdown (fetched from zones API)
-  - [ ] Status multi-select (In Use, Available, Maintenance, Out of Service)
-  - [ ] \"Clear All Filters\" button
-  - [ ] Asset count badge: \"Showing X of Y assets\"
-  - [ ] Apply filters on change, debounced by 300ms
+- [X] T036 [FE] Create `frontend/src/pages/AirsideMapPage.tsx`
+  - [X] Page layout: map (100% width) + filter panel (collapsible sidebar)
+  - [X] Fetch live assets on mount using React Query
+  - [X] WebSocket subscription for real-time updates
+  - [X] Handle loading/error states with spinners/messages
+  - [X] Pass filtered assets to UniversalAssetMap component
+- [X] T037 [FE] Create `frontend/src/components/Tracking/UniversalAssetMap.tsx`
+  - [X] Leaflet map component (react-leaflet)
+  - [X] Set initial center based on tenant (VIDP, LIRN, YBBN)
+  - [X] Render asset markers from props
+  - [X] Implement marker clustering (react-leaflet-cluster) for zoom < 15
+  - [X] Zone boundaries layer with toggle control
+  - [X] Handle marker click → show AssetPopup
+  - [X] Smooth marker position animation using react-spring
+  - [X] Zoom controls, scale bar, attribution
+- [X] T038 [FE] Create `frontend/src/components/Tracking/AssetMarker.tsx`
+  - [X] Custom SVG markers color-coded by category
+  - [X] Colors: Emergency=Red, Fueling=Orange, Cargo=Blue, GSE=Green, Transport=Purple, Power=Yellow, Services=Teal
+  - [X] Marker states: solid (In Use), hollow (Available), gray (Maintenance), black w/ X (Out of Service)
+  - [X] Size scales with zoom level (12px at z14, 24px at z18)
+  - [X] Pulse animation for moving assets (speed > 0)
+  - [X] Use DivIcon for custom HTML/SVG content
+- [X] T039 [FE] Create `frontend/src/components/Tracking/AssetPopup.tsx`
+  - [X] Leaflet Popup component
+  - [X] Display: Asset ID, Name, Category badge, Status badge
+  - [X] Display: Current Zone, Speed (if moving), Last Updated (relative time)
+  - [X] \"View Movement Trail\" button → navigate to TrailPage with assetId
+  - [X] \"View in Register\" button → navigate to AssetDetails page
+  - [X] Styling with Tailwind CSS
+- [X] T040 [FE] Create `frontend/src/components/Tracking/AssetFilterPanel.tsx`
+  - [X] Collapsible sidebar panel
+  - [X] Category multi-select checkboxes (Emergency, Fueling, etc.)
+  - [X] Owner/tenant dropdown (visible for ADMIN role only)
+  - [X] Zone dropdown (fetched from zones API)
+  - [X] Status multi-select (In Use, Available, Maintenance, Out of Service)
+  - [X] \"Clear All Filters\" button
+  - [X] Asset count badge: \"Showing X of Y assets\"
+  - [X] Apply filters on change, debounced by 300ms
 - [ ] T041 [FE] Create `frontend/src/components/Tracking/ZoneBoundariesLayer.tsx`
   - [ ] Fetch restricted zones from GET /api/zones endpoint
   - [ ] Render as Leaflet Polygon layers

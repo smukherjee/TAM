@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/Layout/MainLayout';
 import MapPage from './pages/MapPage';
 import TurnaroundPage from './pages/TurnaroundPage';
@@ -14,7 +15,19 @@ import KitsListPage from './pages/KitsListPage';
 import CategoriesListPage from './pages/CategoriesListPage';
 import TagsListPage from './pages/TagsListPage';
 import LocationsListPage from './pages/LocationsListPage';
+import AirsideMapPage from './pages/AirsideMapPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Create a QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5000,
+    },
+  },
+});
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { user, isLoading } = useAuth();
@@ -104,6 +117,13 @@ const AppRoutes = () => {
           </MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/tracking/map" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AirsideMapPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/admin" element={
         <ProtectedRoute>
           <MainLayout>
@@ -118,11 +138,13 @@ const AppRoutes = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 };
 
