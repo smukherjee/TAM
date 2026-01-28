@@ -2,8 +2,15 @@
 
 **Feature ID**: 005  
 **Created**: 2026-01-28  
+**Updated**: 2026-01-28 (Added Phase 2A for Demo Flow enhancements)  
 **Status**: In Progress  
-**Estimated Total Effort**: 18-24 days
+**Estimated Total Effort**: 21-28 days (revised from 18-24 days)
+
+**Task Summary**:
+- **Total Tasks**: 233 (was 162, added 71 for US5 & US6)
+- **Completed**: 23 (Phase 0 & Phase 1)
+- **Remaining**: 210
+- **New in Phase 2A**: 48 tasks for Universal Airside Map (US5) and Hotspot Analysis (US6)
 
 ---
 
@@ -28,32 +35,378 @@
 
 ---
 
-## Phase 1: Database Layer
+## Phase 1: Database Layer ✅ COMPLETE
 
-- [ ] T006 [DB] Create 06-asset-tracking-security.sql migration file
-- [ ] T007 [DB] Create `restricted_zones` table with PostGIS POLYGON
-- [ ] T008 [DB] Create `asset_movement_trail` hypertable
-- [ ] T009 [DB] Create `zone_violations` hypertable
-- [ ] T010 [DB] Create `movement_discrepancies` hypertable
-- [ ] T011 [DB] Create `asset_location_register` table
-- [ ] T012 [DB] Add spatial indexes (GIST) for all geometry columns
-- [ ] T013 [DB] Add time-series indexes for hypertables
-- [ ] T014 [DB] Create `zone_violations_hourly` continuous aggregate
-- [ ] T015 [DB] Create `movement_discrepancies_daily` continuous aggregate
-- [ ] T016 [DB] Seed restricted zones for VIDP (4 zones)
-- [ ] T017 [DB] Seed restricted zones for LIRN (2 zones)
-- [ ] T018 [DB] Seed restricted zones for YBBN (2 zones)
-- [ ] T019 [DB] Create helper function `get_asset_id_from_vehicle()`
-- [ ] T020 [DB] Test spatial queries (ST_Contains, ST_Distance)
-- [ ] T021 [DB] Verify TimescaleDB compression policies
-- [ ] T022 [DB] Apply migration to local database
-- [ ] T023 [DB] Verify all tables created successfully
+- [x] T006 [DB] Create 06-asset-tracking-security.sql migration file
+- [x] T007 [DB] Create `restricted_zones` table with PostGIS POLYGON
+- [x] T008 [DB] Create `asset_movement_trail` hypertable
+- [x] T009 [DB] Create `zone_violations` hypertable
+- [x] T010 [DB] Create `movement_discrepancies` hypertable
+- [x] T011 [DB] Create `asset_location_register` table
+- [x] T012 [DB] Add spatial indexes (GIST) for all geometry columns
+- [x] T013 [DB] Add time-series indexes for hypertables
+- [x] T014 [DB] Create `zone_violations_hourly` continuous aggregate
+- [x] T015 [DB] Create `movement_discrepancies_daily` continuous aggregate
+- [x] T016 [DB] Seed restricted zones for VIDP (4 zones)
+- [x] T017 [DB] Seed restricted zones for LIRN (2 zones)
+- [x] T018 [DB] Seed restricted zones for YBBN (2 zones)
+- [x] T019 [DB] Create helper function `get_asset_id_from_vehicle()`
+- [x] T020 [DB] Test spatial queries (ST_Contains, ST_Distance)
+- [x] T021 [DB] Verify TimescaleDB compression policies
+- [x] T022 [DB] Apply migration to local database
+- [x] T023 [DB] Verify all tables created successfully
 
 **Acceptance Criteria:**
-- All tables exist with correct schema
-- Spatial queries execute in <100ms
-- Sample restricted zones inserted
-- Continuous aggregates configured
+- ✅ All tables exist with correct schema
+- ✅ Spatial queries execute in <100ms
+- ✅ 8 restricted zones inserted across 3 tenants
+- ✅ Continuous aggregates configured
+
+---
+
+## Phase 2A: Demo Flow Enhancements (US5 & US6)
+
+**Priority**: HIGH - Required for complete Demo Flow coverage (100%)
+
+### Database Enhancements
+
+- [ ] T024 [DB] Create `asset_activity_heatmap` materialized view
+  - [ ] Grid-based aggregation using ST_SnapToGrid (10m resolution = 0.0001°)
+  - [ ] Time-bucketed by hour for last 30 days
+  - [ ] Count activity, unique assets, avg speed per cell
+  - [ ] Create GIST spatial index on grid_location
+  - [ ] Create index on (tenant_code, time_bucket)
+- [ ] T025 [DB] Create `violation_heatmap` materialized view
+  - [ ] Grid-based violation density aggregation
+  - [ ] Count violations by severity per cell
+  - [ ] Time-bucketed by hour
+  - [ ] Create spatial and temporal indexes
+- [ ] T026 [DB] Create refresh policy for heatmap views
+  - [ ] Auto-refresh every 6 hours
+  - [ ] Create manual refresh function `refresh_heatmaps()`
+  - [ ] Test refresh performance (<10 seconds)
+
+### Backend API - Universal Asset Map (US5)
+
+- [ ] T027 [BE] Create `AssetLocationDTO.java`
+  - [ ] Fields: assetId, assetIdentifier, name, category, latitude, longitude
+  - [ ] Fields: status, currentZone, speed, lastUpdated, owner
+  - [ ] Add @Data, @Builder, @AllArgsConstructor annotations
+  - [ ] Add validation annotations
+- [ ] T028 [BE] Create `AssetLocationService.java`
+  - [ ] Method: `getAllLiveAssets(tenantCode, filters)` - Query asset_location_register
+  - [ ] Method: `getLiveAssetById(assetId)` - Single asset details
+  - [ ] Method: `getAssetsInZone(zoneId)` - Filter by zone
+  - [ ] Method: `getAssetsByCategory(category)` - Filter by category
+  - [ ] Implement caching with @Cacheable (5 second TTL)
+  - [ ] Optimize query with JOIN to assets and zones tables
+- [ ] T029 [BE] Create `AssetLocationController.java`
+  - [ ] `GET /api/tracking/assets/live` - All live assets
+  - [ ] Query params: tenantCode, category, status, zone
+  - [ ] Response: AssetLocationResponse with assets array + count
+  - [ ] `GET /api/tracking/assets/live/{assetId}` - Single asset
+  - [ ] Add @PreAuthorize for role-based access
+  - [ ] Add @ApiOperation Swagger docs
+- [ ] T030 [BE] Enhance WebSocket for live asset updates
+  - [ ] Create `AssetLocationWebSocketService.java`
+  - [ ] Broadcast to `/topic/assets/live/{tenantCode}`
+  - [ ] Message payload: AssetPositionUpdateEvent
+  - [ ] Include all asset position changes (not just violations)
+  - [ ] Throttle to 1 update per asset per 5 seconds
+  - [ ] Integrate in MovementTrailIngestionService
+
+### Backend API - Heatmap (US6)
+
+- [ ] T031 [BE] Create `HeatmapDataDTO.java`
+  - [ ] Fields: latitude, longitude, intensity (0-1 normalized)
+  - [ ] Fields: metadata (activityCount, uniqueAssets, avgSpeed)
+  - [ ] Add nested class for statistics
+- [ ] T032 [BE] Create `HotspotDetailDTO.java`
+  - [ ] Fields: location, mode, activityCount, uniqueAssets
+  - [ ] Fields: assets (list of contributing assets)
+  - [ ] Fields: violations (if violation mode)
+  - [ ] Fields: timeDistribution (hourly breakdown chart data)
+- [ ] T033 [BE] Create `HeatmapService.java`
+  - [ ] Method: `getActivityHeatmap(tenantCode, startDate, endDate, gridSize)`
+  - [ ] Method: `getViolationHeatmap(tenantCode, startDate, endDate, gridSize)`
+  - [ ] Method: `getDwellHeatmap(tenantCode, startDate, endDate, gridSize)`
+  - [ ] Method: `getHotspotDetails(lat, lng, mode, dateRange)`
+  - [ ] Grid size conversion: 10m=0.0001°, 25m=0.00025°, 50m=0.0005°, 100m=0.001°
+  - [ ] Normalize intensity values to 0-1 scale (percentile-based)
+  - [ ] Implement caching for frequently requested ranges
+- [ ] T034 [BE] Create `HeatmapController.java`
+  - [ ] `GET /api/tracking/heatmap/activity` - Activity density data
+  - [ ] `GET /api/tracking/heatmap/violations` - Violation density data
+  - [ ] `GET /api/tracking/heatmap/dwell` - Dwell time data
+  - [ ] `GET /api/tracking/heatmap/hotspot` - Hotspot detail for clicked cell
+  - [ ] All endpoints support: tenantCode, startDate, endDate, gridSize params
+  - [ ] Add Swagger documentation
+  - [ ] Add validation for date ranges (max 30 days)
+- [ ] T035 [BE] Create heatmap export service
+  - [ ] Method: `exportHeatmapDataCSV(heatmapData)` - CSV export
+  - [ ] Method: `generateHeatmapReportPDF(heatmapData, metadata)` - PDF summary
+  - [ ] CSV format: latitude, longitude, intensity, activityCount
+  - [ ] PDF includes: heatmap summary stats, top 10 hotspots table
+
+### Frontend - Universal Asset Map (US5)
+
+- [ ] T036 [FE] Create `frontend/src/pages/AirsideMapPage.tsx`
+  - [ ] Page layout: map (100% width) + filter panel (collapsible sidebar)
+  - [ ] Fetch live assets on mount using React Query
+  - [ ] WebSocket subscription for real-time updates
+  - [ ] Handle loading/error states with spinners/messages
+  - [ ] Pass filtered assets to UniversalAssetMap component
+- [ ] T037 [FE] Create `frontend/src/components/Tracking/UniversalAssetMap.tsx`
+  - [ ] Leaflet map component (react-leaflet)
+  - [ ] Set initial center based on tenant (VIDP, LIRN, YBBN)
+  - [ ] Render asset markers from props
+  - [ ] Implement marker clustering (react-leaflet-cluster) for zoom < 15
+  - [ ] Zone boundaries layer with toggle control
+  - [ ] Handle marker click → show AssetPopup
+  - [ ] Smooth marker position animation using react-spring
+  - [ ] Zoom controls, scale bar, attribution
+- [ ] T038 [FE] Create `frontend/src/components/Tracking/AssetMarker.tsx`
+  - [ ] Custom SVG markers color-coded by category
+  - [ ] Colors: Emergency=Red, Fueling=Orange, Cargo=Blue, GSE=Green, Transport=Purple, Power=Yellow, Services=Teal
+  - [ ] Marker states: solid (In Use), hollow (Available), gray (Maintenance), black w/ X (Out of Service)
+  - [ ] Size scales with zoom level (12px at z14, 24px at z18)
+  - [ ] Pulse animation for moving assets (speed > 0)
+  - [ ] Use DivIcon for custom HTML/SVG content
+- [ ] T039 [FE] Create `frontend/src/components/Tracking/AssetPopup.tsx`
+  - [ ] Leaflet Popup component
+  - [ ] Display: Asset ID, Name, Category badge, Status badge
+  - [ ] Display: Current Zone, Speed (if moving), Last Updated (relative time)
+  - [ ] \"View Movement Trail\" button → navigate to TrailPage with assetId
+  - [ ] \"View in Register\" button → navigate to AssetDetails page
+  - [ ] Styling with Tailwind CSS
+- [ ] T040 [FE] Create `frontend/src/components/Tracking/AssetFilterPanel.tsx`
+  - [ ] Collapsible sidebar panel
+  - [ ] Category multi-select checkboxes (Emergency, Fueling, etc.)
+  - [ ] Owner/tenant dropdown (visible for ADMIN role only)
+  - [ ] Zone dropdown (fetched from zones API)
+  - [ ] Status multi-select (In Use, Available, Maintenance, Out of Service)
+  - [ ] \"Clear All Filters\" button
+  - [ ] Asset count badge: \"Showing X of Y assets\"
+  - [ ] Apply filters on change, debounced by 300ms
+- [ ] T041 [FE] Create `frontend/src/components/Tracking/ZoneBoundariesLayer.tsx`
+  - [ ] Fetch restricted zones from GET /api/zones endpoint
+  - [ ] Render as Leaflet Polygon layers
+  - [ ] Color by zone type: PROHIBITED=rgba(255,0,0,0.3), RESTRICTED=rgba(255,165,0,0.3), CONTROLLED=rgba(255,255,0,0.3), MAINTENANCE=rgba(0,0,255,0.3)
+  - [ ] Solid border (2px), semi-transparent fill
+  - [ ] Tooltip on hover showing zone name and type
+  - [ ] Toggle visibility button in map controls (eye icon)
+  - [ ] Store visibility state in localStorage
+- [ ] T042 [FE] Create `frontend/src/components/Tracking/AssetSearchBar.tsx`
+  - [ ] Search input with autocomplete (Combobox from Headless UI)
+  - [ ] Search by asset ID or name (case-insensitive)
+  - [ ] Fetch suggestions on typing (debounced 300ms)
+  - [ ] On select: zoom to asset location, highlight marker (pulse animation)
+  - [ ] Recent searches dropdown (store in localStorage, max 5)
+  - [ ] Clear button
+- [ ] T043 [FE] Create `frontend/src/components/Tracking/MapLegend.tsx`
+  - [ ] Collapsible panel (default: expanded)
+  - [ ] Section 1: Marker colors (category legend)
+  - [ ] Section 2: Status indicators (solid/hollow/gray/black)
+  - [ ] Section 3: Zone colors (PROHIBITED/RESTRICTED/etc.)
+  - [ ] Toggle collapse with arrow icon
+  - [ ] Position: bottom-right corner, absolute positioning
+- [ ] T044 [FE] Implement WebSocket real-time updates
+  - [ ] Create custom hook: `useAssetLiveUpdates(tenantCode)`
+  - [ ] Subscribe to `/topic/assets/live/{tenantCode}` using SockJS + STOMP
+  - [ ] On event receive: update asset state in React Query cache
+  - [ ] Use react-spring for smooth marker position animation
+  - [ ] Add new markers for new assets (fade in animation)
+  - [ ] Remove markers for inactive assets (fade out after 30 sec)
+  - [ ] Handle reconnection on disconnect
+- [ ] T045 [FE] Create `frontend/src/services/assetLocationService.ts`
+  - [ ] `fetchLiveAssets(filters: AssetFilter)` - GET /api/tracking/assets/live
+  - [ ] `fetchAssetById(assetId: string)` - GET /api/tracking/assets/live/{id}
+  - [ ] `subscribeToLiveUpdates(tenantCode, callback)` - WebSocket helper
+  - [ ] Error handling with axios interceptors
+- [ ] T046 [FE] Add TypeScript interfaces
+  - [ ] `LiveAsset` interface (matches AssetLocationDTO)
+  - [ ] `AssetFilter` interface (category, status, zone, owner)
+  - [ ] `ZoneBoundary` interface (id, name, type, geometry)
+  - [ ] `AssetPositionUpdateEvent` interface (WebSocket payload)
+
+### Frontend - Hotspot Analysis (US6)
+
+- [ ] T047 [FE] Install Leaflet.heat plugin
+  - [ ] `npm install leaflet.heat @types/leaflet.heat --save`
+  - [ ] Verify compatibility with react-leaflet v4
+  - [ ] Add to package.json dependencies
+- [ ] T048 [FE] Create `frontend/src/pages/HotspotAnalysisPage.tsx`
+  - [ ] Layout: Map (70% width) + Controls sidebar (30% width)
+  - [ ] State: mode (Activity/Violation/Dwell), gridSize, timeRange
+  - [ ] Fetch heatmap data based on selected mode using React Query
+  - [ ] Toggle button: \"Asset View\" ↔ \"Heatmap View\"
+  - [ ] Pass heatmap data to HeatmapView component
+  - [ ] Handle mode/time range changes → refetch data
+- [ ] T049 [FE] Create `frontend/src/components/Tracking/HeatmapView.tsx`
+  - [ ] Leaflet map with base layer
+  - [ ] Use Leaflet.heat to render heat layer overlay
+  - [ ] Configure gradient: {0.0: 'blue', 0.25: 'green', 0.5: 'yellow', 0.75: 'orange', 1.0: 'red'}
+  - [ ] Adjust intensity based on slider value prop (0-100 → 0-1)
+  - [ ] Adjust radius based on grid size (10m=5px, 25m=10px, 50m=15px, 100m=20px)
+  - [ ] Click cell → determine lat/lng → trigger hotspot detail modal
+  - [ ] Overlay zone boundaries (optional toggle)
+- [ ] T050 [FE] Create `frontend/src/components/Tracking/HeatmapControls.tsx`
+  - [ ] Mode selector: Radio button group (Activity / Violations / Dwell)
+  - [ ] Grid resolution dropdown: Select (10m / 25m / 50m / 100m)
+  - [ ] Time range preset buttons: 1h, 24h, 7d, 30d
+  - [ ] Custom date range picker (react-datepicker)
+  - [ ] Intensity slider: Range input (0-100) with label
+  - [ ] Auto-refresh toggle switch (refresh every 60 seconds when enabled)
+  - [ ] \"Switch to Asset View\" button → navigate to AirsideMapPage
+  - [ ] Export dropdown menu: PNG / CSV / PDF
+  - [ ] Trigger export on selection
+- [ ] T051 [FE] Create `frontend/src/components/Tracking/HotspotDetailModal.tsx`
+  - [ ] Modal dialog (Headless UI Dialog)
+  - [ ] Triggered on heatmap cell click, receives lat/lng and mode
+  - [ ] Fetch hotspot details from GET /api/tracking/heatmap/hotspot
+  - [ ] Display: Location (lat/long with copy button), Intensity value
+  - [ ] Activity mode: Total movements, Unique assets, Avg speed
+  - [ ] Violation mode: Total violations, Breakdown by severity (CRITICAL/HIGH/MEDIUM/LOW), Asset list
+  - [ ] Dwell mode: Total dwell time, Avg dwell time, Asset list
+  - [ ] Time distribution chart: Recharts BarChart (hourly breakdown)
+  - [ ] \"View Assets\" button → switch to AirsideMapPage with location filter (bounding box)
+  - [ ] \"View Violations\" button → navigate to ViolationReportPage with location filter
+  - [ ] Close button, click outside to close
+- [ ] T052 [FE] Create `frontend/src/components/Tracking/HeatmapLegend.tsx`
+  - [ ] Color gradient bar (vertical, 200px height)
+  - [ ] Intensity labels: Low (0) → High (100)
+  - [ ] Current mode indicator: \"Showing: Activity Density\"
+  - [ ] Grid size indicator: \"Grid: 10m\"
+  - [ ] Time range display: \"Period: Last 24 hours\"
+  - [ ] Position: bottom-left corner
+- [ ] T053 [FE] Implement heatmap data fetching
+  - [ ] Fetch on mode/time range/grid size change
+  - [ ] Transform API response to Leaflet.heat format: [[lat, lng, intensity], ...]
+  - [ ] Normalize intensity values to 0-1 scale (divide by max)
+  - [ ] Cache previous results in React Query for quick mode switching
+  - [ ] Handle loading state with skeleton/spinner
+  - [ ] Handle empty data (show \"No data available\" message)
+- [ ] T054 [FE] Implement export functionality
+  - [ ] PNG: Use html2canvas to capture map div, download as image
+  - [ ] CSV: Format heatmap data with headers (Latitude, Longitude, Intensity, Activity Count)
+  - [ ] CSV: Use Papa Parse library for CSV generation
+  - [ ] PDF: Generate summary report with jsPDF
+  - [ ] PDF includes: Title, metadata (mode, time range), embedded map image, statistics table, top 10 hotspots table
+  - [ ] Download with descriptive filename: `heatmap_{mode}_{date}.{ext}`
+  - [ ] Show success toast notification on download
+- [ ] T055 [FE] Create `frontend/src/services/heatmapService.ts`
+  - [ ] `fetchActivityHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/activity
+  - [ ] `fetchViolationHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/violations
+  - [ ] `fetchDwellHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/dwell
+  - [ ] `fetchHotspotDetails(lat, lng, mode, dateRange)` - GET /api/tracking/heatmap/hotspot
+  - [ ] `exportHeatmapData(data, format: 'png' | 'csv' | 'pdf')` - Trigger export
+  - [ ] Error handling and retry logic
+- [ ] T056 [FE] Add TypeScript interfaces
+  - [ ] `HeatmapPoint` interface: {latitude, longitude, intensity, metadata}
+  - [ ] `HotspotDetail` interface: {location, mode, activityCount, assets, violations, timeDistribution}
+  - [ ] `HeatmapFilters` interface: {tenantCode, startDate, endDate, gridSize}
+  - [ ] `HeatmapMode` enum: ACTIVITY | VIOLATION | DWELL
+  - [ ] `HeatmapStatistics` interface: {totalCells, hotspotCells, maxIntensity, avgIntensity}
+
+### Navigation & Integration
+
+- [ ] T057 [FE] Update `frontend/src/components/Layout/MainLayout.tsx`
+  - [ ] Add new menu section: \"Airside Operations\" (between Dashboard and Reports)
+  - [ ] Add \"Live Asset Map\" menu item (icon: MapIcon, route: `/tracking/airside-map`)
+  - [ ] Add \"Hotspot Analysis\" menu item (icon: FireIcon, route: `/tracking/hotspot-analysis`)
+  - [ ] Show section for roles: ADMIN, GH, AIRPORT_USER
+  - [ ] Highlight active route
+- [ ] T058 [FE] Update `frontend/src/App.tsx`
+  - [ ] Add route: `/tracking/airside-map` → AirsideMapPage
+  - [ ] Add route: `/tracking/hotspot-analysis` → HotspotAnalysisPage
+  - [ ] Wrap in ProtectedRoute with role check: ['ADMIN', 'GH', 'AIRPORT_USER']
+  - [ ] Add lazy loading with React.lazy and Suspense
+- [ ] T059 [FE] Cross-linking between pages
+  - [ ] Asset map → Movement trail: \"View Trail\" button in AssetPopup
+  - [ ] Hotspot analysis → Asset map: \"View Assets\" button in HotspotDetailModal
+  - [ ] Hotspot analysis → Violation report: \"View Violations\" button in HotspotDetailModal
+  - [ ] Asset map → Asset register: \"View in Register\" button in AssetPopup
+  - [ ] Preserve filter state when navigating between pages (use URL query params)
+
+### Testing & Quality
+
+- [ ] T060 [TEST] Backend unit tests for new services
+  - [ ] Test AssetLocationService.getAllLiveAssets() with filters
+  - [ ] Test HeatmapService.getActivityHeatmap() grid calculations
+  - [ ] Test heatmap intensity normalization (percentile-based)
+  - [ ] Test grid size conversion (10m=0.0001°, etc.)
+  - [ ] Mock repository calls with @MockBean
+- [ ] T061 [TEST] Backend integration tests
+  - [ ] Test GET /api/tracking/assets/live endpoint
+  - [ ] Test heatmap endpoints with various grid sizes (10m, 25m, 50m, 100m)
+  - [ ] Test tenant filtering (VIDP, LIRN, YBBN)
+  - [ ] Test date range validation (reject ranges > 30 days)
+  - [ ] Test WebSocket broadcasts with @SpringBootTest
+  - [ ] Use @DirtiesContext to reset state between tests
+- [ ] T062 [TEST] Frontend component tests (React Testing Library)
+  - [ ] Test AssetMarker renders correct color for each category
+  - [ ] Test AssetFilterPanel applies filters and updates count badge
+  - [ ] Test HeatmapControls mode switching updates state
+  - [ ] Test HotspotDetailModal displays correct data based on mode
+  - [ ] Mock API calls with MSW (Mock Service Worker)
+- [ ] T063 [TEST] Frontend integration tests
+  - [ ] Test AirsideMapPage loads and displays markers
+  - [ ] Test real-time marker updates (mock WebSocket events)
+  - [ ] Test HeatmapView renders heatmap layer correctly
+  - [ ] Test filter application updates visible markers
+  - [ ] Test search functionality zooms to asset
+- [ ] T064 [TEST] E2E tests (Playwright or Cypress)
+  - [ ] E2E: View live asset map, click asset, view details
+  - [ ] E2E: Apply category filter, verify marker count updates
+  - [ ] E2E: Search for asset by ID, verify zoom to location
+  - [ ] E2E: Switch to heatmap, change mode to Violations, click hotspot
+  - [ ] E2E: Export heatmap as PNG, verify download
+  - [ ] E2E: Navigate from hotspot to violation report
+- [ ] T065 [TEST] Performance testing
+  - [ ] Test map with 500+ assets (should render <3 seconds)
+  - [ ] Test heatmap with 10,000+ data points (render <5 seconds)
+  - [ ] Test WebSocket with rapid updates (100 updates/sec, no lag)
+  - [ ] Monitor memory usage during 30-minute session
+  - [ ] Test marker clustering performance at various zoom levels
+  - [ ] Use Chrome DevTools Performance profiler
+
+### Documentation
+
+- [ ] T066 [DOC] Update spec.md with US5 and US6
+- [ ] T067 [DOC] Update plan.md with Phase 2A details
+- [ ] T068 [DOC] Update tasks.md with new Phase 2A tasks
+- [ ] T069 [DOC] Create heatmap user guide
+  - [ ] How to interpret heatmap colors (gradient explanation)
+  - [ ] When to use each mode (Activity for congestion, Violation for security, Dwell for bottlenecks)
+  - [ ] How to identify problematic areas (look for red hotspots)
+  - [ ] How to drill down into hotspot details
+  - [ ] Example use cases with screenshots
+- [ ] T070 [DOC] Create universal map user guide
+  - [ ] How to filter assets (category, status, zone)
+  - [ ] How to search for specific asset
+  - [ ] Understanding marker colors and states
+  - [ ] How to track asset in real-time
+  - [ ] How to view movement history from popup
+- [ ] T071 [DOC] Add screenshots to README
+  - [ ] Universal asset map screenshot (with markers and zones)
+  - [ ] Heatmap analysis screenshot (activity mode)
+  - [ ] Hotspot detail modal screenshot
+  - [ ] Filter panel screenshot
+
+**Acceptance Criteria:**
+- ✅ Universal asset map displays all assets in real-time with <3 sec load time
+- ✅ Asset markers update smoothly via WebSocket (<1 sec latency)
+- ✅ Filters work correctly and update marker count
+- ✅ Marker clustering prevents overlap at low zoom levels
+- ✅ Heatmap displays correctly for all 3 modes (Activity, Violation, Dwell)
+- ✅ Hotspot click shows detailed breakdown with time distribution chart
+- ✅ Export functionality works for PNG/CSV/PDF formats
+- ✅ Performance acceptable with 500+ assets and 10,000+ heatmap points
+- ✅ Demo Flow requirements 1 (Universal Airside Visibility) and 3 (Hotspot Identification) fully satisfied (100% coverage)
+- ✅ No regressions in existing features
+- ✅ All tests pass (unit, integration, E2E)
+
+**Estimated Duration**: 3-4 days
 
 ---
 

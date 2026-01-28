@@ -459,29 +459,256 @@ WHERE z.tenant_code = $1
 
 **Tasks:**
 - [x] Create spec.md
-- [ ] Create plan.md (this document)
-- [ ] Create tasks.md
+- [x] Create plan.md (this document)
+- [x] Create tasks.md
 - [ ] Create data-model.md
-- [ ] Set up git branch (005-asset-tracking-security)
+- [x] Set up git branch (005-asset-tracking-security)
 
 ---
 
-### Phase 1: Database Layer (3 days)
+### Phase 1: Database Layer (3 days) ✅ COMPLETE
 
 **Tasks:**
-- [ ] Apply SQL migration (06-asset-tracking-security.sql)
-- [ ] Verify PostGIS extension installed
-- [ ] Seed restricted zones for all tenants
-- [ ] Create spatial indexes
-- [ ] Test zone containment queries
-- [ ] Create continuous aggregates
-- [ ] Test data retention policies
+- [x] Apply SQL migration (06-asset-tracking-security.sql)
+- [x] Verify PostGIS extension installed
+- [x] Seed restricted zones for all tenants
+- [x] Create spatial indexes
+- [x] Test zone containment queries
+- [x] Create continuous aggregates
+- [x] Test data retention policies
 
 **Acceptance:**
-- All tables created successfully
-- Spatial queries return correct results (<100ms)
-- TimescaleDB hypertables configured
-- Sample data inserted for testing
+- ✅ All tables created successfully
+- ✅ Spatial queries return correct results (<100ms)
+- ✅ TimescaleDB hypertables configured
+- ✅ 8 restricted zones seeded for VIDP, LIRN, YBBN
+
+---
+
+### Phase 2A: Demo Flow Enhancements - Universal Map & Heatmap (3-4 days)
+
+**Priority**: HIGH - Required for complete Demo Flow coverage (100%)
+
+**Objective**: Implement US5 (Universal Airside Map) and US6 (Hotspot Analysis) to address Demo Flow gaps identified in requirements analysis.
+
+**New API Endpoints:**
+
+#### Universal Asset Map (US5)
+```http
+GET /api/tracking/assets/live?tenantCode={code}&category={cat}&status={status}&zone={zone}
+```
+Returns all current asset positions from `asset_location_register`.
+
+**Response:**
+```json
+{
+  "assets": [
+    {
+      "assetId": "uuid",
+      "assetIdentifier": "SAM-0005",
+      "name": "Fuel Truck - 001",
+      "category": "Fueling",
+      "latitude": 28.5555,
+      "longitude": 77.0900,
+      "status": "IN_USE",
+      "currentZone": "Apron Stand 5",
+      "speed": 12.5,
+      "lastUpdated": "2026-01-28T14:30:00Z",
+      "owner": "VIDP"
+    }
+  ],
+  "total": 45,
+  "filtered": 12
+}
+```
+
+```http
+GET /api/tracking/assets/live/{assetId}
+```
+Returns single asset details.
+
+#### Heatmap Analysis (US6)
+```http
+GET /api/tracking/heatmap/activity?tenantCode={code}&startDate={date}&endDate={date}&gridSize={size}
+```
+Returns activity density heatmap.
+
+**Parameters:**
+- `gridSize`: 10m, 25m, 50m, 100m (converted to degrees: 0.0001°, 0.00025°, 0.0005°, 0.001°)
+
+**Response:**
+```json
+{
+  "mode": "ACTIVITY",
+  "gridSize": "10m",
+  "timeRange": {
+    "start": "2026-01-27T14:30:00Z",
+    "end": "2026-01-28T14:30:00Z"
+  },
+  "data": [
+    {
+      "latitude": 28.5555,
+      "longitude": 77.0900,
+      "intensity": 0.85,
+      "metadata": {
+        "activityCount": 120,
+        "uniqueAssets": 15,
+        "avgSpeed": 8.5
+      }
+    }
+  ],
+  "statistics": {
+    "totalCells": 1250,
+    "hotspotCells": 45,
+    "maxIntensity": 1.0,
+    "avgIntensity": 0.32
+  }
+}
+```
+
+```http
+GET /api/tracking/heatmap/violations?tenantCode={code}&startDate={date}&endDate={date}&gridSize={size}
+```
+Returns violation density heatmap.
+
+```http
+GET /api/tracking/heatmap/dwell?tenantCode={code}&startDate={date}&endDate={date}&gridSize={size}
+```
+Returns dwell time heatmap (time assets spent stationary in each cell).
+
+```http
+GET /api/tracking/heatmap/hotspot?latitude={lat}&longitude={lng}&mode={mode}&startDate={date}&endDate={date}
+```
+Returns detailed breakdown for a specific hotspot cell.
+
+**Response:**
+```json
+{
+  "location": {
+    "latitude": 28.5555,
+    "longitude": 77.0900
+  },
+  "mode": "ACTIVITY",
+  "activityCount": 120,
+  "uniqueAssets": 15,
+  "assets": [
+    {
+      "assetIdentifier": "SAM-0005",
+      "name": "Fuel Truck - 001",
+      "visits": 25,
+      "totalDuration": "2h 15m"
+    }
+  ],
+  "timeDistribution": [
+    {"hour": "00:00", "count": 5},
+    {"hour": "01:00", "count": 3},
+    {"hour": "14:00", "count": 45}
+  ]
+}
+```
+
+**WebSocket Events:**
+
+```javascript
+// Subscribe to live asset updates
+STOMP.subscribe('/topic/assets/live/{tenantCode}', (message) => {
+  {
+    "eventType": "ASSET_POSITION_UPDATE",
+    "assetId": "uuid",
+    "latitude": 28.5556,
+    "longitude": 77.0901,
+    "speed": 13.2,
+    "timestamp": "2026-01-28T14:30:05Z"
+  }
+});
+```
+
+**Database Additions:**
+
+```sql
+-- Heatmap materialized views
+CREATE MATERIALIZED VIEW asset_activity_heatmap AS
+SELECT 
+    ST_SnapToGrid(location, 0.0001) as grid_location,
+    tenant_code,
+    time_bucket('1 hour', timestamp) as time_bucket,
+    COUNT(*) as activity_count,
+    COUNT(DISTINCT asset_identifier) as unique_assets,
+    AVG(speed) as avg_speed
+FROM asset_movement_trail
+WHERE timestamp > NOW() - INTERVAL '30 days'
+GROUP BY grid_location, tenant_code, time_bucket;
+
+CREATE MATERIALIZED VIEW violation_heatmap AS
+SELECT 
+    ST_SnapToGrid(entry_location, 0.0001) as grid_location,
+    tenant_code,
+    time_bucket('1 hour', timestamp) as time_bucket,
+    COUNT(*) as violation_count,
+    COUNT(*) FILTER (WHERE severity = 'CRITICAL') as critical_count
+FROM zone_violations
+WHERE timestamp > NOW() - INTERVAL '30 days'
+GROUP BY grid_location, tenant_code, time_bucket;
+```
+
+**Frontend Components:**
+
+#### Universal Airside Map Page (US5)
+- **Page**: `AirsideMapPage.tsx`
+- **Components**:
+  - `UniversalAssetMap.tsx`: Leaflet map with all assets
+  - `AssetMarker.tsx`: Custom markers color-coded by category
+  - `AssetPopup.tsx`: Asset details on click
+  - `AssetFilterPanel.tsx`: Multi-filter controls
+  - `ZoneBoundariesLayer.tsx`: Restricted zone polygons
+  - `AssetSearchBar.tsx`: Search and zoom to asset
+  - `MapLegend.tsx`: Color/status legend
+- **Features**:
+  - Real-time WebSocket updates
+  - Marker clustering (react-leaflet-cluster)
+  - Smooth marker animation
+  - Category/status/zone filtering
+  - Owner metadata display
+
+#### Hotspot Analysis Page (US6)
+- **Page**: `HotspotAnalysisPage.tsx`
+- **Components**:
+  - `HeatmapView.tsx`: Leaflet.heat integration
+  - `HeatmapControls.tsx`: Mode/resolution/time selectors
+  - `HotspotDetailModal.tsx`: Cell detail breakdown
+  - `HeatmapLegend.tsx`: Gradient legend
+- **Features**:
+  - 3 modes: Activity, Violation, Dwell
+  - 4 grid resolutions: 10m/25m/50m/100m
+  - Time range selector
+  - Intensity slider
+  - Export PNG/CSV/PDF
+  - Comparison mode (stretch goal)
+
+**Tasks:**
+- [ ] Create heatmap materialized views
+- [ ] Create AssetLocationService and endpoints
+- [ ] Create HeatmapService and endpoints
+- [ ] Enhance WebSocket for live asset broadcasts
+- [ ] Create Universal Airside Map page
+- [ ] Create Hotspot Analysis page
+- [ ] Install Leaflet.heat plugin
+- [ ] Update navigation menu
+- [ ] Integration testing
+- [ ] Performance testing (500+ assets)
+
+**Acceptance:**
+- ✅ Universal asset map shows all assets in real-time (<3 sec load)
+- ✅ Asset markers update via WebSocket (<1 sec latency)
+- ✅ Filters work correctly
+- ✅ Marker clustering prevents overlap
+- ✅ Heatmap displays all 3 modes correctly
+- ✅ Hotspot click shows detailed breakdown
+- ✅ Export functionality works
+- ✅ Performance acceptable with 500+ assets
+- ✅ Demo Flow requirements 1 (Universal Airside Visibility) and 3 (Hotspot Identification) fully satisfied
+
+**Estimated Duration**: 3-4 days
 
 ---
 

@@ -120,6 +120,127 @@ Airport operations face critical challenges:
 
 ---
 
+### US5: Universal Airside Map View
+
+**As an** Airport Operations Manager  
+**I want to** see all assets on a single airside map in real-time  
+**So that** I have complete situational awareness of all ground operations
+
+**Acceptance Criteria:**
+- [ ] Map displays ALL assets currently on airside (from asset_location_register)
+- [ ] Asset markers color-coded by category:
+  - Emergency: Red
+  - Fueling: Orange
+  - Cargo: Blue
+  - Ground Support: Green
+  - Transport: Purple
+  - Power: Yellow
+  - Services: Teal
+- [ ] Asset marker states:
+  - In Use: Solid color
+  - Available: Hollow/outlined
+  - Maintenance: Gray with wrench icon
+  - Out of Service: Black with X
+- [ ] Clicking asset marker shows popup with:
+  - Asset ID, Name, Category
+  - Current zone
+  - Current status
+  - Speed (if moving)
+  - Last update timestamp
+  - Quick link to "View Trail"
+- [ ] Filter panel:
+  - By asset category (multi-select)
+  - By owner/tenant (for ADMIN cross-tenant view)
+  - By zone (assets in specific zone)
+  - By status (In Use, Available, etc.)
+- [ ] Show/hide restricted zone boundaries toggle
+- [ ] Zone boundaries color-coded:
+  - PROHIBITED: Red polygon
+  - RESTRICTED: Orange polygon
+  - CONTROLLED: Yellow polygon
+  - MAINTENANCE: Blue polygon
+- [ ] Real-time updates via WebSocket:
+  - Asset positions update every 5 seconds
+  - Markers smoothly animate to new positions
+  - New assets appear, inactive assets fade out
+- [ ] Toggle between views:
+  - "All Assets" (airport-wide, ADMIN/AIRPORT_USER)
+  - "My Assets" (tenant-specific, GH)
+- [ ] Asset count badge showing filtered/total (e.g., "12 / 45 assets")
+- [ ] Legend panel explaining marker colors and states
+- [ ] Cluster markers when zoomed out (prevent overlap)
+- [ ] Owner information displayed in asset popup (not primary filter)
+- [ ] Search bar: Find asset by ID or name, zoom to location
+
+**Priority**: P0 (Critical)  
+**Demo Flow Mapping**: Universal Airside Visibility
+
+---
+
+### US6: Hotspot Analysis & Heatmap
+
+**As a** Safety Manager  
+**I want to** identify high-activity and high-risk areas using heatmap visualization  
+**So that** I can proactively address operational bottlenecks and safety concerns
+
+**Acceptance Criteria:**
+- [ ] Toggle button in toolbar: "Asset View" ↔ "Heatmap View"
+- [ ] Three heatmap modes with radio selector:
+  - **Activity Density**: Shows where most asset movement occurs (high traffic areas)
+  - **Violation Density**: Shows where most zone violations happen (security hotspots)
+  - **Dwell Time**: Shows where assets spend most time (potential bottlenecks)
+- [ ] Color gradient legend:
+  - Blue: Low activity/violations (0-25th percentile)
+  - Green: Moderate (25-50th percentile)
+  - Yellow: High (50-75th percentile)
+  - Orange: Very High (75-90th percentile)
+  - Red: Critical (90-100th percentile)
+- [ ] Grid resolution selector:
+  - 10m: Fine detail (for stand-level analysis)
+  - 25m: Medium detail (for apron sections)
+  - 50m: Coarse (for terminal areas)
+  - 100m: Overview (for entire airport)
+- [ ] Time range selector:
+  - Last hour
+  - Last 24 hours (default)
+  - Last 7 days
+  - Last 30 days
+  - Custom date range
+- [ ] Click hotspot cell to see details:
+  - Modal/panel with:
+    - Activity count / Violation count / Dwell time (based on mode)
+    - List of assets that contributed
+    - List of specific violations (if violation mode)
+    - Time distribution chart (when activity peaks)
+  - "View Assets" button to switch to asset view with filter applied
+- [ ] Heatmap intensity control slider (adjust color sensitivity)
+- [ ] Overlay restricted zones on heatmap (show if hotspots align with zones)
+- [ ] Export options:
+  - Download heatmap as PNG image
+  - Export heatmap data as CSV (lat, long, intensity)
+  - Export hotspot summary report as PDF
+- [ ] Comparison mode:
+  - Split screen: Compare two time periods
+  - Example: "Last week" vs "This week"
+  - Highlight areas with increasing/decreasing activity
+- [ ] Auto-refresh toggle for real-time heatmap updates
+- [ ] Threshold alerts:
+  - Define activity threshold (e.g., >100 movements/hour)
+  - Receive notification when threshold exceeded in any cell
+- [ ] Integration with violation report:
+  - Click violation hotspot → "View Violations" opens filtered report
+
+**Priority**: P0 (Critical)  
+**Demo Flow Mapping**: Hotspot Identification
+
+**Business Value:**
+- **Identify congestion**: Find bottlenecks before they cause delays
+- **Prevent incidents**: Detect high-violation areas needing intervention
+- **Optimize layout**: Data-driven decisions for stand/taxiway allocation
+- **Resource planning**: Position GSE based on demand patterns
+
+---
+
 ## Functional Requirements
 
 ### FR1: Restricted Zone Management
