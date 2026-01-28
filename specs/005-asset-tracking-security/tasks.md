@@ -62,11 +62,11 @@
   - [ ] PublishKafkaRecord processor: Send to asset-positions-json topic
   - [ ] UpdateAttribute: Track last_poll_time
   - [ ] Configure error handling and retry logic
-- [ ] T023b [P] Create Kafka topic: asset-positions-json
-  - [ ] Partitions: 3 (for parallel processing)
-  - [ ] Replication factor: 1 (single node for MVP)
-  - [ ] Retention: 24 hours
-  - [ ] Compression: gzip
+- [x] T023b [P] Create Kafka topic: asset-positions-json
+  - [x] Partitions: 3 (for parallel processing)
+  - [x] Replication factor: 1 (single node for MVP)
+  - [x] Retention: 24 hours
+  - [x] Compression: gzip
 - [ ] T023c [P] Test NiFi flow with mock vehicle data
   - [ ] Run simulate_ba249.sh to generate test positions
   - [ ] Verify NiFi polls and publishes to Kafka
@@ -89,21 +89,21 @@
 
 ### Database Enhancements
 
-- [ ] T024 [DB] Create `asset_activity_heatmap` materialized view
-  - [ ] Grid-based aggregation using ST_SnapToGrid (10m resolution = 0.0001°)
-  - [ ] Time-bucketed by hour for last 30 days
-  - [ ] Count activity, unique assets, avg speed per cell
-  - [ ] Create GIST spatial index on grid_location
-  - [ ] Create index on (tenant_code, time_bucket)
-- [ ] T025 [DB] Create `violation_heatmap` materialized view
-  - [ ] Grid-based violation density aggregation
-  - [ ] Count violations by severity per cell
-  - [ ] Time-bucketed by hour
-  - [ ] Create spatial and temporal indexes
-- [ ] T026 [DB] Create refresh policy for heatmap views
-  - [ ] Auto-refresh every 6 hours
-  - [ ] Create manual refresh function `refresh_heatmaps()`
-  - [ ] Test refresh performance (<10 seconds)
+- [x] T024 [DB] Create `asset_activity_heatmap` materialized view
+  - [x] Grid-based aggregation using ST_SnapToGrid (10m resolution = 0.0001°)
+  - [x] Time-bucketed by hour for last 30 days
+  - [x] Count activity, unique assets, avg speed per cell
+  - [x] Create GIST spatial index on grid_location
+  - [x] Create index on (tenant_code, time_bucket)
+- [x] T025 [DB] Create `violation_heatmap` materialized view
+  - [x] Grid-based violation density aggregation
+  - [x] Count violations by severity per cell
+  - [x] Time-bucketed by hour
+  - [x] Create spatial and temporal indexes
+- [x] T026 [DB] Create refresh policy for heatmap views
+  - [x] Auto-refresh every 6 hours
+  - [x] Create manual refresh function `refresh_heatmaps()`
+  - [x] Test refresh performance (<10 seconds)
 
 ### NiFi & Kafka Integration
 
@@ -977,11 +977,21 @@
   - [ ] Add missing indexes
   - [ ] Refactor complex queries
   - [ ] Use EXPLAIN ANALYZE
+- [ ] T137a [TEST] Load test 100 concurrent users on report endpoints
+  - [ ] Simulate 100 concurrent users requesting /api/tracking/violations
+  - [ ] Simulate 100 concurrent users requesting /api/tracking/discrepancies
+  - [ ] Simulate 50 concurrent users requesting /api/tracking/trail
+  - [ ] Verify response time <3 seconds per NFR requirement
+  - [ ] Monitor database connection pool (should not exhaust)
+  - [ ] Monitor CPU/memory usage (should stay <80%)
+  - [ ] Test during peak data load (500 assets × 5-second updates)
+  - [ ] Document max supported concurrent users
 
 **Acceptance Criteria:**
 - All performance SLAs met
 - No bottlenecks identified
 - System stable under load
+- **System supports ≥100 concurrent users with <3 second response time (NFR Scalability)**
 
 ---
 
