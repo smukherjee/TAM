@@ -1,0 +1,1230 @@
+openapi: 3.0.3
+info:
+  title: Asset Tracking & Security API
+  description: REST API for zone violations, movement discrepancies, and asset tracking
+  version: 1.0.0
+  contact:
+    name: Platform Team
+    email: platform@tam.com
+
+servers:
+  - url: http://localhost:8090/api
+    description: Local development
+  - url: https://api-dev.tam.com/api
+    description: Development environment
+  - url: https://api.tam.com/api
+    description: Production
+
+tags:
+  - name: Zone Violations
+    description: Restricted zone violation management
+  - name: Movement Discrepancies
+    description: Movement anomaly detection and investigation
+  - name: Movement Trail
+    description: Historical asset position tracking
+  - name: Restricted Zones
+    description: Zone configuration and management
+  - name: Live Tracking
+    description: Real-time asset positions
+  - name: Heatmaps
+    description: Activity and violation heatmap analytics
+
+paths:
+  /tracking/violations:
+    get:
+      tags: [Zone Violations]
+      summary: List zone violations with filters
+      operationId: getZoneViolations
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: zoneId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by restricted zone ID
+        - name: severity
+          in: query
+          schema:
+            $ref: '#/components/schemas/SeverityEnum'
+          description: Filter by severity level
+        - name: assetId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by asset ID
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Start of date range (ISO 8601)
+          example: "2026-01-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: End of date range (ISO 8601)
+          example: "2026-01-31T23:59:59Z"
+        - name: acknowledged
+          in: query
+          schema:
+            type: boolean
+          description: Filter by acknowledgment status
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Page number (0-indexed)
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+          description: Page size
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "timestamp,desc"
+            enum:
+              - "timestamp,asc"
+              - "timestamp,desc"
+              - "severity,asc"
+              - "severity,desc"
+          description: Sort order
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ZoneViolationResponse'
+                  page:
+                    $ref: '#/components/schemas/PageMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tracking/violations/{violationId}:
+    get:
+      tags: [Zone Violations]
+      summary: Get violation details
+      operationId: getViolationById
+      parameters:
+        - name: violationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Violation ID (e.g., VIO-20260128-001)
+      responses:
+        '200':
+          description: Violation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZoneViolationDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Zone Violations]
+      summary: Acknowledge violation
+      operationId: acknowledgeViolation
+      parameters:
+        - name: violationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeViolationRequest'
+      responses:
+        '200':
+          description: Violation acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZoneViolationDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tracking/discrepancies:
+    get:
+      tags: [Movement Discrepancies]
+      summary: List movement discrepancies with filters
+      operationId: getMovementDiscrepancies
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: discrepancyType
+          in: query
+          schema:
+            $ref: '#/components/schemas/DiscrepancyTypeEnum'
+          description: Filter by discrepancy type
+        - name: severity
+          in: query
+          schema:
+            $ref: '#/components/schemas/SeverityEnum'
+          description: Filter by severity level
+        - name: assetId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by asset ID
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: acknowledged
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "timestamp,desc"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovementDiscrepancyResponse'
+                  page:
+                    $ref: '#/components/schemas/PageMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /tracking/discrepancies/{discrepancyId}:
+    get:
+      tags: [Movement Discrepancies]
+      summary: Get discrepancy details
+      operationId: getDiscrepancyById
+      parameters:
+        - name: discrepancyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Discrepancy found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementDiscrepancyDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Movement Discrepancies]
+      summary: Acknowledge discrepancy
+      operationId: acknowledgeDiscrepancy
+      parameters:
+        - name: discrepancyId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeDiscrepancyRequest'
+      responses:
+        '200':
+          description: Discrepancy acknowledged
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tracking/trail/{assetId}:
+    get:
+      tags: [Movement Trail]
+      summary: Get asset movement trail
+      operationId: getAssetMovementTrail
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Asset ID
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: simplify
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Apply Douglas-Peucker simplification for large trails
+        - name: tolerance
+          in: query
+          schema:
+            type: number
+            format: double
+            default: 0.0001
+          description: Simplification tolerance in degrees (if simplify=true)
+      responses:
+        '200':
+          description: Movement trail returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementTrailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Asset not found
+
+  /tracking/zones:
+    get:
+      tags: [Restricted Zones]
+      summary: List all restricted zones
+      operationId: getRestrictedZones
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: zoneType
+          in: query
+          schema:
+            $ref: '#/components/schemas/ZoneTypeEnum'
+          description: Filter by zone type
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+          description: Filter by active status
+      responses:
+        '200':
+          description: Zones returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RestrictedZoneResponse'
+
+    post:
+      tags: [Restricted Zones]
+      summary: Create new restricted zone
+      operationId: createRestrictedZone
+      security:
+        - bearerAuth: [ROLE_ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRestrictedZoneRequest'
+      responses:
+        '201':
+          description: Zone created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedZoneResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tracking/zones/{zoneId}:
+    get:
+      tags: [Restricted Zones]
+      summary: Get zone details
+      operationId: getZoneById
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Zone found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedZoneDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Restricted Zones]
+      summary: Update zone configuration
+      operationId: updateRestrictedZone
+      security:
+        - bearerAuth: [ROLE_ADMIN]
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRestrictedZoneRequest'
+      responses:
+        '200':
+          description: Zone updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedZoneDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Restricted Zones]
+      summary: Deactivate zone
+      operationId: deactivateZone
+      security:
+        - bearerAuth: [ROLE_ADMIN]
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Zone deactivated
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tracking/assets/live:
+    get:
+      tags: [Live Tracking]
+      summary: Get all live asset positions (US5)
+      operationId: getLiveAssetPositions
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by asset category
+          example: "Fueling"
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: Filter by asset status
+          example: "In Use"
+        - name: zoneId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter assets in specific zone
+      responses:
+        '200':
+          description: Live positions returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LiveAssetPositionResponse'
+
+  /tracking/heatmap/activity:
+    get:
+      tags: [Heatmaps]
+      summary: Get activity density heatmap (US6)
+      operationId: getActivityHeatmap
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: resolution
+          in: query
+          schema:
+            type: integer
+            enum: [10, 25, 50, 100]
+            default: 25
+          description: Grid cell size in meters
+      responses:
+        '200':
+          description: Heatmap data returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapResponse'
+
+  /tracking/heatmap/violations:
+    get:
+      tags: [Heatmaps]
+      summary: Get violation density heatmap (US6)
+      operationId: getViolationHeatmap
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: resolution
+          in: query
+          schema:
+            type: integer
+            enum: [10, 25, 50, 100]
+            default: 25
+      responses:
+        '200':
+          description: Heatmap data returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapResponse'
+
+  /tracking/heatmap/dwell:
+    get:
+      tags: [Heatmaps]
+      summary: Get dwell time heatmap (US6)
+      operationId: getDwellHeatmap
+      parameters:
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: resolution
+          in: query
+          schema:
+            type: integer
+            enum: [10, 25, 50, 100]
+            default: 25
+      responses:
+        '200':
+          description: Heatmap data returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapResponse'
+
+  /tracking/heatmap/hotspot/{lat}/{lng}:
+    get:
+      tags: [Heatmaps]
+      summary: Get hotspot cell details (US6)
+      operationId: getHotspotDetail
+      parameters:
+        - name: lat
+          in: path
+          required: true
+          schema:
+            type: number
+            format: double
+          description: Latitude of grid cell
+        - name: lng
+          in: path
+          required: true
+          schema:
+            type: number
+            format: double
+          description: Longitude of grid cell
+        - $ref: '#/components/parameters/TenantCodeParam'
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Hotspot detail returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotspotDetailResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantCodeParam:
+      name: tenantCode
+      in: query
+      required: true
+      schema:
+        type: string
+        maxLength: 10
+      description: Tenant code (VIDP, LIRN, YBBN)
+      example: "VIDP"
+
+  schemas:
+    # Enums
+    SeverityEnum:
+      type: string
+      enum: [CRITICAL, HIGH, MEDIUM, LOW]
+
+    ZoneTypeEnum:
+      type: string
+      enum: [PROHIBITED, RESTRICTED, CONTROLLED, MAINTENANCE]
+
+    ViolationTypeEnum:
+      type: string
+      enum: [UNAUTHORIZED_ENTRY, UNAUTHORIZED_CATEGORY, PROHIBITED_ZONE]
+
+    DiscrepancyTypeEnum:
+      type: string
+      enum: [UNEXPECTED_MOVEMENT, LOCATION_MISMATCH, SPEED_ANOMALY, MISSING_TRACKING, DUPLICATE_SIGNAL]
+
+    # Zone Violation Schemas
+    ZoneViolationResponse:
+      type: object
+      properties:
+        violationId:
+          type: string
+          example: "VIO-20260128-001"
+        assetId:
+          type: string
+          format: uuid
+        assetName:
+          type: string
+          example: "Fuel Truck - 001"
+        assetCategory:
+          type: string
+          example: "Fueling"
+        zoneName:
+          type: string
+          example: "Runway 09/27 Safety Zone"
+        zoneType:
+          $ref: '#/components/schemas/ZoneTypeEnum'
+        violationType:
+          $ref: '#/components/schemas/ViolationTypeEnum'
+        severity:
+          $ref: '#/components/schemas/SeverityEnum'
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-28T14:30:00Z"
+        durationSeconds:
+          type: integer
+          nullable: true
+          description: Duration in zone (null if ongoing)
+        acknowledged:
+          type: boolean
+        acknowledgedBy:
+          type: string
+          nullable: true
+        acknowledgedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ZoneViolationDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ZoneViolationResponse'
+        - type: object
+          properties:
+            entryLocation:
+              $ref: '#/components/schemas/GeoPointResponse'
+            exitLocation:
+              $ref: '#/components/schemas/GeoPointResponse'
+              nullable: true
+            resolutionNotes:
+              type: string
+              nullable: true
+            relatedTrailSegment:
+              type: array
+              items:
+                $ref: '#/components/schemas/TrailPointResponse'
+
+    AcknowledgeViolationRequest:
+      type: object
+      required: [acknowledgedBy, resolutionNotes]
+      properties:
+        acknowledgedBy:
+          type: string
+          example: "john.doe@airport.com"
+        resolutionNotes:
+          type: string
+          example: "Driver error - retraining scheduled"
+
+    # Movement Discrepancy Schemas
+    MovementDiscrepancyResponse:
+      type: object
+      properties:
+        discrepancyId:
+          type: string
+          example: "DIS-20260128-001"
+        assetId:
+          type: string
+          format: uuid
+        assetName:
+          type: string
+        assetCategory:
+          type: string
+        discrepancyType:
+          $ref: '#/components/schemas/DiscrepancyTypeEnum'
+        severity:
+          $ref: '#/components/schemas/SeverityEnum'
+        timestamp:
+          type: string
+          format: date-time
+        description:
+          type: string
+          example: "Asset moved 120m while status=Maintenance"
+        acknowledged:
+          type: boolean
+
+    MovementDiscrepancyDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/MovementDiscrepancyResponse'
+        - type: object
+          properties:
+            expectedLocation:
+              $ref: '#/components/schemas/GeoPointResponse'
+              nullable: true
+            actualLocation:
+              $ref: '#/components/schemas/GeoPointResponse'
+            deviationMeters:
+              type: number
+              format: double
+              nullable: true
+            expectedSpeed:
+              type: number
+              nullable: true
+            actualSpeed:
+              type: number
+              nullable: true
+            investigationNotes:
+              type: string
+              nullable: true
+
+    AcknowledgeDiscrepancyRequest:
+      type: object
+      required: [acknowledgedBy, investigationNotes]
+      properties:
+        acknowledgedBy:
+          type: string
+        investigationNotes:
+          type: string
+
+    # Movement Trail Schemas
+    MovementTrailResponse:
+      type: object
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        assetName:
+          type: string
+        trail:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrailPointResponse'
+        zones:
+          type: array
+          description: Zones visited during trail period
+          items:
+            $ref: '#/components/schemas/ZoneVisitResponse'
+        summary:
+          $ref: '#/components/schemas/TrailSummary'
+
+    TrailPointResponse:
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/GeoPointResponse'
+        timestamp:
+          type: string
+          format: date-time
+        speed:
+          type: number
+          nullable: true
+        heading:
+          type: number
+          nullable: true
+        zoneColor:
+          type: string
+          description: Map color based on zone type (blue=normal, red=restricted)
+          example: "blue"
+
+    ZoneVisitResponse:
+      type: object
+      properties:
+        zoneName:
+          type: string
+        entryTime:
+          type: string
+          format: date-time
+        exitTime:
+          type: string
+          format: date-time
+          nullable: true
+        dwellSeconds:
+          type: integer
+
+    TrailSummary:
+      type: object
+      properties:
+        totalPoints:
+          type: integer
+        distanceKm:
+          type: number
+        avgSpeedKmh:
+          type: number
+        maxSpeedKmh:
+          type: number
+        zonesVisited:
+          type: integer
+
+    # Restricted Zone Schemas
+    RestrictedZoneResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        zoneType:
+          $ref: '#/components/schemas/ZoneTypeEnum'
+        geometry:
+          $ref: '#/components/schemas/GeoPolygonResponse'
+        authorizedCategories:
+          type: array
+          items:
+            type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    RestrictedZoneDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/RestrictedZoneResponse'
+        - type: object
+          properties:
+            authorizedAssetIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+              nullable: true
+            recentViolations:
+              type: array
+              items:
+                $ref: '#/components/schemas/ZoneViolationResponse'
+
+    CreateRestrictedZoneRequest:
+      type: object
+      required: [name, zoneType, geometry, tenantCode]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        zoneType:
+          $ref: '#/components/schemas/ZoneTypeEnum'
+        geometry:
+          $ref: '#/components/schemas/GeoPolygonRequest'
+        authorizedCategories:
+          type: array
+          items:
+            type: string
+          nullable: true
+        authorizedAssetIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          nullable: true
+        tenantCode:
+          type: string
+          maxLength: 10
+
+    UpdateRestrictedZoneRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        zoneType:
+          $ref: '#/components/schemas/ZoneTypeEnum'
+        authorizedCategories:
+          type: array
+          items:
+            type: string
+        authorizedAssetIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        isActive:
+          type: boolean
+
+    # Live Tracking Schemas (US5)
+    LiveAssetPositionResponse:
+      type: object
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        assetIdentifier:
+          type: string
+          example: "SAM-0005"
+        assetName:
+          type: string
+          example: "Fuel Truck - 001"
+        category:
+          type: string
+          example: "Fueling"
+        status:
+          type: string
+          example: "In Use"
+        location:
+          $ref: '#/components/schemas/GeoPointResponse'
+        speed:
+          type: number
+          nullable: true
+        heading:
+          type: number
+          nullable: true
+        currentZone:
+          type: string
+          nullable: true
+        lastUpdated:
+          type: string
+          format: date-time
+        markerColor:
+          type: string
+          description: Hex color code for map marker
+          example: "#FF5722"
+        markerIcon:
+          type: string
+          enum: [fire-truck, fuel-truck, forklift, tow-truck, bus, power, services, dot]
+          description: Icon type for map marker
+
+    # Heatmap Schemas (US6)
+    HeatmapResponse:
+      type: object
+      properties:
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeatmapCellResponse'
+        bounds:
+          $ref: '#/components/schemas/BoundsResponse'
+        summary:
+          $ref: '#/components/schemas/HeatmapSummary'
+
+    HeatmapCellResponse:
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/GeoPointResponse'
+        intensity:
+          type: number
+          description: Normalized intensity 0.0-1.0
+          minimum: 0
+          maximum: 1
+        value:
+          type: number
+          description: Raw count or metric
+        metadata:
+          type: object
+          properties:
+            uniqueAssets:
+              type: integer
+            avgSpeed:
+              type: number
+              nullable: true
+            violationCount:
+              type: integer
+              nullable: true
+
+    HeatmapSummary:
+      type: object
+      properties:
+        totalCells:
+          type: integer
+        maxIntensity:
+          type: number
+        avgIntensity:
+          type: number
+        timeRange:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+
+    HotspotDetailResponse:
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/GeoPointResponse'
+        activityCount:
+          type: integer
+        uniqueAssets:
+          type: integer
+        violationCount:
+          type: integer
+        avgDwellMinutes:
+          type: number
+        topAssets:
+          type: array
+          description: Assets with most activity in this cell
+          items:
+            type: object
+            properties:
+              assetName:
+                type: string
+              visits:
+                type: integer
+        hourlyDistribution:
+          type: array
+          description: Activity by hour of day
+          items:
+            type: object
+            properties:
+              hour:
+                type: integer
+                minimum: 0
+                maximum: 23
+              count:
+                type: integer
+
+    # Geometry Schemas
+    GeoPointResponse:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 28.5555
+        longitude:
+          type: number
+          format: double
+          example: 77.0900
+
+    GeoPolygonResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [Polygon]
+        coordinates:
+          type: array
+          items:
+            type: array
+            description: Array of [lng, lat] pairs
+            items:
+              type: array
+              items:
+                type: number
+                format: double
+              minItems: 2
+              maxItems: 2
+
+    GeoPolygonRequest:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          type: string
+          enum: [Polygon]
+        coordinates:
+          type: array
+          description: GeoJSON polygon coordinates
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                type: number
+              minItems: 2
+
+    BoundsResponse:
+      type: object
+      description: Geographic bounding box
+      properties:
+        north:
+          type: number
+        south:
+          type: number
+        east:
+          type: number
+        west:
+          type: number
+
+    # Pagination
+    PageMetadata:
+      type: object
+      properties:
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        numberOfElements:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    # Error Schemas
+    ProblemDetail:
+      type: object
+      description: RFC 7807 Problem Details
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "https://api.tam.com/errors/validation-error"
+        title:
+          type: string
+          example: "Validation Error"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: "startDate must be before endDate"
+        instance:
+          type: string
+          format: uri
+          example: "/api/tracking/violations?startDate=2026-02-01&endDate=2026-01-01"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+security:
+  - bearerAuth: []
