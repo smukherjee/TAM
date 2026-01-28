@@ -149,13 +149,13 @@
   - [x] `GET /api/tracking/assets/live/{assetId}` - Single asset
   - [x] Add @PreAuthorize for role-based access
   - [x] Add @ApiOperation Swagger docs
-- [ ] T030 [BE] Enhance WebSocket for live asset updates
-  - [ ] Create `AssetLocationWebSocketService.java`
-  - [ ] Broadcast to `/topic/assets/live/{tenantCode}`
-  - [ ] Message payload: AssetPositionUpdateEvent
-  - [ ] Include all asset position changes (not just violations)
-  - [ ] Throttle to 1 update per asset per 5 seconds
-  - [ ] Integrate in MovementTrailIngestionService
+- [x] T030 [BE] Enhance WebSocket for live asset updates
+  - [x] Create `AssetLocationWebSocketService.java`
+  - [x] Broadcast to `/topic/assets/live/{tenantCode}`
+  - [x] Message payload: AssetPositionUpdateEvent
+  - [x] Include all asset position changes (not just violations)
+  - [x] Throttle to 1 update per asset per 5 seconds
+  - [x] Integrate in MovementTrailIngestionService
 
 ### Backend API - Heatmap (US6)
 
