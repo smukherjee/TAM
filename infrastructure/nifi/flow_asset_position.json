@@ -1,0 +1,154 @@
+{
+  "flowName": "Asset Position Polling",
+  "description": "Polls vehicles table every 5 seconds and publishes to Kafka topic asset-positions-json",
+  "processors": [
+    {
+      "name": "ExecuteSQLRecord_AssetPositions",
+      "type": "org.apache.nifi.processors.standard.ExecuteSQLRecord",
+      "schedulingPeriod": "5 sec",
+      "properties": {
+        "Database Connection Pooling Service": "DBCPConnectionPool",
+        "SQL select query": "SELECT vehicle_id, latitude, longitude, speed, heading, status, timestamp, tenant_code FROM vehicles WHERE updated_at > '${last_poll_time:toDate('yyyy-MM-dd HH:mm:ss'):format('yyyy-MM-dd HH:mm:ss', 'UTC')}' OR ${last_poll_time:isEmpty()}",
+        "Record Writer": "JsonRecordSetWriter",
+        "Max Rows Per Flow File": "1000"
+      },
+      "comments": "Query vehicles table for new position updates every 5 seconds"
+    },
+    {
+      "name": "UpdateAttribute_TrackPollTime",
+      "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+      "properties": {
+        "last_poll_time": "${now():format('yyyy-MM-dd HH:mm:ss', 'UTC')}"
+      },
+      "comments": "Track last successful poll timestamp"
+    },
+    {
+      "name": "PublishKafkaRecord_AssetPositions",
+      "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafkaRecord_2_6",
+      "properties": {
+        "Kafka Brokers": "redpanda:29092",
+        "Topic Name": "asset-positions-json",
+        "Record Reader": "JsonTreeReader",
+        "Record Writer": "JsonRecordSetWriter",
+        "Delivery Guarantee": "1",
+        "Message Key Field": "vehicle_id",
+        "Compression Type": "gzip",
+        "Acks": "1",
+        "Use Transactions": "false"
+      },
+      "comments": "Publish position records to Kafka topic asset-positions-json"
+    },
+    {
+      "name": "LogAttribute_Success",
+      "type": "org.apache.nifi.processors.standard.LogAttribute",
+      "properties": {
+        "Log Level": "info",
+        "Attributes to Log": "fragment.count,record.count"
+      },
+      "autoTerminateRelationships": ["success"],
+      "comments": "Log successful processing metrics"
+    },
+    {
+      "name": "LogAttribute_Failure",
+      "type": "org.apache.nifi.processors.standard.LogAttribute",
+      "properties": {
+        "Log Level": "error",
+        "Log Payload": "true"
+      },
+      "autoTerminateRelationships": ["success"],
+      "comments": "Log failures for troubleshooting"
+    },
+    {
+      "name": "RetryFlowFile",
+      "type": "org.apache.nifi.processors.standard.RetryFlowFile",
+      "properties": {
+        "Maximum Retries": "3",
+        "Retry Attribute": "retry.count",
+        "Reuse Mode": "Fail on Reuse"
+      },
+      "comments": "Retry failed Kafka publishes up to 3 times"
+    }
+  ],
+  "controllerServices": [
+    {
+      "name": "DBCPConnectionPool",
+      "type": "org.apache.nifi.dbcp.DBCPConnectionPool",
+      "properties": {
+        "Database Connection URL": "jdbc:postgresql://timescaledb:5432/tam",
+        "Database Driver Class Name": "org.postgresql.Driver",
+        "Database Driver Location(s)": "/opt/nifi/nifi-current/lib/postgresql-42.7.1.jar",
+        "Database User": "postgres",
+        "Password": "postgres",
+        "Max Wait Time": "500 millis",
+        "Max Total Connections": "10"
+      },
+      "comments": "PostgreSQL connection pool for vehicles table"
+    },
+    {
+      "name": "JsonTreeReader",
+      "type": "org.apache.nifi.json.JsonTreeReader",
+      "properties": {
+        "Schema Access Strategy": "Infer Schema"
+      },
+      "comments": "JSON reader for Kafka records"
+    },
+    {
+      "name": "JsonRecordSetWriter",
+      "type": "org.apache.nifi.json.JsonRecordSetWriter",
+      "properties": {
+        "Schema Write Strategy": "No Schema",
+        "Schema Access Strategy": "Inherit Record Schema",
+        "Pretty Print JSON": "false",
+        "Suppress Null Values": "Never Suppress"
+      },
+      "comments": "JSON writer for Kafka messages"
+    }
+  ],
+  "connections": [
+    {
+      "from": "ExecuteSQLRecord_AssetPositions",
+      "fromRelationship": "success",
+      "to": "UpdateAttribute_TrackPollTime",
+      "comments": "Process successful query results"
+    },
+    {
+      "from": "ExecuteSQLRecord_AssetPositions",
+      "fromRelationship": "failure",
+      "to": "LogAttribute_Failure",
+      "comments": "Log database query failures"
+    },
+    {
+      "from": "UpdateAttribute_TrackPollTime",
+      "fromRelationship": "success",
+      "to": "PublishKafkaRecord_AssetPositions",
+      "comments": "Send to Kafka after updating poll timestamp"
+    },
+    {
+      "from": "PublishKafkaRecord_AssetPositions",
+      "fromRelationship": "success",
+      "to": "LogAttribute_Success",
+      "comments": "Log successful Kafka publish"
+    },
+    {
+      "from": "PublishKafkaRecord_AssetPositions",
+      "fromRelationship": "failure",
+      "to": "RetryFlowFile",
+      "comments": "Retry failed Kafka publishes"
+    },
+    {
+      "from": "RetryFlowFile",
+      "fromRelationship": "retry",
+      "to": "PublishKafkaRecord_AssetPositions",
+      "comments": "Retry sending to Kafka"
+    },
+    {
+      "from": "RetryFlowFile",
+      "fromRelationship": "retries_exceeded",
+      "to": "LogAttribute_Failure",
+      "comments": "Log permanent failures after retries exhausted"
+    }
+  ],
+  "variables": {
+    "last_poll_time": ""
+  }
+}

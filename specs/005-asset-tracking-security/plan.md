@@ -415,7 +415,10 @@ WHERE z.tenant_code = $1
 
 **Subscribe**: `/topic/violations/{tenantCode}`  
 **Subscribe**: `/topic/discrepancies/{tenantCode}`  
-**Subscribe**: `/topic/trail/{assetId}`
+**Subscribe**: `/topic/trail/{assetId}`  
+**Subscribe**: `/topic/assets/live/{tenantCode}` (for US5 Universal Map - real-time asset positions)
+
+*Note: The spec.md FR6.1 event `asset_trail_update` is implemented as `AssetPositionUpdateEvent` on the `/topic/assets/live/{tenantCode}` topic. These are equivalent - the implementation consolidates real-time asset position broadcasts into a single event type for efficiency (broadcasts every 5 seconds for all moving assets)*
 
 **Event Format**:
 ```json

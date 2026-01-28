@@ -159,31 +159,31 @@
 
 ### Backend API - Heatmap (US6)
 
-- [ ] T031 [BE] Create `HeatmapDataDTO.java`
-  - [ ] Fields: latitude, longitude, intensity (0-1 normalized)
-  - [ ] Fields: metadata (activityCount, uniqueAssets, avgSpeed)
-  - [ ] Add nested class for statistics
-- [ ] T032 [BE] Create `HotspotDetailDTO.java`
-  - [ ] Fields: location, mode, activityCount, uniqueAssets
-  - [ ] Fields: assets (list of contributing assets)
-  - [ ] Fields: violations (if violation mode)
-  - [ ] Fields: timeDistribution (hourly breakdown chart data)
-- [ ] T033 [BE] Create `HeatmapService.java`
-  - [ ] Method: `getActivityHeatmap(tenantCode, startDate, endDate, gridSize)`
-  - [ ] Method: `getViolationHeatmap(tenantCode, startDate, endDate, gridSize)`
-  - [ ] Method: `getDwellHeatmap(tenantCode, startDate, endDate, gridSize)`
-  - [ ] Method: `getHotspotDetails(lat, lng, mode, dateRange)`
-  - [ ] Grid size conversion: 10m=0.0001°, 25m=0.00025°, 50m=0.0005°, 100m=0.001°
-  - [ ] Normalize intensity values to 0-1 scale (percentile-based)
-  - [ ] Implement caching for frequently requested ranges
-- [ ] T034 [BE] Create `HeatmapController.java`
-  - [ ] `GET /api/tracking/heatmap/activity` - Activity density data
-  - [ ] `GET /api/tracking/heatmap/violations` - Violation density data
-  - [ ] `GET /api/tracking/heatmap/dwell` - Dwell time data
-  - [ ] `GET /api/tracking/heatmap/hotspot` - Hotspot detail for clicked cell
-  - [ ] All endpoints support: tenantCode, startDate, endDate, gridSize params
-  - [ ] Add Swagger documentation
-  - [ ] Add validation for date ranges (max 30 days)
+- [x] T031 [BE] Create `HeatmapDataDTO.java`
+  - [x] Fields: latitude, longitude, intensity (0-1 normalized)
+  - [x] Fields: metadata (activityCount, uniqueAssets, avgSpeed)
+  - [x] Add nested class for statistics
+- [x] T032 [BE] Create `HotspotDetailDTO.java`
+  - [x] Fields: location, mode, activityCount, uniqueAssets
+  - [x] Fields: assets (list of contributing assets)
+  - [x] Fields: violations (if violation mode)
+  - [x] Fields: timeDistribution (hourly breakdown chart data)
+- [x] T033 [BE] Create `HeatmapService.java`
+  - [x] Method: `getActivityHeatmap(tenantCode, startDate, endDate, gridSize)`
+  - [x] Method: `getViolationHeatmap(tenantCode, startDate, endDate, gridSize)`
+  - [x] Method: `getDwellHeatmap(tenantCode, startDate, endDate, gridSize)`
+  - [x] Method: `getHotspotDetails(lat, lng, mode, dateRange)`
+  - [x] Grid size conversion: 10m=0.0001°, 25m=0.00025°, 50m=0.0005°, 100m=0.001°
+  - [x] Normalize intensity values to 0-1 scale (percentile-based)
+  - [x] Implement caching for frequently requested ranges
+- [x] T034 [BE] Create `HeatmapController.java`
+  - [x] `GET /api/tracking/heatmap/activity` - Activity density data
+  - [x] `GET /api/tracking/heatmap/violations` - Violation density data
+  - [x] `GET /api/tracking/heatmap/dwell` - Dwell time data
+  - [x] `GET /api/tracking/heatmap/hotspot` - Hotspot detail for clicked cell
+  - [x] All endpoints support: tenantCode, startDate, endDate, gridSize params
+  - [x] Add Swagger documentation
+  - [x] Add validation for date ranges (max 30 days)
 - [ ] T035 [BE] Create heatmap export service
   - [ ] Method: `exportHeatmapDataCSV(heatmapData)` - CSV export
   - [ ] Method: `generateHeatmapReportPDF(heatmapData, metadata)` - PDF summary

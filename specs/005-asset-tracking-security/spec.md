@@ -120,7 +120,7 @@ Airport operations face critical challenges:
 
 ---
 
-### US5: Universal Airside Map View
+### US5: Universal Airside Map View (Phase 2A)
 
 **As an** Airport Operations Manager  
 **I want to** see all assets on a single airside map in real-time  
@@ -177,7 +177,7 @@ Airport operations face critical challenges:
 
 ---
 
-### US6: Hotspot Analysis & Heatmap
+### US6: Hotspot Analysis & Heatmap (Phase 2A)
 
 **As a** Safety Manager  
 **I want to** identify high-activity and high-risk areas using heatmap visualization  
@@ -252,8 +252,10 @@ Airport operations face critical challenges:
 - If zone has authorized_asset_ids: Check asset.id IN authorized_asset_ids
 - If asset matches either rule: AUTHORIZED
 - If PROHIBITED zone: ALWAYS unauthorized (overrides exceptions)
-- If authorized_asset_categories is NULL or empty: Treat as "no restrictions" (all asset categories allowed)
+- If authorized_asset_categories is NULL or empty: Treat as "no restrictions" (all asset categories allowed, including registered assets only - unmapped vehicles are still detected but logged separately)
 - If no rules defined: Default UNAUTHORIZED for RESTRICTED/PROHIBITED, AUTHORIZED for CONTROLLED/MAINTENANCE
+
+*Clarification: NULL/empty authorized_asset_categories allows all registered asset categories through, but unmapped vehicles (no matching qr_id) are handled separately by FR2.4 mapping logic and logged for manual resolution*
 
 **FR1.3**: Zone boundaries defined as PostGIS POLYGON with WGS84 coordinates
 
@@ -298,10 +300,12 @@ Airport operations face critical challenges:
 - Asset enters PROHIBITED zone
 
 **FR3.2**: Violation severity assignment:
-- **CRITICAL**: PROHIBITED zone entry
-- **HIGH**: RESTRICTED zone with no authorization
-- **MEDIUM**: CONTROLLED zone without authorization
-- **LOW**: MAINTENANCE zone after hours
+- **CRITICAL**: PROHIBITED zone entry (displayed in red)
+- **HIGH**: RESTRICTED zone with no authorization (displayed in orange)
+- **MEDIUM**: CONTROLLED zone without authorization (displayed in yellow)
+- **LOW**: MAINTENANCE zone after hours (displayed in blue)
+
+*Note: Same color scheme applies to movement discrepancies (FR4.2) for UI consistency*
 
 **FR3.3**: Duration calculation:
 - Continuous time in zone from entry to exit
@@ -417,7 +421,9 @@ Airport operations face critical challenges:
 |------|--------------|------------------------|-----------------|-------------|
 | ADMIN | ✅ All tenants | ✅ | ✅ | ✅ |
 | GH (Ground Handling) | ✅ Own tenant | ✅ | ❌ | ✅ |
-| AIRPORT_USER | ✅ Own tenant | ❌ | ❌ | ❌ |
+| AIRPORT_USER | ✅ Own tenant (read-only: Violations, Discrepancies, Trail) | ❌ | ❌ | ❌ |
+
+*Clarification: AIRPORT_USER can view all three report types (Zone Violations, Movement Discrepancies, Movement Trail) but cannot acknowledge violations/discrepancies or export data. This provides operational visibility without modification rights*
 
 **FR7.2**: Tenant isolation enforced at database query level
 

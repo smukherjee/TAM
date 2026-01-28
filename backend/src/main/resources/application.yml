@@ -41,7 +41,7 @@ spring:
       type: single
   cache:
     type: caffeine
-    cache-names: liveAssets,liveAsset
+    cache-names: liveAssets,liveAsset,activityHeatmap,violationHeatmap
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=5s
   data:
@@ -119,7 +119,7 @@ spring:
       type: single
   cache:
     type: caffeine
-    cache-names: liveAssets,liveAsset
+    cache-names: liveAssets,liveAsset,activityHeatmap,violationHeatmap
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=5s
   data:
