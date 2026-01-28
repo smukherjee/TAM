@@ -29,9 +29,16 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        max.poll.records: 100
+        fetch.max.wait.ms: 500
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      concurrency: 3
+      ack-mode: record
+      type: single
   data:
     redis:
       host: localhost
@@ -91,9 +98,20 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Asset tracking consumer configuration (T026c)
+      properties:
+        max.poll.records: 100
+        fetch.max.wait.ms: 500
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      # Concurrency for asset tracking consumer (matches 3 Kafka partitions)
+      concurrency: 3
+      # Acknowledge after processing completes
+      ack-mode: record
+      # Enable JSON deserialization
+      type: single
   data:
     redis:
       host: ${REDIS_HOST:redis}

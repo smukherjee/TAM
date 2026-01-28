@@ -107,26 +107,26 @@
 
 ### NiFi & Kafka Integration
 
-- [ ] T026a [BE] Create `AssetPositionEvent.java` (Kafka message model)
-  - [ ] Fields: vehicleId, assetId, latitude, longitude, speed, heading, status, timestamp, tenantCode
-  - [ ] Add @Data, @Builder, @NoArgsConstructor, @AllArgsConstructor
-  - [ ] Add Jackson annotations for JSON deserialization
-- [ ] T026b [BE] Create `MovementTrailProcessor.java` (Kafka consumer)
-  - [ ] Annotation: @KafkaListener(topics = "asset-positions-json")
-  - [ ] Consume AssetPositionEvent from Kafka
-  - [ ] Match vehicle_id → asset using qr_id
-  - [ ] Check zone containment using ST_DWithin (50m buffer)
-  - [ ] Detect zone violations (call ZoneViolationService)
-  - [ ] Detect movement discrepancies (call DiscrepancyService)
-  - [ ] Write to asset_movement_trail and asset_location_register
-  - [ ] Broadcast WebSocket event for real-time updates
-  - [ ] Error handling: Log unmapped vehicles, dead letter queue for failed messages
-- [ ] T026c [BE] Configure Kafka consumer properties
-  - [ ] application.yml: spring.kafka.consumer settings
-  - [ ] Group ID: asset-tracking-consumer-group
-  - [ ] Auto-offset-reset: earliest
-  - [ ] Enable JSON deserialization
-  - [ ] Concurrency: 3 (match Kafka partitions)
+- [x] T026a [BE] Create `AssetPositionEvent.java` (Kafka message model)
+  - [x] Fields: vehicleId, assetId, latitude, longitude, speed, heading, status, timestamp, tenantCode
+  - [x] Add @Data, @Builder, @NoArgsConstructor, @AllArgsConstructor
+  - [x] Add Jackson annotations for JSON deserialization
+- [x] T026b [BE] Create `MovementTrailProcessor.java` (Kafka consumer)
+  - [x] Annotation: @KafkaListener(topics = "asset-positions-json")
+  - [x] Consume AssetPositionEvent from Kafka
+  - [x] Match vehicle_id → asset using qr_id
+  - [x] Check zone containment using ST_DWithin (50m buffer)
+  - [x] Detect zone violations (call ZoneViolationService)
+  - [x] Detect movement discrepancies (call DiscrepancyService)
+  - [x] Write to asset_movement_trail and asset_location_register
+  - [x] Broadcast WebSocket event for real-time updates
+  - [x] Error handling: Log unmapped vehicles, dead letter queue for failed messages
+- [x] T026c [BE] Configure Kafka consumer properties
+  - [x] application.yml: spring.kafka.consumer settings
+  - [x] Group ID: asset-tracking-consumer-group
+  - [x] Auto-offset-reset: earliest
+  - [x] Enable JSON deserialization
+  - [x] Concurrency: 3 (match Kafka partitions)
 
 ### Backend API - Universal Asset Map (US5)
 
