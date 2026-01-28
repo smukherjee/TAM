@@ -8,8 +8,9 @@ interface MapControlPanelProps {
     vehicles: boolean;
     flights: boolean;
     alerts: boolean;
+    assets?: boolean;
   };
-  onLayerToggle: (layer: 'vehicles' | 'flights' | 'alerts') => void;
+  onLayerToggle: (layer: 'vehicles' | 'flights' | 'alerts' | 'assets') => void;
   theme?: 'dark' | 'light';
   onThemeToggle?: () => void;
   vehicleTypes?: string[]; // Reserved for future use

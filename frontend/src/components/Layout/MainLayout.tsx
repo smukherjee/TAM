@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp, Flame } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,6 +15,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const showReports = role === 'ADMIN' || role === 'AIRPORT_USER';
     const showAssets = role === 'ADMIN' || role === 'GH';
     const showPipeline = role === 'ADMIN';
+    const showAirsideOps = role === 'ADMIN' || role === 'GH' || role === 'AIRPORT_USER';
 
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -73,6 +74,17 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     )}
                     {showTurnaround && <NavItem to="/turnaround" icon={<Activity size={20} />} label="Turnaround" isOpen={isOpen} />}
                     {showReports && <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics" isOpen={isOpen} />}
+                    
+                    {/* Airside Operations Section - Hotspot Analysis only (Assets integrated into Live Map) */}
+                    {showAirsideOps && (
+                        <div className={`mt-4 pt-4 border-t border-gray-700`}>
+                            <div className={`text-xs font-semibold text-gray-500 uppercase tracking-wilder mb-2 px-2 transition-all duration-300 ${isOpen ? 'opacity-100 h-auto' : 'opacity-0 h-0 hidden'}`}>
+                                Airside Operations
+                            </div>
+                            <NavItem to="/tracking/hotspots" icon={<Flame size={20} />} label="Hotspot Analysis" isOpen={isOpen} />
+                        </div>
+                    )}
+                    
                     {showPipeline && <NavItem to="/pipeline" icon={<Network size={20} />} label="Observability" isOpen={isOpen} />}
                     {role === 'ADMIN' && (
                         <div className={`mt-6 pt-6 border-t border-gray-700 ${isOpen ? 'block' : 'hidden md:block'}`}>

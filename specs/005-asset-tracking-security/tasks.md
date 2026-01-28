@@ -230,145 +230,145 @@
   - [X] \"Clear All Filters\" button
   - [X] Asset count badge: \"Showing X of Y assets\"
   - [X] Apply filters on change, debounced by 300ms
-- [ ] T041 [FE] Create `frontend/src/components/Tracking/ZoneBoundariesLayer.tsx`
-  - [ ] Fetch restricted zones from GET /api/zones endpoint
-  - [ ] Render as Leaflet Polygon layers
-  - [ ] Color by zone type: PROHIBITED=rgba(255,0,0,0.3), RESTRICTED=rgba(255,165,0,0.3), CONTROLLED=rgba(255,255,0,0.3), MAINTENANCE=rgba(0,0,255,0.3)
-  - [ ] Solid border (2px), semi-transparent fill
-  - [ ] Tooltip on hover showing zone name and type
-  - [ ] Toggle visibility button in map controls (eye icon)
-  - [ ] Store visibility state in localStorage
-- [ ] T042 [FE] Create `frontend/src/components/Tracking/AssetSearchBar.tsx`
-  - [ ] Search input with autocomplete (Combobox from Headless UI)
-  - [ ] Search by asset ID or name (case-insensitive)
-  - [ ] Fetch suggestions on typing (debounced 300ms)
-  - [ ] On select: zoom to asset location, highlight marker (pulse animation)
-  - [ ] Recent searches dropdown (store in localStorage, max 5)
-  - [ ] Clear button
-- [ ] T043 [FE] Create `frontend/src/components/Tracking/MapLegend.tsx`
-  - [ ] Collapsible panel (default: expanded)
+- [x] T041 [FE] Create `frontend/src/components/Tracking/ZoneBoundariesLayer.tsx`
+  - [x] Fetch restricted zones from GET /api/zones endpoint
+  - [x] Render as Leaflet Polygon layers
+  - [x] Color by zone type: PROHIBITED=rgba(255,0,0,0.3), RESTRICTED=rgba(255,165,0,0.3), CONTROLLED=rgba(255,255,0,0.3), MAINTENANCE=rgba(0,0,255,0.3)
+  - [x] Solid border (2px), semi-transparent fill
+  - [x] Tooltip on hover showing zone name and type
+  - [x] Toggle visibility button in map controls (eye icon)
+  - [x] Store visibility state in localStorage
+- [x] T042 [FE] Create `frontend/src/components/Tracking/AssetSearchBar.tsx`
+  - [x] Search input with autocomplete (Combobox from Headless UI)
+  - [x] Search by asset ID or name (case-insensitive)
+  - [x] Fetch suggestions on typing (debounced 300ms)
+  - [x] On select: zoom to asset location, highlight marker (pulse animation)
+  - [x] Recent searches dropdown (store in localStorage, max 5)
+  - [x] Clear button
+- [x] T043 [FE] Create `frontend/src/components/Tracking/MapLegend.tsx`
+  - [x] Collapsible panel (default: expanded)
   - [ ] Section 1: Marker colors (category legend)
   - [ ] Section 2: Status indicators (solid/hollow/gray/black)
   - [ ] Section 3: Zone colors (PROHIBITED/RESTRICTED/etc.)
   - [ ] Toggle collapse with arrow icon
   - [ ] Position: bottom-right corner, absolute positioning
-- [ ] T044 [FE] Implement WebSocket real-time updates
-  - [ ] Create custom hook: `useAssetLiveUpdates(tenantCode)`
-  - [ ] Subscribe to `/topic/assets/live/{tenantCode}` using SockJS + STOMP
-  - [ ] On event receive: update asset state in React Query cache
-  - [ ] Use react-spring for smooth marker position animation
-  - [ ] Add new markers for new assets (fade in animation)
-  - [ ] Remove markers for inactive assets (fade out after 30 sec)
-  - [ ] Handle reconnection on disconnect
-- [ ] T045 [FE] Create `frontend/src/services/assetLocationService.ts`
-  - [ ] `fetchLiveAssets(filters: AssetFilter)` - GET /api/tracking/assets/live
-  - [ ] `fetchAssetById(assetId: string)` - GET /api/tracking/assets/live/{id}
-  - [ ] `subscribeToLiveUpdates(tenantCode, callback)` - WebSocket helper
-  - [ ] Error handling with axios interceptors
-- [ ] T046 [FE] Add TypeScript interfaces
-  - [ ] `LiveAsset` interface (matches AssetLocationDTO)
-  - [ ] `AssetFilter` interface (category, status, zone, owner)
-  - [ ] `ZoneBoundary` interface (id, name, type, geometry)
-  - [ ] `AssetPositionUpdateEvent` interface (WebSocket payload)
+- [X] T044 [FE] Implement WebSocket real-time updates
+  - [X] Create custom hook: `useAssetLiveUpdates(tenantCode)`
+  - [X] Subscribe to `/topic/assets/live/{tenantCode}` using SockJS + STOMP
+  - [X] On event receive: update asset state in React Query cache
+  - [X] Use react-spring for smooth marker position animation
+  - [X] Add new markers for new assets (fade in animation)
+  - [X] Remove markers for inactive assets (fade out after 30 sec)
+  - [X] Handle reconnection on disconnect
+- [X] T045 [FE] Create `frontend/src/services/assetLocationService.ts`
+  - [X] `fetchLiveAssets(filters: AssetFilter)` - GET /api/tracking/assets/live
+  - [X] `fetchAssetById(assetId: string)` - GET /api/tracking/assets/live/{id}
+  - [X] `subscribeToLiveUpdates(tenantCode, callback)` - WebSocket helper
+  - [X] Error handling with axios interceptors
+- [X] T046 [FE] Add TypeScript interfaces
+  - [X] `LiveAsset` interface (matches AssetLocationDTO)
+  - [X] `AssetFilter` interface (category, status, zone, owner)
+  - [X] `ZoneBoundary` interface (id, name, type, geometry)
+  - [X] `AssetPositionUpdateEvent` interface (WebSocket payload)
 
 ### Frontend - Hotspot Analysis (US6)
 
-- [ ] T047 [FE] Install Leaflet.heat plugin
-  - [ ] `npm install leaflet.heat @types/leaflet.heat --save`
-  - [ ] Verify compatibility with react-leaflet v4
-  - [ ] Add to package.json dependencies
-- [ ] T048 [FE] Create `frontend/src/pages/HotspotAnalysisPage.tsx`
-  - [ ] Layout: Map (70% width) + Controls sidebar (30% width)
-  - [ ] State: mode (Activity/Violation/Dwell), gridSize, timeRange
-  - [ ] Fetch heatmap data based on selected mode using React Query
-  - [ ] Toggle button: \"Asset View\" ↔ \"Heatmap View\"
-  - [ ] Pass heatmap data to HeatmapView component
-  - [ ] Handle mode/time range changes → refetch data
-- [ ] T049 [FE] Create `frontend/src/components/Tracking/HeatmapView.tsx`
-  - [ ] Leaflet map with base layer
-  - [ ] Use Leaflet.heat to render heat layer overlay
-  - [ ] Configure gradient: {0.0: 'blue', 0.25: 'green', 0.5: 'yellow', 0.75: 'orange', 1.0: 'red'}
-  - [ ] Adjust intensity based on slider value prop (0-100 → 0-1)
-  - [ ] Adjust radius based on grid size (10m=5px, 25m=10px, 50m=15px, 100m=20px)
-  - [ ] Click cell → determine lat/lng → trigger hotspot detail modal
+- [X] T047 [FE] Install Leaflet.heat plugin
+  - [X] `npm install leaflet.heat @types/leaflet.heat --save`
+  - [X] Verify compatibility with react-leaflet v4
+  - [X] Add to package.json dependencies
+- [X] T048 [FE] Create `frontend/src/pages/HotspotAnalysisPage.tsx`
+  - [X] Layout: Map (70% width) + Controls sidebar (30% width)
+  - [X] State: mode (Activity/Violation/Dwell), gridSize, timeRange
+  - [X] Fetch heatmap data based on selected mode using React Query
+  - [X] Toggle button: \"Asset View\" ↔ \"Heatmap View\"
+  - [X] Pass heatmap data to HeatmapView component
+  - [X] Handle mode/time range changes → refetch data
+- [X] T049 [FE] Create `frontend/src/components/Tracking/HeatmapView.tsx`
+  - [X] Leaflet map with base layer
+  - [X] Use Leaflet.heat to render heat layer overlay
+  - [X] Configure gradient: {0.0: 'blue', 0.25: 'green', 0.5: 'yellow', 0.75: 'orange', 1.0: 'red'}
+  - [X] Adjust intensity based on slider value prop (0-100 → 0-1)
+  - [X] Adjust radius based on grid size (10m=5px, 25m=10px, 50m=15px, 100m=20px)
+  - [X] Click cell → determine lat/lng → trigger hotspot detail modal
   - [ ] Overlay zone boundaries (optional toggle)
-- [ ] T050 [FE] Create `frontend/src/components/Tracking/HeatmapControls.tsx`
-  - [ ] Mode selector: Radio button group (Activity / Violations / Dwell)
-  - [ ] Grid resolution dropdown: Select (10m / 25m / 50m / 100m)
-  - [ ] Time range preset buttons: 1h, 24h, 7d, 30d
+- [X] T050 [FE] Create `frontend/src/components/Tracking/HeatmapControls.tsx`
+  - [X] Mode selector: Radio button group (Activity / Violations / Dwell)
+  - [X] Grid resolution dropdown: Select (10m / 25m / 50m / 100m)
+  - [X] Time range preset buttons: 1h, 24h, 7d, 30d
   - [ ] Custom date range picker (react-datepicker)
-  - [ ] Intensity slider: Range input (0-100) with label
-  - [ ] Auto-refresh toggle switch (refresh every 60 seconds when enabled)
-  - [ ] \"Switch to Asset View\" button → navigate to AirsideMapPage
-  - [ ] Export dropdown menu: PNG / CSV / PDF
-  - [ ] Trigger export on selection
-- [ ] T051 [FE] Create `frontend/src/components/Tracking/HotspotDetailModal.tsx`
-  - [ ] Modal dialog (Headless UI Dialog)
-  - [ ] Triggered on heatmap cell click, receives lat/lng and mode
-  - [ ] Fetch hotspot details from GET /api/tracking/heatmap/hotspot
-  - [ ] Display: Location (lat/long with copy button), Intensity value
-  - [ ] Activity mode: Total movements, Unique assets, Avg speed
-  - [ ] Violation mode: Total violations, Breakdown by severity (CRITICAL/HIGH/MEDIUM/LOW), Asset list
-  - [ ] Dwell mode: Total dwell time, Avg dwell time, Asset list
-  - [ ] Time distribution chart: Recharts BarChart (hourly breakdown)
-  - [ ] \"View Assets\" button → switch to AirsideMapPage with location filter (bounding box)
-  - [ ] \"View Violations\" button → navigate to ViolationReportPage with location filter
-  - [ ] Close button, click outside to close
-- [ ] T052 [FE] Create `frontend/src/components/Tracking/HeatmapLegend.tsx`
-  - [ ] Color gradient bar (vertical, 200px height)
-  - [ ] Intensity labels: Low (0) → High (100)
-  - [ ] Current mode indicator: \"Showing: Activity Density\"
-  - [ ] Grid size indicator: \"Grid: 10m\"
-  - [ ] Time range display: \"Period: Last 24 hours\"
-  - [ ] Position: bottom-left corner
-- [ ] T053 [FE] Implement heatmap data fetching
-  - [ ] Fetch on mode/time range/grid size change
-  - [ ] Transform API response to Leaflet.heat format: [[lat, lng, intensity], ...]
-  - [ ] Normalize intensity values to 0-1 scale (divide by max)
-  - [ ] Cache previous results in React Query for quick mode switching
-  - [ ] Handle loading state with skeleton/spinner
-  - [ ] Handle empty data (show \"No data available\" message)
-- [ ] T054 [FE] Implement export functionality
-  - [ ] PNG: Use html2canvas to capture map div, download as image
-  - [ ] CSV: Format heatmap data with headers (Latitude, Longitude, Intensity, Activity Count)
-  - [ ] CSV: Use Papa Parse library for CSV generation
-  - [ ] PDF: Generate summary report with jsPDF
-  - [ ] PDF includes: Title, metadata (mode, time range), embedded map image, statistics table, top 10 hotspots table
-  - [ ] Download with descriptive filename: `heatmap_{mode}_{date}.{ext}`
-  - [ ] Show success toast notification on download
-- [ ] T055 [FE] Create `frontend/src/services/heatmapService.ts`
-  - [ ] `fetchActivityHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/activity
-  - [ ] `fetchViolationHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/violations
-  - [ ] `fetchDwellHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/dwell
-  - [ ] `fetchHotspotDetails(lat, lng, mode, dateRange)` - GET /api/tracking/heatmap/hotspot
-  - [ ] `exportHeatmapData(data, format: 'png' | 'csv' | 'pdf')` - Trigger export
-  - [ ] Error handling and retry logic
-- [ ] T056 [FE] Add TypeScript interfaces
-  - [ ] `HeatmapPoint` interface: {latitude, longitude, intensity, metadata}
-  - [ ] `HotspotDetail` interface: {location, mode, activityCount, assets, violations, timeDistribution}
-  - [ ] `HeatmapFilters` interface: {tenantCode, startDate, endDate, gridSize}
-  - [ ] `HeatmapMode` enum: ACTIVITY | VIOLATION | DWELL
-  - [ ] `HeatmapStatistics` interface: {totalCells, hotspotCells, maxIntensity, avgIntensity}
+  - [X] Intensity slider: Range input (0-100) with label
+  - [X] Auto-refresh toggle switch (refresh every 60 seconds when enabled)
+  - [X] \"Switch to Asset View\" button → navigate to AirsideMapPage
+  - [X] Export dropdown menu: PNG / CSV / PDF
+  - [X] Trigger export on selection
+- [X] T051 [FE] Create `frontend/src/components/Tracking/HotspotDetailModal.tsx`
+  - [X] Modal dialog (Headless UI Dialog)
+  - [X] Triggered on heatmap cell click, receives lat/lng and mode
+  - [X] Fetch hotspot details from GET /api/tracking/heatmap/hotspot
+  - [X] Display: Location (lat/long with copy button), Intensity value
+  - [X] Activity mode: Total movements, Unique assets, Avg speed
+  - [X] Violation mode: Total violations, Breakdown by severity (CRITICAL/HIGH/MEDIUM/LOW), Asset list
+  - [X] Dwell mode: Total dwell time, Avg dwell time, Asset list
+  - [X] Time distribution chart: Recharts BarChart (hourly breakdown)
+  - [X] \"View Assets\" button → switch to AirsideMapPage with location filter (bounding box)
+  - [X] \"View Violations\" button → navigate to ViolationReportPage with location filter
+  - [X] Close button, click outside to close
+- [X] T052 [FE] Create `frontend/src/components/Tracking/HeatmapLegend.tsx`
+  - [X] Color gradient bar (vertical, 200px height)
+  - [X] Intensity labels: Low (0) → High (100)
+  - [X] Current mode indicator: \"Showing: Activity Density\"
+  - [X] Grid size indicator: \"Grid: 10m\"
+  - [X] Time range display: \"Period: Last 24 hours\"
+  - [X] Position: bottom-left corner
+- [X] T053 [FE] Implement heatmap data fetching
+  - [X] Fetch on mode/time range/grid size change
+  - [X] Transform API response to Leaflet.heat format: [[lat, lng, intensity], ...]
+  - [X] Normalize intensity values to 0-1 scale (divide by max)
+  - [X] Cache previous results in React Query for quick mode switching
+  - [X] Handle loading state with skeleton/spinner
+  - [X] Handle empty data (show \"No data available\" message)
+- [X] T054 [FE] Implement export functionality
+  - [X] PNG: Use html2canvas to capture map div, download as image
+  - [X] CSV: Format heatmap data with headers (Latitude, Longitude, Intensity, Activity Count)
+  - [X] CSV: Use Papa Parse library for CSV generation
+  - [X] PDF: Generate summary report with jsPDF
+  - [X] PDF includes: Title, metadata (mode, time range), embedded map image, statistics table, top 10 hotspots table
+  - [X] Download with descriptive filename: `heatmap_{mode}_{date}.{ext}`
+  - [X] Show success toast notification on download
+- [X] T055 [FE] Create `frontend/src/services/heatmapService.ts`
+  - [X] `fetchActivityHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/activity
+  - [X] `fetchViolationHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/violations
+  - [X] `fetchDwellHeatmap(filters: HeatmapFilters)` - GET /api/tracking/heatmap/dwell
+  - [X] `fetchHotspotDetails(lat, lng, mode, dateRange)` - GET /api/tracking/heatmap/hotspot
+  - [X] `exportHeatmapData(data, format: 'png' | 'csv' | 'pdf')` - Trigger export
+  - [X] Error handling and retry logic
+- [X] T056 [FE] Add TypeScript interfaces
+  - [X] `HeatmapPoint` interface: {latitude, longitude, intensity, metadata}
+  - [X] `HotspotDetail` interface: {location, mode, activityCount, assets, violations, timeDistribution}
+  - [X] `HeatmapFilters` interface: {tenantCode, startDate, endDate, gridSize}
+  - [X] `HeatmapMode` enum: ACTIVITY | VIOLATION | DWELL
+  - [X] `HeatmapStatistics` interface: {totalCells, hotspotCells, maxIntensity, avgIntensity}
 
 ### Navigation & Integration
 
-- [ ] T057 [FE] Update `frontend/src/components/Layout/MainLayout.tsx`
-  - [ ] Add new menu section: \"Airside Operations\" (between Dashboard and Reports)
-  - [ ] Add \"Live Asset Map\" menu item (icon: MapIcon, route: `/tracking/airside-map`)
-  - [ ] Add \"Hotspot Analysis\" menu item (icon: FireIcon, route: `/tracking/hotspot-analysis`)
-  - [ ] Show section for roles: ADMIN, GH, AIRPORT_USER
-  - [ ] Highlight active route
-- [ ] T058 [FE] Update `frontend/src/App.tsx`
-  - [ ] Add route: `/tracking/airside-map` → AirsideMapPage
-  - [ ] Add route: `/tracking/hotspot-analysis` → HotspotAnalysisPage
-  - [ ] Wrap in ProtectedRoute with role check: ['ADMIN', 'GH', 'AIRPORT_USER']
-  - [ ] Add lazy loading with React.lazy and Suspense
-- [ ] T059 [FE] Cross-linking between pages
-  - [ ] Asset map → Movement trail: \"View Trail\" button in AssetPopup
-  - [ ] Hotspot analysis → Asset map: \"View Assets\" button in HotspotDetailModal
-  - [ ] Hotspot analysis → Violation report: \"View Violations\" button in HotspotDetailModal
-  - [ ] Asset map → Asset register: \"View in Register\" button in AssetPopup
-  - [ ] Preserve filter state when navigating between pages (use URL query params)
+- [X] T057 [FE] Update `frontend/src/components/Layout/MainLayout.tsx`
+  - [X] Add new menu section: \"Airside Operations\" (between Dashboard and Reports)
+  - [X] Add \"Live Asset Map\" menu item (icon: MapIcon, route: `/tracking/assets`)
+  - [X] Add \"Hotspot Analysis\" menu item (icon: FireIcon, route: `/tracking/hotspots`)
+  - [X] Show section for roles: ADMIN, GH, AIRPORT_USER
+  - [X] Highlight active route
+- [X] T058 [FE] Update `frontend/src/App.tsx`
+  - [X] Add route: `/tracking/assets` → AirsideMapPage (already done)
+  - [X] Add route: `/tracking/hotspots` → HotspotAnalysisPage
+  - [X] Wrap in ProtectedRoute with role check: ['ADMIN', 'GH', 'AIRPORT_USER']
+  - [X] Add lazy loading with React.lazy and Suspense
+- [X] T059 [FE] Cross-linking between pages
+  - [X] Asset map → Movement trail: \"View Trail\" button in AssetPopup
+  - [X] Hotspot analysis → Asset map: \"View Assets\" button in HotspotDetailModal
+  - [X] Hotspot analysis → Violation report: \"View Violations\" button in HotspotDetailModal
+  - [X] Asset map → Asset register: \"View in Register\" button in AssetPopup
+  - [X] Preserve filter state when navigating between pages (use URL query params)
 
 ### Testing & Quality
 

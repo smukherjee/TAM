@@ -44,6 +44,12 @@ interface VehicleLayerProps {
 const VehicleLayer: React.FC<VehicleLayerProps> = ({ vehicles }) => {
     const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
+    // Guard against undefined or non-array vehicles
+    if (!vehicles || !Array.isArray(vehicles)) {
+        console.warn('VehicleLayer: vehicles is not an array', vehicles);
+        return null;
+    }
+
     return (
         <>
             {vehicles.map(vehicle => {

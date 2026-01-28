@@ -80,6 +80,12 @@ const FlightLayer: React.FC = () => {
 
     // Memoize flight markers to prevent unnecessary re-creation
     const flightMarkers = useMemo(() => {
+        // Defensive check: ensure throttledFlights is an array
+        if (!throttledFlights || !Array.isArray(throttledFlights)) {
+            console.warn('FlightLayer: throttledFlights is not an array', throttledFlights);
+            return [];
+        }
+        
         console.log('FlightLayer: Rendering', throttledFlights.length, 'flights');
         
         return throttledFlights.map(flight => {

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { AlertTriangle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useThrottle } from '../hooks/useDebounce';
-import { useDraggable } from '../hooks/useDraggable';
 import './MapIcons.css';
 
 interface Alert {
@@ -20,7 +19,6 @@ interface EnhancedAlertListProps {
 
 const EnhancedAlertList: React.FC<EnhancedAlertListProps> = ({ alerts, onDismiss }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const { handleMouseDown, style: draggableStyle } = useDraggable(window.innerWidth - 370, 20);
   const [filter, setFilter] = useState<'all' | 'critical' | 'warning' | 'info'>('all');
 
   // Throttle alerts to prevent excessive re-renders (max 2 updates per second)
@@ -54,16 +52,14 @@ const EnhancedAlertList: React.FC<EnhancedAlertListProps> = ({ alerts, onDismiss
 
   return (
     <div 
-      className="enhanced-alert-list glass-panel" 
+      className="enhanced-alert-list glass-panel absolute top-4 right-4" 
       style={{ 
-        ...draggableStyle,
         width: '350px',
         maxHeight: collapsed ? '60px' : '500px',
         overflow: 'hidden',
         zIndex: 1000,
         padding: '16px',
       }}
-      onMouseDown={handleMouseDown}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">

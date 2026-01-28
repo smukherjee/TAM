@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -77,7 +76,7 @@ public class HeatmapController {
             @RequestParam(required = false) String endDate,
 
             @Parameter(description = "Grid size (10m, 25m, 50m, 100m - default: 25m)")
-            @RequestParam(defaultValue = "25m") @Pattern(regexp = "10m|25m|50m|100m") String gridSize) {
+            @RequestParam(defaultValue = "25m") String gridSize) {
 
         logger.info("GET /api/tracking/heatmap/activity - tenant={}, start={}, end={}, grid={}",
                 tenantCode, startDate, endDate, gridSize);
@@ -129,7 +128,7 @@ public class HeatmapController {
             @RequestParam(required = false) String endDate,
 
             @Parameter(description = "Grid size (10m, 25m, 50m, 100m - default: 25m)")
-            @RequestParam(defaultValue = "25m") @Pattern(regexp = "10m|25m|50m|100m") String gridSize) {
+            @RequestParam(defaultValue = "25m") String gridSize) {
 
         logger.info("GET /api/tracking/heatmap/violations - tenant={}, start={}, end={}, grid={}",
                 tenantCode, startDate, endDate, gridSize);

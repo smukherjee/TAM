@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/Layout/MainLayout';
-import MapPage from './pages/MapPage';
+import UnifiedMapPage from './pages/UnifiedMapPage';
 import TurnaroundPage from './pages/TurnaroundPage';
 import TurnaroundDetailPage from './pages/TurnaroundDetailPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -15,7 +15,7 @@ import KitsListPage from './pages/KitsListPage';
 import CategoriesListPage from './pages/CategoriesListPage';
 import TagsListPage from './pages/TagsListPage';
 import LocationsListPage from './pages/LocationsListPage';
-import AirsideMapPage from './pages/AirsideMapPage';
+import HotspotAnalysisPage from './pages/HotspotAnalysisPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Create a QueryClient instance
@@ -40,10 +40,22 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Unified Map - Single map with all layers (flights, vehicles, assets, heatmap) */}
       <Route path="/" element={
         <ProtectedRoute>
           <MainLayout>
-            <MapPage />
+            <UnifiedMapPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Redirect legacy routes to unified map */}
+      <Route path="/map/turnaround" element={<Navigate to="/" replace />} />
+      <Route path="/tracking/assets" element={<Navigate to="/" replace />} />
+      {/* Hotspot Analysis - Heatmap view */}
+      <Route path="/tracking/hotspots" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <HotspotAnalysisPage />
           </MainLayout>
         </ProtectedRoute>
       } />
@@ -114,13 +126,6 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <PipelinePage />
-          </MainLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/tracking/map" element={
-        <ProtectedRoute>
-          <MainLayout>
-            <AirsideMapPage />
           </MainLayout>
         </ProtectedRoute>
       } />

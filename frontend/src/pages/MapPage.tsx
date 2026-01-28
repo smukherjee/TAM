@@ -23,7 +23,7 @@ const MapPage: React.FC = () => {
     const { user } = useAuth();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
-    const [layers, setLayers] = useState({ vehicles: true, flights: true, alerts: true });
+    const [layers, setLayers] = useState({ vehicles: true, flights: true, alerts: true, assets: false });
     const [mapTheme, setMapTheme] = useState<'dark' | 'light'>('dark');
     const icao = user?.icaoCode || 'VIDP';
 
@@ -84,7 +84,7 @@ const MapPage: React.FC = () => {
         };
     }, [icao]);
 
-    const handleLayerToggle = (layer: 'vehicles' | 'flights' | 'alerts') => {
+    const handleLayerToggle = (layer: 'vehicles' | 'flights' | 'alerts' | 'assets') => {
         setLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
     };
 

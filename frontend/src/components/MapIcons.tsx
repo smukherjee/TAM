@@ -1,7 +1,7 @@
 import L from 'leaflet';
 
 export interface VehicleIconOptions {
-  type: 'bus' | 'fuel_truck' | 'tug' | 'belt_loader' | 'catering' | 'other';
+  type: 'bus' | 'fuel_truck' | 'tug' | 'belt_loader' | 'catering' | 'other' | 'emergency' | 'gpu' | 'cargo_loader' | 'power_unit' | 'cleaning' | 'maintenance';
   status: 'active' | 'alert' | 'warning' | 'idle';
 }
 
@@ -76,6 +76,65 @@ const getVehicleSVG = (type: string, color: string): string => {
         <circle cx="22" cy="22" r="2" fill="white"/>
         <path d="M 12 14 L 14 14 L 14 18 L 12 18 Z" fill="white" opacity="0.3"/>
         <path d="M 18 14 L 20 14 L 20 18 L 18 18 Z" fill="white" opacity="0.3"/>
+      </svg>
+    `,
+    emergency: `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="10" width="20" height="12" rx="2" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <polygon points="16,12 18,16 14,16" fill="white"/>
+        <rect x="15" y="16" width="2" height="4" fill="white"/>
+        <circle cx="16" cy="21" r="0.8" fill="white"/>
+        <circle cx="10" cy="22" r="2" fill="white"/>
+        <circle cx="22" cy="22" r="2" fill="white"/>
+      </svg>
+    `,
+    gpu: `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="8" width="16" height="16" rx="2" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <rect x="10" y="10" width="5" height="5" fill="white" opacity="0.3"/>
+        <rect x="17" y="10" width="5" height="5" fill="white" opacity="0.3"/>
+        <rect x="10" y="17" width="5" height="5" fill="white" opacity="0.3"/>
+        <rect x="17" y="17" width="5" height="5" fill="white" opacity="0.3"/>
+        <circle cx="12" cy="24" r="1.5" fill="white"/>
+        <circle cx="20" cy="24" r="1.5" fill="white"/>
+      </svg>
+    `,
+    cargo_loader: `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="14" width="18" height="8" rx="1" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <rect x="20" y="8" width="8" height="14" rx="1" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <rect x="6" y="16" width="4" height="4" fill="white" opacity="0.4"/>
+        <rect x="11" y="16" width="4" height="4" fill="white" opacity="0.4"/>
+        <circle cx="8" cy="22" r="2" fill="white"/>
+        <circle cx="18" cy="22" r="2" fill="white"/>
+      </svg>
+    `,
+    power_unit: `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="7" y="10" width="18" height="12" rx="2" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <polygon points="16,13 18,17 14,17" fill="white"/>
+        <polygon points="16,17 14,21 18,21" fill="white"/>
+        <circle cx="11" cy="22" r="2" fill="white"/>
+        <circle cx="21" cy="22" r="2" fill="white"/>
+      </svg>
+    `,
+    cleaning: `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="10" width="20" height="12" rx="2" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <circle cx="13" cy="14" r="2" fill="white" opacity="0.4"/>
+        <circle cx="19" cy="14" r="2" fill="white" opacity="0.4"/>
+        <circle cx="16" cy="18" r="2" fill="white" opacity="0.4"/>
+        <circle cx="10" cy="22" r="2" fill="white"/>
+        <circle cx="22" cy="22" r="2" fill="white"/>
+      </svg>
+    `,
+    maintenance: `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="10" width="20" height="12" rx="2" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <rect x="12" y="13" width="2" height="6" fill="white" opacity="0.5"/>
+        <circle cx="18" cy="16" r="2.5" stroke="white" stroke-width="1.5" fill="none"/>
+        <circle cx="10" cy="22" r="2" fill="white"/>
+        <circle cx="22" cy="22" r="2" fill="white"/>
       </svg>
     `,
     other: `

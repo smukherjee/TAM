@@ -119,15 +119,15 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
             {/* Toggle Button */}
             <button
                 onClick={onToggle}
-                className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-lg p-2 hover:bg-gray-50 transition-colors"
+                className="absolute top-4 left-4 z-[1000] bg-gray-800 rounded-lg shadow-lg p-2 hover:bg-gray-700 transition-colors border border-gray-700"
                 aria-label={isOpen ? 'Close filter panel' : 'Open filter panel'}
             >
-                {isOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                {isOpen ? <ChevronLeft className="w-5 h-5 text-gray-300" /> : <ChevronRight className="w-5 h-5 text-gray-300" />}
             </button>
 
             {/* Filter Panel */}
             <div
-                className={`absolute top-0 left-0 h-full bg-white shadow-xl z-[999] transition-transform duration-300 overflow-y-auto ${
+                className={`absolute top-0 left-0 h-full bg-gray-900 shadow-xl z-[999] transition-transform duration-300 overflow-y-auto border-r border-gray-700 ${
                     isOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
                 style={{ width: '320px' }}
@@ -136,13 +136,13 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <Filter className="w-5 h-5 text-gray-700" />
-                            <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                            <Filter className="w-5 h-5 text-gray-400" />
+                            <h2 className="text-lg font-bold text-white">Filters</h2>
                         </div>
                         {hasActiveFilters && (
                             <button
                                 onClick={handleClearAll}
-                                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                className="text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
                             >
                                 <X className="w-4 h-4" />
                                 Clear All
@@ -151,32 +151,32 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                     </div>
 
                     {/* Asset Count Badge */}
-                    <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-gray-700">
-                            Showing <span className="font-bold text-blue-700">{assetCount}</span> of{' '}
-                            <span className="font-bold">{totalCount}</span> assets
+                    <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-700/50">
+                        <p className="text-sm text-gray-300">
+                            Showing <span className="font-bold text-blue-400">{assetCount}</span> of{' '}
+                            <span className="font-bold text-white">{totalCount}</span> assets
                         </p>
                     </div>
 
                     {/* Category Filter */}
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-3">
-                            <Package className="w-4 h-4 text-gray-600" />
-                            <h3 className="text-sm font-semibold text-gray-900">Category</h3>
+                            <Package className="w-4 h-4 text-gray-400" />
+                            <h3 className="text-sm font-semibold text-white">Category</h3>
                         </div>
                         <div className="space-y-2">
                             {CATEGORIES.map(category => (
                                 <label
                                     key={category}
-                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded"
                                 >
                                     <input
                                         type="checkbox"
                                         checked={selectedCategories.includes(category)}
                                         onChange={() => handleCategoryToggle(category)}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                        className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                                     />
-                                    <span className="text-sm text-gray-700">{category}</span>
+                                    <span className="text-sm text-gray-300">{category}</span>
                                 </label>
                             ))}
                         </div>
@@ -184,20 +184,20 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
 
                     {/* Status Filter */}
                     <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3">Status</h3>
+                        <h3 className="text-sm font-semibold text-white mb-3">Status</h3>
                         <div className="space-y-2">
                             {STATUSES.map(status => (
                                 <label
                                     key={status}
-                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded"
                                 >
                                     <input
                                         type="checkbox"
                                         checked={selectedStatuses.includes(status)}
                                         onChange={() => handleStatusToggle(status)}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                        className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                                     />
-                                    <span className="text-sm text-gray-700">{status}</span>
+                                    <span className="text-sm text-gray-300">{status}</span>
                                 </label>
                             ))}
                         </div>
@@ -206,13 +206,13 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                     {/* Zone Filter (placeholder - will be populated with actual zones) */}
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-3">
-                            <MapPin className="w-4 h-4 text-gray-600" />
-                            <h3 className="text-sm font-semibold text-gray-900">Zone</h3>
+                            <MapPin className="w-4 h-4 text-gray-400" />
+                            <h3 className="text-sm font-semibold text-white">Zone</h3>
                         </div>
                         <select
                             value={selectedZone}
                             onChange={(e) => setSelectedZone(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">All Zones</option>
                             {/* TODO: Fetch zones from API and populate */}
@@ -225,18 +225,18 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
 
                     {/* Active Filters Summary */}
                     {hasActiveFilters && (
-                        <div className="mt-6 p-3 bg-gray-50 rounded-lg">
-                            <p className="text-xs font-semibold text-gray-700 mb-2">Active Filters:</p>
+                        <div className="mt-6 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                            <p className="text-xs font-semibold text-gray-400 mb-2">Active Filters:</p>
                             <div className="flex flex-wrap gap-2">
                                 {selectedCategories.map(cat => (
                                     <span
                                         key={cat}
-                                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center gap-1"
+                                        className="px-2 py-1 bg-blue-900/50 text-blue-300 text-xs rounded-full flex items-center gap-1 border border-blue-700/50"
                                     >
                                         {cat}
                                         <button
                                             onClick={() => handleCategoryToggle(cat)}
-                                            className="hover:bg-blue-200 rounded-full"
+                                            className="hover:bg-blue-800 rounded-full"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -245,23 +245,23 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                                 {selectedStatuses.map(stat => (
                                     <span
                                         key={stat}
-                                        className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center gap-1"
+                                        className="px-2 py-1 bg-green-900/50 text-green-300 text-xs rounded-full flex items-center gap-1 border border-green-700/50"
                                     >
                                         {stat}
                                         <button
                                             onClick={() => handleStatusToggle(stat)}
-                                            className="hover:bg-green-200 rounded-full"
+                                            className="hover:bg-green-800 rounded-full"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
                                     </span>
                                 ))}
                                 {selectedZone && (
-                                    <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full flex items-center gap-1">
+                                    <span className="px-2 py-1 bg-purple-900/50 text-purple-300 text-xs rounded-full flex items-center gap-1 border border-purple-700/50">
                                         Zone: {selectedZone}
                                         <button
                                             onClick={() => setSelectedZone('')}
-                                            className="hover:bg-purple-200 rounded-full"
+                                            className="hover:bg-purple-800 rounded-full"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>

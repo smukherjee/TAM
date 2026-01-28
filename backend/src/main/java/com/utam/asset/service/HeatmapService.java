@@ -68,27 +68,37 @@ public class HeatmapService {
         // Query materialized view with optional resampling
         String sql = """
                 SELECT
-                    ST_Y(ST_SnapToGrid(grid_location, ?)) AS latitude,
-                    ST_X(ST_SnapToGrid(grid_location, ?)) AS longitude,
+                    ST_Y(snapped_location) AS latitude,
+                    ST_X(snapped_location) AS longitude,
                     SUM(activity_count) AS activity_count,
                     SUM(unique_assets) AS unique_assets,
                     AVG(avg_speed) AS avg_speed,
                     MAX(max_speed) AS max_speed,
                     MIN(first_activity) AS first_activity,
                     MAX(last_activity) AS last_activity
-                FROM asset_activity_heatmap
-                WHERE tenant_code = ?
-                AND time_bucket >= ?::timestamp
-                AND time_bucket <= ?::timestamp
-                GROUP BY ST_SnapToGrid(grid_location, ?)
+                FROM (
+                    SELECT
+                        ST_SnapToGrid(grid_location, ?) AS snapped_location,
+                        activity_count,
+                        unique_assets,
+                        avg_speed,
+                        max_speed,
+                        first_activity,
+                        last_activity
+                    FROM asset_activity_heatmap
+                    WHERE tenant_code = ?
+                    AND time_bucket >= ?::timestamp
+                    AND time_bucket <= ?::timestamp
+                ) subquery
+                GROUP BY snapped_location
                 HAVING SUM(activity_count) > 0
-                ORDER BY activity_count DESC
+                ORDER BY SUM(activity_count) DESC
                 """;
 
         List<HeatmapDataDTO> rawData = jdbcTemplate.query(
                 sql,
                 this::mapActivityHeatmapRow,
-                gridResolution, gridResolution, tenantCode, startDate, endDate, gridResolution
+                gridResolution, tenantCode, startDate, endDate
         );
 
         // Normalize intensity values (percentile-based)
@@ -119,29 +129,37 @@ public class HeatmapService {
 
         String sql = """
                 SELECT
-                    ST_Y(ST_SnapToGrid(grid_location, ?)) AS latitude,
-                    ST_X(ST_SnapToGrid(grid_location, ?)) AS longitude,
+                    ST_Y(snapped_location) AS latitude,
+                    ST_X(snapped_location) AS longitude,
                     SUM(violation_count) AS violation_count,
-                    SUM(critical_count) AS critical_count,
-                    SUM(high_count) AS high_count,
-                    SUM(medium_count) AS medium_count,
-                    SUM(low_count) AS low_count,
-                    SUM(unique_violating_assets) AS unique_assets,
+                    SUM(unique_violators) AS unique_assets,
+                    AVG(avg_speed) AS avg_speed,
+                    MAX(max_speed) AS max_speed,
                     MIN(first_violation) AS first_activity,
                     MAX(last_violation) AS last_activity
-                FROM violation_heatmap
-                WHERE tenant_code = ?
-                AND time_bucket >= ?::timestamp
-                AND time_bucket <= ?::timestamp
-                GROUP BY ST_SnapToGrid(grid_location, ?)
+                FROM (
+                    SELECT
+                        ST_SnapToGrid(grid_location, ?) AS snapped_location,
+                        violation_count,
+                        unique_violators,
+                        avg_speed,
+                        max_speed,
+                        first_violation,
+                        last_violation
+                    FROM asset_violation_heatmap
+                    WHERE tenant_code = ?
+                    AND time_bucket >= ?::timestamp
+                    AND time_bucket <= ?::timestamp
+                ) subquery
+                GROUP BY snapped_location
                 HAVING SUM(violation_count) > 0
-                ORDER BY violation_count DESC
+                ORDER BY SUM(violation_count) DESC
                 """;
 
         List<HeatmapDataDTO> rawData = jdbcTemplate.query(
                 sql,
                 this::mapViolationHeatmapRow,
-                gridResolution, gridResolution, tenantCode, startDate, endDate, gridResolution
+                gridResolution, tenantCode, startDate, endDate
         );
 
         return normalizeIntensity(rawData);
@@ -415,10 +433,8 @@ public class HeatmapService {
                 .metadata(HeatmapDataDTO.HeatmapMetadata.builder()
                         .activityCount(rs.getLong("violation_count"))
                         .uniqueAssets(rs.getInt("unique_assets"))
-                        .criticalCount(rs.getLong("critical_count"))
-                        .highCount(rs.getLong("high_count"))
-                        .mediumCount(rs.getLong("medium_count"))
-                        .lowCount(rs.getLong("low_count"))
+                        .avgSpeed(rs.getDouble("avg_speed"))
+                        .maxSpeed(rs.getDouble("max_speed"))
                         .firstActivity(rs.getTimestamp("first_activity") != null ?
                                 rs.getTimestamp("first_activity").toInstant().toString() : null)
                         .lastActivity(rs.getTimestamp("last_activity") != null ?

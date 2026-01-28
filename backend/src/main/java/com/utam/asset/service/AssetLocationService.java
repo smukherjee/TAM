@@ -77,12 +77,12 @@ public class AssetLocationService {
                     ST_Y(alr.current_location) AS latitude,
                     ST_X(alr.current_location) AS longitude,
                     a.status,
-                    rz.name AS current_zone,
+                    rz.zone_name AS current_zone,
                     rz.zone_type AS current_zone_type,
-                    alr.zone_status,
+                    CASE WHEN alr.is_in_restricted_zone THEN 'IN_RESTRICTED_ZONE' ELSE 'OUTSIDE_ZONES' END AS zone_status,
                     amt.speed,
                     amt.heading,
-                    alr.last_seen,
+                    alr.last_updated AS last_seen,
                     a.tenant_code,
                     a.qr_id,
                     a.value,
@@ -90,16 +90,16 @@ public class AssetLocationService {
                     CASE WHEN amt.speed > 0 THEN true ELSE false END AS is_moving,
                     EXISTS(
                         SELECT 1 FROM zone_violations zv
-                        WHERE zv.asset_identifier = a.id::text
-                        AND zv.exit_time IS NULL
+                        WHERE zv.asset_identifier = a.asset_id
+                        AND zv.acknowledged = false
                     ) AS has_violation
                 FROM assets a
-                JOIN asset_location_register alr ON a.id::text = alr.asset_identifier
-                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.zone_polygon, 50)
+                JOIN asset_location_register alr ON a.asset_id = alr.asset_identifier
+                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.geometry, 50)
                 LEFT JOIN LATERAL (
                     SELECT speed, heading
                     FROM asset_movement_trail
-                    WHERE asset_identifier = a.id::text
+                    WHERE asset_identifier = a.asset_id
                     ORDER BY timestamp DESC
                     LIMIT 1
                 ) amt ON true
@@ -125,7 +125,7 @@ public class AssetLocationService {
         }
 
         // Order by last_seen descending (most recent first)
-        sql.append(" ORDER BY alr.last_seen DESC");
+        sql.append(" ORDER BY alr.last_updated DESC");
 
         // Apply limit and offset
         int queryLimit = (limit != null && limit > 0) ? Math.min(limit, 500) : 100;
@@ -144,8 +144,8 @@ public class AssetLocationService {
         StringBuilder sql = new StringBuilder("""
                 SELECT COUNT(DISTINCT a.id)
                 FROM assets a
-                JOIN asset_location_register alr ON a.id::text = alr.asset_identifier
-                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.zone_polygon, 50)
+                JOIN asset_location_register alr ON a.asset_id = alr.asset_identifier
+                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.geometry, 50)
                 WHERE a.tenant_code = ?
                 """);
 
@@ -183,19 +183,19 @@ public class AssetLocationService {
 
         String sql = """
                 SELECT
-                    a.id AS asset_id,
+                    a.asset_id,
                     a.asset_id AS asset_identifier,
                     a.name,
                     a.category,
                     ST_Y(alr.current_location) AS latitude,
                     ST_X(alr.current_location) AS longitude,
                     a.status,
-                    rz.name AS current_zone,
+                    rz.zone_name AS current_zone,
                     rz.zone_type AS current_zone_type,
-                    alr.zone_status,
+                    CASE WHEN alr.is_in_restricted_zone THEN 'IN_RESTRICTED_ZONE' ELSE 'OUTSIDE_ZONES' END AS zone_status,
                     amt.speed,
                     amt.heading,
-                    alr.last_seen,
+                    alr.last_updated AS last_seen,
                     a.tenant_code,
                     a.qr_id,
                     a.value,
@@ -203,16 +203,16 @@ public class AssetLocationService {
                     CASE WHEN amt.speed > 0 THEN true ELSE false END AS is_moving,
                     EXISTS(
                         SELECT 1 FROM zone_violations zv
-                        WHERE zv.asset_identifier = a.id::text
-                        AND zv.exit_time IS NULL
+                        WHERE zv.asset_identifier = a.asset_id
+                        AND zv.acknowledged = false
                     ) AS has_violation
                 FROM assets a
-                JOIN asset_location_register alr ON a.id::text = alr.asset_identifier
-                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.zone_polygon, 50)
+                JOIN asset_location_register alr ON a.asset_id = alr.asset_identifier
+                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.geometry, 50)
                 LEFT JOIN LATERAL (
                     SELECT speed, heading
                     FROM asset_movement_trail
-                    WHERE asset_identifier = a.id::text
+                    WHERE asset_identifier = a.asset_id
                     ORDER BY timestamp DESC
                     LIMIT 1
                 ) amt ON true
@@ -235,19 +235,19 @@ public class AssetLocationService {
 
         String sql = """
                 SELECT
-                    a.id AS asset_id,
+                    a.asset_id,
                     a.asset_id AS asset_identifier,
                     a.name,
                     a.category,
                     ST_Y(alr.current_location) AS latitude,
                     ST_X(alr.current_location) AS longitude,
                     a.status,
-                    rz.name AS current_zone,
+                    rz.zone_name AS current_zone,
                     rz.zone_type AS current_zone_type,
-                    alr.zone_status,
+                    CASE WHEN alr.is_in_restricted_zone THEN 'IN_RESTRICTED_ZONE' ELSE 'OUTSIDE_ZONES' END AS zone_status,
                     amt.speed,
                     amt.heading,
-                    alr.last_seen,
+                    alr.last_updated AS last_seen,
                     a.tenant_code,
                     a.qr_id,
                     a.value,
@@ -255,21 +255,21 @@ public class AssetLocationService {
                     CASE WHEN amt.speed > 0 THEN true ELSE false END AS is_moving,
                     EXISTS(
                         SELECT 1 FROM zone_violations zv
-                        WHERE zv.asset_identifier = a.id::text
-                        AND zv.exit_time IS NULL
+                        WHERE zv.asset_identifier = a.asset_id
+                        AND zv.acknowledged = false
                     ) AS has_violation
                 FROM assets a
-                JOIN asset_location_register alr ON a.id::text = alr.asset_identifier
-                JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.zone_polygon, 50)
+                JOIN asset_location_register alr ON a.asset_id = alr.asset_identifier
+                JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.geometry, 50)
                 LEFT JOIN LATERAL (
                     SELECT speed, heading
                     FROM asset_movement_trail
-                    WHERE asset_identifier = a.id::text
+                    WHERE asset_identifier = a.asset_id
                     ORDER BY timestamp DESC
                     LIMIT 1
                 ) amt ON true
                 WHERE rz.id = ? AND a.tenant_code = ?
-                ORDER BY alr.last_seen DESC
+                ORDER BY alr.last_updated DESC
                 """;
 
         return jdbcTemplate.query(sql, new AssetLocationRowMapper(), zoneId, tenantCode);

@@ -34,7 +34,7 @@ const AirsideMapPage: React.FC = () => {
             });
             
             const response = await api.get<AssetLocationResponse>(
-                `/api/tracking/assets/live?${params}`
+                `/tracking/assets/live?${params}`
             );
             return response.data;
         },

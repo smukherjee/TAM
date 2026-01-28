@@ -68,7 +68,7 @@ const UniversalAssetMap: React.FC<UniversalAssetMapProps> = ({
                     });
                 }}
             >
-                {assets.map(asset => (
+                {assets && Array.isArray(assets) && assets.map(asset => (
                     <AssetMarker
                         key={asset.assetId}
                         asset={asset}

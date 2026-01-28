@@ -42,6 +42,79 @@ export interface AssetFilters {
 }
 
 /**
+ * Live Asset Update Event (WebSocket payload)
+ */
+export interface AssetPositionUpdateEvent {
+    assetId: string;
+    latitude: number;
+    longitude: number;
+    speed?: number;
+    heading?: number;
+    status: string;
+    timestamp: string;
+    tenantCode: string;
+    currentZone?: string;
+    zoneStatus?: string;
+}
+
+/**
+ * Restricted Zone Boundary Definition
+ */
+export interface ZoneBoundary {
+    id: string;
+    name: string;
+    type: 'PROHIBITED' | 'RESTRICTED' | 'CONTROLLED' | 'MAINTENANCE';
+    description?: string;
+    geometry: GeoJSON.Polygon;
+    active: boolean;
+    tenantCode: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+/**
+ * Zone Violation Event
+ */
+export interface ZoneViolation {
+    id: string;
+    assetId: string;
+    assetIdentifier: string;
+    zoneId: string;
+    zoneName: string;
+    zoneType: string;
+    violationType: 'ENTRY' | 'UNAUTHORIZED_MOVEMENT' | 'LOITERING';
+    timestamp: string;
+    latitude: number;
+    longitude: number;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    resolved: boolean;
+    tenantCode: string;
+}
+
+/**
+ * Asset Tracking Hotspot Data
+ */
+export interface HotspotData {
+    latitude: number;
+    longitude: number;
+    intensity: number;
+    assetCount: number;
+    timestamp: string;
+}
+
+/**
+ * Asset Movement History Point
+ */
+export interface MovementHistoryPoint {
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    speed?: number;
+    heading?: number;
+    zone?: string;
+}
+
+/**
  * Category color mapping (from research.md)
  */
 export const CATEGORY_COLORS: Record<string, string> = {

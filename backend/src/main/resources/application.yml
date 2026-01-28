@@ -129,9 +129,9 @@ spring:
 
 # Simulation Configuration
 simulation:
-  adsb-url: ${SIMULATION_ADSB_URL:http://nifi:8092/adsb-ingest}
-  vehicle-url: ${SIMULATION_VEHICLE_URL:http://nifi:8093/vehicle-ingest}
-  cv-url: ${SIMULATION_CV_URL:http://nifi:8094/cv-event-ingest}
+  adsb-url: ${SIMULATION_ADSB_URL:http://localhost:8080/api/adsblivedata}
+  vehicle-url: ${SIMULATION_VEHICLE_URL:http://localhost:8080/api/veh_live_data_con}
+  cv-url: ${SIMULATION_CV_URL:http://localhost:8080/api/cv/events}
 
 # MinIO Configuration
 minio:
