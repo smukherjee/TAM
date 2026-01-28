@@ -10,7 +10,7 @@
 
 ## Overview
 
-This feature implements comprehensive security and tracking capabilities for ground support equipment (GSE) and assets across airport operations. It provides real-time monitoring of asset movements, automated detection of restricted zone violations, and identification of movement discrepancies to enhance operational safety and compliance.
+This feature implements comprehensive security and tracking capabilities for all assets across airport operations, including ground support equipment, service vehicles, and other tracked items. It provides real-time monitoring of asset movements, automated detection of restricted zone violations, and identification of movement discrepancies to enhance operational safety and compliance.
 
 ---
 
@@ -219,10 +219,6 @@ Airport operations face critical challenges:
   - Download heatmap as PNG image
   - Export heatmap data as CSV (lat, long, intensity)
   - Export hotspot summary report as PDF
-- [ ] Comparison mode:
-  - Split screen: Compare two time periods
-  - Example: "Last week" vs "This week"
-  - Highlight areas with increasing/decreasing activity
 - [ ] Auto-refresh toggle for real-time heatmap updates
 - [ ] Threshold alerts:
   - Define activity threshold (e.g., >100 movements/hour)
@@ -256,11 +252,17 @@ Airport operations face critical challenges:
 - If zone has authorized_asset_ids: Check asset.id IN authorized_asset_ids
 - If asset matches either rule: AUTHORIZED
 - If PROHIBITED zone: ALWAYS unauthorized (overrides exceptions)
+- If authorized_asset_categories is NULL or empty: Treat as "no restrictions" (all asset categories allowed)
 - If no rules defined: Default UNAUTHORIZED for RESTRICTED/PROHIBITED, AUTHORIZED for CONTROLLED/MAINTENANCE
 
 **FR1.3**: Zone boundaries defined as PostGIS POLYGON with WGS84 coordinates
 
-**FR1.4**: Zones are tenant-specific (multi-tenancy maintained)
+**FR1.4**: Zone detection includes 50m buffer zone to account for GPS accuracy variations
+- Use PostGIS `ST_DWithin(zone.geometry, asset.location, 50)` for violation detection
+- Buffer prevents false positives from GPS drift near zone boundaries
+- Entry/exit events triggered only after 2 consecutive readings confirm location
+
+**FR1.5**: Zones are tenant-specific (multi-tenancy maintained)
 
 ---
 
@@ -323,7 +325,7 @@ Airport operations face critical challenges:
 
 **UNEXPECTED_MOVEMENT**: 
 - Asset status = "Maintenance" or "Out of Service" but position changed
-- Deviation > 50 meters within 1 hour
+- Deviation > 50 meters within consecutive 5-second readings (i.e., asset moved >50m between two consecutive position updates)
 
 **LOCATION_MISMATCH**:
 - Asset register location ≠ actual GPS location
@@ -345,7 +347,7 @@ Airport operations face critical challenges:
 
 **FR4.2**: Discrepancy severity:
 - **CRITICAL**: DUPLICATE_SIGNAL, SPEED_ANOMALY >50% over limit
-- **HIGH**: LOCATION_MISMATCH >500m, MISSING_TRACKING >30 min
+- **HIGH**: LOCATION_MISMATCH >500m, MISSING_TRACKING >10 min
 - **MEDIUM**: UNEXPECTED_MOVEMENT, LOCATION_MISMATCH 100-500m
 - **LOW**: SPEED_ANOMALY <20% over limit
 
@@ -475,8 +477,15 @@ Airport operations face critical challenges:
 
 - **PostGIS**: Geographic queries for zone detection
 - **TimescaleDB**: Efficient time-series storage for trail data
+- **Apache NiFi**: Ingestion gateway for asset position data (polling vehicles table)
+- **Apache Kafka**: Message broker for asset-positions-json topic
 - **Existing Assets Module**: Asset register must be populated
 - **Existing Vehicles Tracking**: GPS data from vehicles table
+- **Mock Data Generators**: Simulation scripts to populate vehicles table with test data
+  - `simulate_ba249.sh`: British Airways flight BA249 asset movements
+  - `simulate_ek500.sh`: Emirates flight EK500 asset movements  
+  - `simulate_qf401_ybbn.sh`: Qantas flight QF401 asset movements at Brisbane
+  - Custom asset movement simulator for zone violation testing
 - **WebSocket Infrastructure**: Real-time event broadcasting
 
 ---
@@ -485,7 +494,7 @@ Airport operations face critical challenges:
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| GPS accuracy issues | High false positives | Implement 50m buffer zone, require 2 consecutive readings |
+| GPS accuracy issues | High false positives | Implement 50m buffer zone (see FR1.4), require 2 consecutive readings |
 | Vehicle-Asset mapping gaps | Incomplete tracking | Provide manual mapping UI, alert admins of unmapped vehicles |
 | High data volume | Storage costs | Implement compression, archival after 90 days |
 | Complex zone geometries | Performance degradation | Use spatial indexes, simplify polygons to <100 vertices |
@@ -502,6 +511,7 @@ Airport operations face critical challenges:
 - Automated corrective actions (e.g., send alert to driver)
 - Historical trend analysis dashboard
 - Integration with maintenance scheduling system
+- Heatmap comparison mode (split screen comparing two time periods) - deferred to Phase 2
 
 ---
 
@@ -535,7 +545,8 @@ Airport operations face critical challenges:
 
 ## Glossary
 
-- **GSE**: Ground Support Equipment (pushback tractors, fuel trucks, etc.)
+- **Asset**: Any tracked item in airport operations (ground support equipment, service vehicles, cargo containers, etc.)
+- **GSE**: Ground Support Equipment - a category of assets including pushback tractors, fuel trucks, belt loaders, etc.
 - **Zone Incursion**: Unauthorized entry into restricted zone
 - **Trail**: Sequential record of asset positions over time
 - **Discrepancy**: Deviation from expected asset behavior or location

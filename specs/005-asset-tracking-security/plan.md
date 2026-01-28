@@ -45,8 +45,8 @@
 │  │  └──────────────┘  └───────────────┘  └───────────┘ │   │
 │  │                                                      │   │
 │  │  ┌──────────────────────────────────────────────┐   │   │
-│  │  │  MovementTrailIngestionService (Scheduled)   │   │   │
-│  │  │  - Reads from vehicles table every 5 sec     │   │   │
+│  │  │  MovementTrailProcessor (Kafka Consumer)     │   │   │
+│  │  │  - Consumes from asset-positions-json        │   │   │
 │  │  │  - Detects zone violations                   │   │   │
 │  │  │  - Detects movement discrepancies            │   │   │
 │  │  │  - Writes to asset_movement_trail            │   │   │
@@ -90,17 +90,26 @@
 ### 1. Movement Trail Ingestion (Real-time)
 
 ```
-┌──────────────┐      5 sec      ┌────────────────────────┐
-│   vehicles   │ ←─────────────  │ MovementTrail          │
-│   table      │                 │ IngestionService       │
-│ (live data)  │                 │ (@Scheduled)           │
+┌──────────────┐      Query      ┌────────────────────────┐
+│   vehicles   │ ←─────────────  │ Apache NiFi            │
+│   table      │   ExecuteSQL    │ Asset Position         │
+│ (live data)  │   (every 5s)    │ Polling Flow           │
 └──────────────┘                 └────────────────────────┘
                                            │
-                                           ↓
+                                           ↓ Publish
+                                 ┌────────────────────┐
+                                 │ Kafka Topic:       │
+                                 │ asset-positions    │
+                                 └────────────────────┘
+                                           │
+                                           ↓ Consume
                           ┌────────────────────────────────┐
-                          │ For each vehicle position:     │
+                          │ MovementTrailProcessor         │
+                          │ (Spring Boot Kafka Consumer)   │
+                          │                                │
+                          │ For each position event:       │
                           │ 1. Match vehicle_id → asset    │
-                          │ 2. Check zone (ST_Contains)    │
+                          │ 2. Check zone (ST_DWithin)     │
                           │ 3. Detect violations           │
                           │ 4. Detect discrepancies        │
                           │ 5. Write to movement_trail     │
@@ -657,17 +666,17 @@ GROUP BY grid_location, tenant_code, time_bucket;
 - **Page**: `AirsideMapPage.tsx`
 - **Components**:
   - `UniversalAssetMap.tsx`: Leaflet map with all assets
-  - `AssetMarker.tsx`: Custom markers color-coded by category
+  - `AssetMarker.tsx`: Custom markers color-coded by category (see spec.md Asset Category Reference table)
   - `AssetPopup.tsx`: Asset details on click
   - `AssetFilterPanel.tsx`: Multi-filter controls
   - `ZoneBoundariesLayer.tsx`: Restricted zone polygons
   - `AssetSearchBar.tsx`: Search and zoom to asset
-  - `MapLegend.tsx`: Color/status legend
+  - `MapLegend.tsx`: Color/status legend (references spec.md Asset Category Reference)
 - **Features**:
   - Real-time WebSocket updates
   - Marker clustering (react-leaflet-cluster)
   - Smooth marker animation
-  - Category/status/zone filtering
+  - Category/status/zone filtering (8 categories as defined in spec.md)
   - Owner metadata display
 
 #### Hotspot Analysis Page (US6)

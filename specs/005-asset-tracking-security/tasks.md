@@ -30,8 +30,8 @@
 - [x] T001 [P] Create feature branch `005-asset-tracking-security`
 - [x] T002 [DOC] Create spec.md with requirements and user stories
 - [x] T003 [DOC] Create plan.md with architecture and implementation plan
-- [ ] T004 [DOC] Create tasks.md (this file)
-- [ ] T005 [DOC] Create data-model.md with ERD and schema documentation
+- [x] T004 [DOC] Create tasks.md (this file)
+- [x] T005 [DOC] Create PHASE_2A_SUMMARY.md with enhancement details
 
 ---
 
@@ -55,12 +55,31 @@
 - [x] T021 [DB] Verify TimescaleDB compression policies
 - [x] T022 [DB] Apply migration to local database
 - [x] T023 [DB] Verify all tables created successfully
+- [ ] T023a [P] Create NiFi flow: Asset Position Polling
+  - [ ] ExecuteSQLRecord processor to query vehicles table every 5 seconds
+  - [ ] Query: SELECT vehicle_id, latitude, longitude, speed, heading, status, timestamp FROM vehicles WHERE updated_at > ${last_poll_time}
+  - [ ] ConvertRecord processor: Database rows → JSON
+  - [ ] PublishKafkaRecord processor: Send to asset-positions-json topic
+  - [ ] UpdateAttribute: Track last_poll_time
+  - [ ] Configure error handling and retry logic
+- [ ] T023b [P] Create Kafka topic: asset-positions-json
+  - [ ] Partitions: 3 (for parallel processing)
+  - [ ] Replication factor: 1 (single node for MVP)
+  - [ ] Retention: 24 hours
+  - [ ] Compression: gzip
+- [ ] T023c [P] Test NiFi flow with mock vehicle data
+  - [ ] Run simulate_ba249.sh to generate test positions
+  - [ ] Verify NiFi polls and publishes to Kafka
+  - [ ] Verify JSON format matches expected schema
+  - [ ] Monitor flow performance (<1 sec latency)
 
 **Acceptance Criteria:**
 - ✅ All tables exist with correct schema
 - ✅ Spatial queries execute in <100ms
 - ✅ 8 restricted zones inserted across 3 tenants
 - ✅ Continuous aggregates configured
+- ✅ NiFi flow ingests vehicle positions every 5 seconds
+- ✅ Kafka topic receives position events with <1 sec latency
 
 ---
 
@@ -85,6 +104,29 @@
   - [ ] Auto-refresh every 6 hours
   - [ ] Create manual refresh function `refresh_heatmaps()`
   - [ ] Test refresh performance (<10 seconds)
+
+### NiFi & Kafka Integration
+
+- [ ] T026a [BE] Create `AssetPositionEvent.java` (Kafka message model)
+  - [ ] Fields: vehicleId, assetId, latitude, longitude, speed, heading, status, timestamp, tenantCode
+  - [ ] Add @Data, @Builder, @NoArgsConstructor, @AllArgsConstructor
+  - [ ] Add Jackson annotations for JSON deserialization
+- [ ] T026b [BE] Create `MovementTrailProcessor.java` (Kafka consumer)
+  - [ ] Annotation: @KafkaListener(topics = "asset-positions-json")
+  - [ ] Consume AssetPositionEvent from Kafka
+  - [ ] Match vehicle_id → asset using qr_id
+  - [ ] Check zone containment using ST_DWithin (50m buffer)
+  - [ ] Detect zone violations (call ZoneViolationService)
+  - [ ] Detect movement discrepancies (call DiscrepancyService)
+  - [ ] Write to asset_movement_trail and asset_location_register
+  - [ ] Broadcast WebSocket event for real-time updates
+  - [ ] Error handling: Log unmapped vehicles, dead letter queue for failed messages
+- [ ] T026c [BE] Configure Kafka consumer properties
+  - [ ] application.yml: spring.kafka.consumer settings
+  - [ ] Group ID: asset-tracking-consumer-group
+  - [ ] Auto-offset-reset: earliest
+  - [ ] Enable JSON deserialization
+  - [ ] Concurrency: 3 (match Kafka partitions)
 
 ### Backend API - Universal Asset Map (US5)
 
