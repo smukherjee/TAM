@@ -26,6 +26,25 @@ public class AssetController {
         return ApiResponse.success(assets);
     }
 
+    @GetMapping("/search")
+    public ApiResponse<List<Asset>> searchAssets(
+            @RequestParam(value = "q", defaultValue = "") String query,
+            @RequestParam(value = "limit", defaultValue = "20") int limit,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
+        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
+        List<Asset> assets = assetService.searchAssets(tenantCode, query, limit);
+        return ApiResponse.success(assets);
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<Asset> getAssetById(@PathVariable String id) {
+        Asset asset = assetService.getAssetById(id);
+        if (asset == null) {
+            return ApiResponse.error("Asset not found");
+        }
+        return ApiResponse.success(asset);
+    }
+
     @PostMapping
     public ApiResponse<Asset> createAsset(
             @RequestBody Asset asset,

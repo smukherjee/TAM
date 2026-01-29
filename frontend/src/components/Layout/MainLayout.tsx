@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp, Flame } from 'lucide-react';
+import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp, Flame, AlertOctagon, AlertTriangle, Route } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isOpen, setIsOpen] = useState(true);
     const [assetMenuOpen, setAssetMenuOpen] = useState(false);
+    const [securityMenuOpen, setSecurityMenuOpen] = useState(false);
     const { user, logout } = useAuth();
 
     // Logic for role-based access
@@ -16,6 +17,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const showAssets = role === 'ADMIN' || role === 'GH';
     const showPipeline = role === 'ADMIN';
     const showAirsideOps = role === 'ADMIN' || role === 'GH' || role === 'AIRPORT_USER';
+    const showSecurityReports = role === 'ADMIN' || role === 'GH';
 
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -27,7 +29,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     <div className="flex items-center space-x-3">
                         <Plane className="text-blue-500 animate-pulse shrink-0" size={28} />
                         <h1 className={`text-xl font-bold tracking-wider transition-opacity duration-200 whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                            UTAM <span className="text-blue-500">OS</span>
+                            TAM <span className="text-blue-500">OS</span>
                         </h1>
                     </div>
                 </div>
@@ -82,6 +84,41 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 Airside Operations
                             </div>
                             <NavItem to="/tracking/hotspots" icon={<Flame size={20} />} label="Hotspot Analysis" isOpen={isOpen} />
+                        </div>
+                    )}
+                    
+                    {/* Security Reports Section */}
+                    {showSecurityReports && (
+                        <div className={`mt-4 pt-4 border-t border-gray-700`}>
+                            <div className={`text-xs font-semibold text-gray-500 uppercase tracking-wilder mb-2 px-2 transition-all duration-300 ${isOpen ? 'opacity-100 h-auto' : 'opacity-0 h-0 hidden'}`}>
+                                Security Reports
+                            </div>
+                            <div
+                                onClick={() => setSecurityMenuOpen(!securityMenuOpen)}
+                                className="flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-gray-700 text-gray-300 hover:text-white group mb-1"
+                            >
+                                <div className="flex items-center space-x-3">
+                                    <AlertOctagon size={20} className="shrink-0 text-red-400" />
+                                    {isOpen && <span className="font-medium text-sm">Security</span>}
+                                </div>
+                                {isOpen && (
+                                    securityMenuOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+                                )}
+                            </div>
+                            {(securityMenuOpen || !isOpen) && isOpen && (
+                                <div className="ml-6 space-y-1 border-l-2 border-gray-700 pl-3 mb-2">
+                                    <SubNavItem to="/tracking/violations" label="Zone Violations" icon={<AlertOctagon size={14} className="text-red-400" />} />
+                                    <SubNavItem to="/tracking/discrepancies" label="Discrepancies" icon={<AlertTriangle size={14} className="text-orange-400" />} />
+                                    <SubNavItem to="/tracking/trail" label="Movement Trail" icon={<Route size={14} className="text-blue-400" />} />
+                                </div>
+                            )}
+                            {!isOpen && (
+                                <div className="space-y-1">
+                                    <NavItem to="/tracking/violations" icon={<AlertOctagon size={20} className="text-red-400" />} label="Zone Violations" isOpen={isOpen} />
+                                    <NavItem to="/tracking/discrepancies" icon={<AlertTriangle size={20} className="text-orange-400" />} label="Discrepancies" isOpen={isOpen} />
+                                    <NavItem to="/tracking/trail" icon={<Route size={20} className="text-blue-400" />} label="Movement Trail" isOpen={isOpen} />
+                                </div>
+                            )}
                         </div>
                     )}
                     
@@ -143,18 +180,19 @@ const NavItem = ({ to, icon, label, isOpen }: { to: string; icon: React.ReactNod
     </NavLink>
 );
 
-const SubNavItem: React.FC<{ to: string; label: string }> = ({ to, label }) => {
+const SubNavItem: React.FC<{ to: string; label: string; icon?: React.ReactNode }> = ({ to, label, icon }) => {
     return (
         <NavLink
             to={to}
             className={({ isActive }) =>
-                `block px-3 py-2 rounded-md transition-all duration-200 text-sm ${
+                `flex items-center px-3 py-2 rounded-md transition-all duration-200 text-sm ${
                     isActive
                         ? 'bg-blue-600 text-white'
                         : 'text-gray-400 hover:bg-gray-700 hover:text-white'
                 }`
             }
         >
+            {icon && <span className="mr-2">{icon}</span>}
             {label}
         </NavLink>
     );

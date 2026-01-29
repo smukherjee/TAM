@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.asset.event.AssetPositionEvent;
 import com.utam.asset.service.AssetService;
+import com.utam.tracking.service.MovementTrailIngestionService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -17,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -27,12 +31,12 @@ import java.util.UUID;
  * Processes events from asset-positions-json topic to:
  * 1. Write to asset_movement_trail (for historical tracking)
  * 2. Update asset_location_register (current location)
- * 3. Detect zone violations (future enhancement)
- * 4. Detect movement discrepancies (future enhancement)
+ * 3. Detect zone violations using PostGIS spatial queries
+ * 4. Detect movement discrepancies (status mismatch, unexpected movement)
  * 5. Broadcast WebSocket events to frontend
  * <p>
  * Feature: 005-asset-tracking-security (US1-US4)
- * Tasks: T026b, T026c
+ * Tasks: T026b, T026c, T041-T047
  */
 @Service
 public class MovementTrailProcessor {
@@ -43,6 +47,7 @@ public class MovementTrailProcessor {
     private final AssetService assetService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
+    private final MovementTrailIngestionService ingestionService;
     
     // Metrics
     private final Timer latencyTimer;
@@ -55,11 +60,13 @@ public class MovementTrailProcessor {
             AssetService assetService,
             SimpMessagingTemplate messagingTemplate,
             ObjectMapper objectMapper,
+            MovementTrailIngestionService ingestionService,
             MeterRegistry registry) {
         this.jdbcTemplate = jdbcTemplate;
         this.assetService = assetService;
         this.messagingTemplate = messagingTemplate;
         this.objectMapper = objectMapper;
+        this.ingestionService = ingestionService;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         
         // Initialize metrics
@@ -129,10 +136,8 @@ public class MovementTrailProcessor {
      * Process a single position event.
      * Steps:
      * 1. Match vehicle_id → asset using qr_id (if not already matched)
-     * 2. Write to asset_movement_trail
-     * 3. Update asset_location_register
-     * 4. Check zone violations (placeholder for future)
-     * 5. Broadcast WebSocket event
+     * 2. Delegate to ingestion service for zone detection, violation detection, discrepancy detection
+     * 3. Broadcast WebSocket event
      */
     private void processPositionEvent(AssetPositionEvent event) {
         try {
@@ -144,27 +149,53 @@ public class MovementTrailProcessor {
             
             // Step 1: Match vehicle → asset via qr_id (if assetId not provided)
             UUID assetId = event.getAssetId();
+            String assetIdentifier = null;
+            String assetName = null;
+            String assetCategory = null;
+            
             if (assetId == null) {
-                assetId = matchVehicleToAsset(event.getVehicleId(), event.getTenantCode());
+                AssetInfo assetInfo = matchVehicleToAsset(event.getVehicleId(), event.getTenantCode());
+                if (assetInfo == null) {
+                    logger.debug("No asset matched for vehicle: {} (tenant: {})", 
+                            event.getVehicleId(), event.getTenantCode());
+                    return;
+                }
+                assetId = assetInfo.id;
+                assetIdentifier = assetInfo.identifier;
+                assetName = assetInfo.name;
+                assetCategory = assetInfo.category;
+            } else {
+                // Fetch asset details for enrichment
+                AssetInfo assetInfo = getAssetDetails(assetId);
+                if (assetInfo != null) {
+                    assetIdentifier = assetInfo.identifier;
+                    assetName = assetInfo.name;
+                    assetCategory = assetInfo.category;
+                }
             }
             
-            // If no asset matched, skip (or log as unregistered vehicle)
-            if (assetId == null) {
-                logger.debug("No asset matched for vehicle: {} (tenant: {})", 
-                        event.getVehicleId(), event.getTenantCode());
-                return;
-            }
+            // Step 2: Delegate to ingestion service for processing
+            // This handles movement trail writing, zone detection, violation/discrepancy detection, location register update
+            ZonedDateTime eventTime = event.getTimestamp() != null 
+                ? ZonedDateTime.ofInstant(event.getTimestamp(), ZoneOffset.UTC)
+                : ZonedDateTime.now(ZoneOffset.UTC);
+                
+            ingestionService.processPositionUpdate(
+                    assetId,
+                    assetIdentifier,
+                    assetName,
+                    assetCategory,
+                    event.getVehicleId(),
+                    event.getLatitude(),
+                    event.getLongitude(),
+                    event.getSpeed(),
+                    event.getHeading(),
+                    event.getStatus(),
+                    eventTime,
+                    event.getTenantCode()
+            );
             
-            // Step 2: Write to asset_movement_trail
-            writeMovementTrail(assetId, event);
-            
-            // Step 3: Update asset_location_register (upsert current location)
-            updateLocationRegister(assetId, event);
-            
-            // Step 4: Check zone violations (placeholder - to be implemented in later tasks)
-            // boolean violation = checkZoneViolations(assetId, event);
-            
-            // Step 5: Broadcast WebSocket event to frontend
+            // Step 3: Broadcast WebSocket event to frontend
             broadcastPositionUpdate(assetId, event);
             
             logger.debug("Processed position event: assetId={}, vehicle={}, lat={}, lng={}", 
@@ -181,12 +212,17 @@ public class MovementTrailProcessor {
      * Match vehicle_id to asset_id using qr_id.
      * Assumes vehicles.vehicle_id = assets.qr_id for tracking.
      */
-    private UUID matchVehicleToAsset(String vehicleId, String tenantCode) {
+    private AssetInfo matchVehicleToAsset(String vehicleId, String tenantCode) {
         try {
-            String sql = "SELECT id FROM assets WHERE qr_id = ? AND tenant_code = ? LIMIT 1";
-            List<UUID> results = jdbcTemplate.query(
+            String sql = "SELECT id, identifier, name, category FROM assets WHERE qr_id = ? AND tenant_code = ? LIMIT 1";
+            List<AssetInfo> results = jdbcTemplate.query(
                     sql,
-                    (rs, rowNum) -> UUID.fromString(rs.getString("id")),
+                    (rs, rowNum) -> new AssetInfo(
+                            UUID.fromString(rs.getString("id")),
+                            rs.getString("identifier"),
+                            rs.getString("name"),
+                            rs.getString("category")
+                    ),
                     vehicleId,
                     tenantCode
             );
@@ -199,51 +235,27 @@ public class MovementTrailProcessor {
     }
 
     /**
-     * Write position to asset_movement_trail table.
-     * Uses PostGIS ST_SetSRID and ST_MakePoint for spatial indexing.
+     * Get asset details by ID
      */
-    private void writeMovementTrail(UUID assetId, AssetPositionEvent event) {
-        String sql = """
-                INSERT INTO asset_movement_trail 
-                (asset_identifier, location, speed, heading, timestamp, tenant_code)
-                VALUES (?, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?, ?, ?, ?)
-                """;
-        
-        jdbcTemplate.update(
-                sql,
-                assetId.toString(),
-                event.getLongitude(),  // PostGIS: X = longitude
-                event.getLatitude(),   // PostGIS: Y = latitude
-                event.getSpeed(),
-                event.getHeading(),
-                Timestamp.from(event.getTimestamp()),
-                event.getTenantCode()
-        );
-    }
-
-    /**
-     * Update asset_location_register with current position (upsert).
-     * Uses ON CONFLICT to update existing records.
-     */
-    private void updateLocationRegister(UUID assetId, AssetPositionEvent event) {
-        String sql = """
-                INSERT INTO asset_location_register 
-                (asset_identifier, current_location, last_seen, tenant_code, zone_status)
-                VALUES (?, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?, ?, 'UNKNOWN')
-                ON CONFLICT (asset_identifier) DO UPDATE SET
-                    current_location = EXCLUDED.current_location,
-                    last_seen = EXCLUDED.last_seen,
-                    zone_status = 'UNKNOWN'
-                """;
-        
-        jdbcTemplate.update(
-                sql,
-                assetId.toString(),
-                event.getLongitude(),
-                event.getLatitude(),
-                Timestamp.from(event.getTimestamp()),
-                event.getTenantCode()
-        );
+    private AssetInfo getAssetDetails(UUID assetId) {
+        try {
+            String sql = "SELECT identifier, name, category FROM assets WHERE id = ? LIMIT 1";
+            List<AssetInfo> results = jdbcTemplate.query(
+                    sql,
+                    (rs, rowNum) -> new AssetInfo(
+                            assetId,
+                            rs.getString("identifier"),
+                            rs.getString("name"),
+                            rs.getString("category")
+                    ),
+                    assetId
+            );
+            return results.isEmpty() ? null : results.get(0);
+        } catch (Exception e) {
+            logger.error("Failed to get asset details: assetId={}, error={}", 
+                    assetId, e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -271,6 +283,23 @@ public class MovementTrailProcessor {
             logger.warn("Failed to broadcast WebSocket update for asset {}: {}", 
                     assetId, e.getMessage());
             // Non-critical error, don't fail the whole processing
+        }
+    }
+
+    /**
+     * Helper class for asset information
+     */
+    private static class AssetInfo {
+        final UUID id;
+        final String identifier;
+        final String name;
+        final String category;
+
+        AssetInfo(UUID id, String identifier, String name, String category) {
+            this.id = id;
+            this.identifier = identifier;
+            this.name = name;
+            this.category = category;
         }
     }
 }

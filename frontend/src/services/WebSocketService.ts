@@ -96,6 +96,45 @@ class WebSocketService {
     disconnect() {
         this.client.deactivate();
     }
+
+    // ========================================================================
+    // Tracking Subscriptions (Feature: 005-asset-tracking-security)
+    // ========================================================================
+
+    /**
+     * Subscribe to zone violation events for a tenant
+     */
+    subscribeToViolations(tenantCode: string, callback: (violation: any) => void): { unsubscribe: () => void } {
+        return this.subscribe(`/topic/violations/${tenantCode}`, callback);
+    }
+
+    /**
+     * Subscribe to movement discrepancy events for a tenant
+     */
+    subscribeToDiscrepancies(tenantCode: string, callback: (discrepancy: any) => void): { unsubscribe: () => void } {
+        return this.subscribe(`/topic/discrepancies/${tenantCode}`, callback);
+    }
+
+    /**
+     * Subscribe to violation acknowledgment events
+     */
+    subscribeToViolationAcknowledgments(tenantCode: string, callback: (event: any) => void): { unsubscribe: () => void } {
+        return this.subscribe(`/topic/violations/${tenantCode}/acknowledged`, callback);
+    }
+
+    /**
+     * Subscribe to discrepancy acknowledgment events
+     */
+    subscribeToDiscrepancyAcknowledgments(tenantCode: string, callback: (event: any) => void): { unsubscribe: () => void } {
+        return this.subscribe(`/topic/discrepancies/${tenantCode}/acknowledged`, callback);
+    }
+
+    /**
+     * Subscribe to critical alerts that require immediate attention
+     */
+    subscribeToCriticalAlerts(tenantCode: string, callback: (alert: any) => void): { unsubscribe: () => void } {
+        return this.subscribe(`/topic/alerts/critical/${tenantCode}`, callback);
+    }
 }
 
 export const webSocketService = new WebSocketService();

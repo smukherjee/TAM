@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/Layout/MainLayout';
@@ -17,6 +17,11 @@ import TagsListPage from './pages/TagsListPage';
 import LocationsListPage from './pages/LocationsListPage';
 import HotspotAnalysisPage from './pages/HotspotAnalysisPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Lazy-loaded Security Report Pages
+const RestrictedZoneReportPage = lazy(() => import('./pages/RestrictedZoneReportPage'));
+const MovementDiscrepancyReportPage = lazy(() => import('./pages/MovementDiscrepancyReportPage'));
+const MovementTrailPage = lazy(() => import('./pages/MovementTrailPage'));
 
 // Create a QueryClient instance
 const queryClient = new QueryClient({
@@ -119,6 +124,36 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <LocationsListPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Security Reports - Zone Violations */}
+      <Route path="/tracking/violations" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <RestrictedZoneReportPage />
+            </Suspense>
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Security Reports - Movement Discrepancies */}
+      <Route path="/tracking/discrepancies" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <MovementDiscrepancyReportPage />
+            </Suspense>
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Security Reports - Movement Trail */}
+      <Route path="/tracking/trail" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <MovementTrailPage />
+            </Suspense>
           </MainLayout>
         </ProtectedRoute>
       } />

@@ -271,7 +271,7 @@ SELECT add_continuous_aggregate_policy('zone_violations_hourly',
     schedule_interval => INTERVAL '1 hour',
     if_not_exists => TRUE);
 
-COMMENT ON MATERIALIZED VIEW zone_violations_hourly IS 'Hourly aggregation of zone violations for analytics';
+-- Note: zone_violations_hourly is a TimescaleDB continuous aggregate (hourly aggregation of zone violations for analytics)
 
 -- 9. CONTINUOUS AGGREGATE: Movement Discrepancies Daily Summary
 CREATE MATERIALIZED VIEW IF NOT EXISTS movement_discrepancies_daily
@@ -298,7 +298,7 @@ SELECT add_continuous_aggregate_policy('movement_discrepancies_daily',
     schedule_interval => INTERVAL '1 day',
     if_not_exists => TRUE);
 
-COMMENT ON MATERIALIZED VIEW movement_discrepancies_daily IS 'Daily aggregation of movement discrepancies for trend analysis';
+-- Note: movement_discrepancies_daily is a TimescaleDB continuous aggregate (daily aggregation of movement discrepancies for trend analysis)
 
 -- 10. SEED DATA: Restricted Zones for VIDP (Delhi)
 INSERT INTO restricted_zones (zone_id, zone_name, zone_type, description, tenant_code, geometry, authorized_asset_categories) VALUES
