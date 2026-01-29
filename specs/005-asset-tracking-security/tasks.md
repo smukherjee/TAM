@@ -620,6 +620,19 @@
   - [x] Create `TrailSummaryDTO.java`
   - [x] Create `RestrictedZoneDTO.java`
   - [x] Create `AcknowledgeRequestDTO.java`
+- [ ] T055a [BE] Create report export service `ReportExportService.java`
+  - [ ] Method: `exportViolationsToExcel(filters, tenantCode)` - Generate Excel file
+  - [ ] Method: `exportViolationsToPDF(filters, tenantCode)` - Generate formatted PDF report
+  - [ ] Method: `exportDiscrepanciesToExcel(filters, tenantCode)` - Generate Excel file
+  - [ ] Method: `exportDiscrepanciesToPDF(filters, tenantCode)` - Generate formatted PDF report
+  - [ ] Use Apache POI for Excel generation
+  - [ ] Use iText or OpenPDF for PDF generation
+  - [ ] Include filter criteria in report header
+  - [ ] Add company logo and timestamp
+- [ ] T055b [BE] Add export endpoints to controllers
+  - [ ] `GET /api/tracking/zones/violations/export?format={pdf|excel}` in ZoneViolationController
+  - [ ] `GET /api/tracking/discrepancies/export?format={pdf|excel}` in MovementDiscrepancyController
+  - [ ] Return file as attachment with proper Content-Disposition header
 - [ ] T056 [BE] Create MapStruct mappers
   - [ ] Create `ZoneViolationMapper.java`
   - [ ] Create `DiscrepancyMapper.java`
@@ -685,11 +698,21 @@
   - [x] Call after creating violation
   - [x] Call after creating discrepancy
 - [x] T070 [BE] Test WebSocket events with WebSocket client
+- [ ] T070a [FE] Implement browser push notifications for CRITICAL severity
+  - [ ] Request notification permission on first login (Notification API)
+  - [ ] Create `useBrowserNotifications()` hook
+  - [ ] Trigger browser notification when CRITICAL violation received via WebSocket
+  - [ ] Trigger browser notification when CRITICAL discrepancy received (>500m deviation)
+  - [ ] Include asset name, zone/discrepancy type, and timestamp in notification body
+  - [ ] Click notification navigates to relevant report page
+  - [ ] Respect user preference (store in localStorage)
+  - [ ] Graceful fallback if notifications not supported/denied
 
 **Acceptance Criteria:**
 - WebSocket events broadcast correctly
 - Tenant filtering working
 - Events received by frontend clients
+- Browser notifications appear for CRITICAL severity events (FR6.3)
 
 ---
 
@@ -1143,10 +1166,10 @@
 
 ## Summary
 
-**Total Tasks**: 162  
-**Completed**: 3  
-**Remaining**: 159  
-**Estimated Completion**: ~20 days
+**Total Tasks**: 236  
+**Completed**: 118 (Phases 0-12 + Phase 2A)  
+**Remaining**: 118  
+**Estimated Completion**: ~12-15 days
 
-**Current Phase**: Phase 0 - Foundation  
-**Next Phase**: Phase 1 - Database Layer
+**Current Phase**: Phase 2A - Demo Flow Enhancements (US5 & US6)  
+**Next Phase**: Phase 13 - Backend Testing
