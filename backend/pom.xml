@@ -116,6 +116,18 @@
 		<artifactId>hypersistence-utils-hibernate-63</artifactId>
 		<version>3.9.0</version>
 	</dependency>
+	<!-- Apache POI for Excel export -->
+	<dependency>
+		<groupId>org.apache.poi</groupId>
+		<artifactId>poi-ooxml</artifactId>
+		<version>5.2.5</version>
+	</dependency>
+	<!-- OpenPDF for PDF export (LGPL, iText fork) -->
+	<dependency>
+		<groupId>com.github.librepdf</groupId>
+		<artifactId>openpdf</artifactId>
+		<version>1.3.35</version>
+	</dependency>
 	</dependencies>
 	
 	<build>

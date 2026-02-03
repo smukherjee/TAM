@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { 
     Activity, 
     AlertTriangle, 
     Clock, 
     Download, 
-    Map as MapIcon 
+    Map as MapIcon,
+    Calendar
 } from 'lucide-react';
 
 /**
@@ -43,15 +46,51 @@ const HeatmapControls: React.FC<HeatmapControlsProps> = ({
     onGridSizeChange,
     onIntensityChange,
     onTimeRangeChange,
+    onCustomTimeRange,
     onAutoRefreshToggle,
     onSwitchToAssetView,
     onExport
 }) => {
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [customStartDate, setCustomStartDate] = useState<Date | null>(
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Default: 7 days ago
+    );
+    const [customEndDate, setCustomEndDate] = useState<Date | null>(new Date());
 
     const handleExport = (format: 'png' | 'csv' | 'pdf') => {
         onExport(format);
         setShowExportMenu(false);
+    };
+
+    const handleCustomRangeClick = () => {
+        onTimeRangeChange('custom');
+        setShowDatePicker(true);
+    };
+
+    const handleApplyCustomRange = () => {
+        if (customStartDate && customEndDate && onCustomTimeRange) {
+            onCustomTimeRange(customStartDate, customEndDate);
+            setShowDatePicker(false);
+        }
+    };
+
+    const handleCancelCustomRange = () => {
+        setShowDatePicker(false);
+        // Reset to previous time range if needed
+        if (timeRange === 'custom') {
+            onTimeRangeChange('24h');
+        }
+    };
+
+    // Calculate max date (30 days from start) for validation
+    const getMaxEndDate = () => {
+        if (customStartDate) {
+            const maxDate = new Date(customStartDate);
+            maxDate.setDate(maxDate.getDate() + 30);
+            return maxDate > new Date() ? new Date() : maxDate;
+        }
+        return new Date();
     };
 
     return (
@@ -148,16 +187,75 @@ const HeatmapControls: React.FC<HeatmapControlsProps> = ({
                     ))}
                 </div>
                 <button
-                    onClick={() => onTimeRangeChange('custom')}
-                    className={`w-full px-3 py-2 text-sm rounded-md transition ${
+                    onClick={handleCustomRangeClick}
+                    className={`w-full flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md transition ${
                         timeRange === 'custom'
                             ? 'bg-blue-600 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                 >
+                    <Calendar className="w-4 h-4" />
                     Custom Range
                 </button>
-                {/* TODO: Add date picker for custom range */}
+                
+                {/* Custom Date Range Picker */}
+                {showDatePicker && (
+                    <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Start Date
+                                </label>
+                                <DatePicker
+                                    selected={customStartDate}
+                                    onChange={(date: Date | null) => setCustomStartDate(date)}
+                                    selectsStart
+                                    startDate={customStartDate}
+                                    endDate={customEndDate}
+                                    maxDate={new Date()}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    dateFormat="MMM d, yyyy"
+                                    placeholderText="Select start date"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    End Date
+                                </label>
+                                <DatePicker
+                                    selected={customEndDate}
+                                    onChange={(date: Date | null) => setCustomEndDate(date)}
+                                    selectsEnd
+                                    startDate={customStartDate}
+                                    endDate={customEndDate}
+                                    minDate={customStartDate || undefined}
+                                    maxDate={getMaxEndDate()}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    dateFormat="MMM d, yyyy"
+                                    placeholderText="Select end date"
+                                />
+                            </div>
+                            <div className="text-xs text-gray-500">
+                                Max range: 30 days
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    onClick={handleApplyCustomRange}
+                                    disabled={!customStartDate || !customEndDate}
+                                    className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                >
+                                    Apply
+                                </button>
+                                <button
+                                    onClick={handleCancelCustomRange}
+                                    className="flex-1 px-3 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Intensity Slider */}

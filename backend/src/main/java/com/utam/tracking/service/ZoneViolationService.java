@@ -131,6 +131,36 @@ public class ZoneViolationService {
     }
 
     /**
+     * Get all violations for export (unpaged).
+     * Task: T055a, T055b
+     */
+    @Transactional(readOnly = true)
+    public List<ZoneViolationDTO> getAllViolationsForExport(
+            String tenantCode,
+            ZonedDateTime startDate,
+            ZonedDateTime endDate,
+            String severity,
+            Boolean acknowledged) {
+
+        List<ZoneViolation> violations;
+
+        if (startDate != null && endDate != null) {
+            violations = violationRepository.findByTenantCodeAndTimestampBetweenOrderByTimestampDesc(
+                tenantCode, startDate, endDate);
+        } else {
+            violations = violationRepository.findByTenantCodeOrderByTimestampDesc(tenantCode);
+        }
+
+        // Apply filters
+        return violations.stream()
+            .filter(v -> severity == null || severity.isEmpty() || 
+                        (v.getSeverity() != null && v.getSeverity().name().equalsIgnoreCase(severity)))
+            .filter(v -> acknowledged == null || v.getAcknowledged().equals(acknowledged))
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Convert entity to DTO.
      */
     private ZoneViolationDTO toDTO(ZoneViolation entity) {

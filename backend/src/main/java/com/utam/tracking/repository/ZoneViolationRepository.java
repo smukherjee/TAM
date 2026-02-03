@@ -124,4 +124,22 @@ public interface ZoneViolationRepository extends JpaRepository<ZoneViolation, UU
             @Param("startTime") ZonedDateTime startTime,
             @Param("endTime") ZonedDateTime endTime
     );
+
+    // ============================================================
+    // Export Support Methods (T055a, T055b)
+    // ============================================================
+
+    /**
+     * Find all violations for a tenant (for export - no pagination)
+     */
+    List<ZoneViolation> findByTenantCodeOrderByTimestampDesc(String tenantCode);
+
+    /**
+     * Find violations within a time range for export (no pagination)
+     */
+    List<ZoneViolation> findByTenantCodeAndTimestampBetweenOrderByTimestampDesc(
+            String tenantCode,
+            ZonedDateTime startTime,
+            ZonedDateTime endTime
+    );
 }

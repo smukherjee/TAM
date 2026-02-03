@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet/dist/leaflet.css';
 import HeatmapLegend from './HeatmapLegend';
+import ZoneBoundariesLayer, { ZoneBoundariesToggle } from './ZoneBoundariesLayer';
 
 /**
  * HeatmapView Component
@@ -111,8 +112,22 @@ const HeatmapView: React.FC<HeatmapViewProps> = ({
     zoom,
     mode = 'activity',
     timeRange = '24h',
-    onCellClick
+    onCellClick,
+    showZoneBoundaries: initialShowZones = false
 }) => {
+    // Zone boundaries visibility state - persisted to localStorage
+    const [showZoneBoundaries, setShowZoneBoundaries] = useState<boolean>(() => {
+        const saved = localStorage.getItem('heatmapZoneBoundariesVisible');
+        return saved !== null ? saved === 'true' : initialShowZones;
+    });
+
+    // Persist zone visibility to localStorage
+    const handleZoneToggle = () => {
+        const newValue = !showZoneBoundaries;
+        setShowZoneBoundaries(newValue);
+        localStorage.setItem('heatmapZoneBoundariesVisible', String(newValue));
+    };
+
     return (
         <div className="relative w-full h-full">
             <MapContainer
@@ -133,8 +148,17 @@ const HeatmapView: React.FC<HeatmapViewProps> = ({
                     onCellClick={onCellClick}
                 />
 
-                {/* TODO: Add ZoneBoundariesLayer if showZoneBoundaries is true */}
+                {/* Zone boundaries layer - conditionally rendered */}
+                {showZoneBoundaries && <ZoneBoundariesLayer />}
             </MapContainer>
+
+            {/* Zone Boundaries Toggle */}
+            <div className="absolute top-4 left-4 z-[1000]">
+                <ZoneBoundariesToggle 
+                    visible={showZoneBoundaries} 
+                    onToggle={handleZoneToggle} 
+                />
+            </div>
 
             {/* Heatmap Legend */}
             <HeatmapLegend

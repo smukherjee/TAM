@@ -116,4 +116,22 @@ public interface MovementDiscrepancyRepository extends JpaRepository<MovementDis
             @Param("startTime") ZonedDateTime startTime,
             @Param("endTime") ZonedDateTime endTime
     );
+
+    // ============================================================
+    // Export Support Methods (T055a, T055b)
+    // ============================================================
+
+    /**
+     * Find all discrepancies for a tenant (for export - no pagination)
+     */
+    List<MovementDiscrepancy> findByTenantCodeOrderByTimestampDesc(String tenantCode);
+
+    /**
+     * Find discrepancies within a time range for export (no pagination)
+     */
+    List<MovementDiscrepancy> findByTenantCodeAndTimestampBetweenOrderByTimestampDesc(
+            String tenantCode,
+            ZonedDateTime startTime,
+            ZonedDateTime endTime
+    );
 }

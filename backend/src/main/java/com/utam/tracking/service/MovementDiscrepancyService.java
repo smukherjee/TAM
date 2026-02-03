@@ -123,6 +123,36 @@ public class MovementDiscrepancyService {
     }
 
     /**
+     * Get all discrepancies for export (unpaged).
+     * Task: T055a, T055b
+     */
+    @Transactional(readOnly = true)
+    public List<MovementDiscrepancyDTO> getAllDiscrepanciesForExport(
+            String tenantCode,
+            ZonedDateTime startDate,
+            ZonedDateTime endDate,
+            String discrepancyType,
+            Boolean acknowledged) {
+
+        List<MovementDiscrepancy> discrepancies;
+
+        if (startDate != null && endDate != null) {
+            discrepancies = discrepancyRepository.findByTenantCodeAndTimestampBetweenOrderByTimestampDesc(
+                tenantCode, startDate, endDate);
+        } else {
+            discrepancies = discrepancyRepository.findByTenantCodeOrderByTimestampDesc(tenantCode);
+        }
+
+        // Apply filters
+        return discrepancies.stream()
+            .filter(d -> discrepancyType == null || discrepancyType.isEmpty() || 
+                        (d.getDiscrepancyType() != null && d.getDiscrepancyType().name().equalsIgnoreCase(discrepancyType)))
+            .filter(d -> acknowledged == null || d.getAcknowledged().equals(acknowledged))
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Convert entity to DTO.
      */
     private MovementDiscrepancyDTO toDTO(MovementDiscrepancy entity) {

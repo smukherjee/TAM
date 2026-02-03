@@ -2,6 +2,7 @@ package com.utam.asset.controller;
 
 import com.utam.asset.dto.HeatmapDataDTO;
 import com.utam.asset.dto.HotspotDetailDTO;
+import com.utam.asset.service.HeatmapExportService;
 import com.utam.asset.service.HeatmapService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,11 +11,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -33,12 +37,14 @@ public class HeatmapController {
     private static final Logger logger = LoggerFactory.getLogger(HeatmapController.class);
 
     private final HeatmapService heatmapService;
+    private final HeatmapExportService heatmapExportService;
 
     // Max date range (30 days as per requirements)
     private static final int MAX_DATE_RANGE_DAYS = 30;
 
-    public HeatmapController(HeatmapService heatmapService) {
+    public HeatmapController(HeatmapService heatmapService, HeatmapExportService heatmapExportService) {
         this.heatmapService = heatmapService;
+        this.heatmapExportService = heatmapExportService;
     }
 
     /**
@@ -270,5 +276,135 @@ public class HeatmapController {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid date format. Use ISO 8601 (YYYY-MM-DD): " + e.getMessage());
         }
+    }
+
+    // ============================================
+    // Export Endpoints (T035)
+    // ============================================
+
+    /**
+     * Export heatmap data as CSV.
+     * <p>
+     * Task: T035 - Heatmap Export Service
+     */
+    @GetMapping("/export/csv")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR', 'OPERATOR')")
+    @Operation(summary = "Export heatmap data as CSV",
+            description = "Exports heatmap data for the specified mode and date range as a CSV file")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "CSV file generated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    public ResponseEntity<byte[]> exportHeatmapCsv(
+            @Parameter(description = "Tenant code", required = true)
+            @RequestParam String tenantCode,
+
+            @Parameter(description = "Heatmap mode: activity, violations, dwell", required = true)
+            @RequestParam String mode,
+
+            @Parameter(description = "Start date (ISO 8601)")
+            @RequestParam(required = false) String startDate,
+
+            @Parameter(description = "End date (ISO 8601)")
+            @RequestParam(required = false) String endDate,
+
+            @Parameter(description = "Grid size (10m, 25m, 50m, 100m)")
+            @RequestParam(defaultValue = "25m") String gridSize) {
+
+        logger.info("GET /api/tracking/heatmap/export/csv - mode={}, tenant={}", mode, tenantCode);
+
+        String effectiveStartDate = startDate != null ? startDate : LocalDate.now().minusDays(7).toString();
+        String effectiveEndDate = endDate != null ? endDate : LocalDate.now().toString();
+        validateDateRange(effectiveStartDate, effectiveEndDate);
+
+        // Get heatmap data based on mode
+        List<HeatmapDataDTO> heatmapData = getHeatmapDataByMode(mode, tenantCode, effectiveStartDate, effectiveEndDate, gridSize);
+
+        // Generate CSV
+        byte[] csvBytes = heatmapExportService.exportHeatmapDataCSV(heatmapData, mode);
+
+        // Generate filename
+        String filename = String.format("heatmap_%s_%s_%s_to_%s.csv",
+                mode, tenantCode, effectiveStartDate, effectiveEndDate);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(csvBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(csvBytes);
+    }
+
+    /**
+     * Export heatmap report as PDF.
+     * <p>
+     * Task: T035 - Heatmap Export Service
+     */
+    @GetMapping("/export/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR', 'OPERATOR')")
+    @Operation(summary = "Export heatmap report as PDF",
+            description = "Generates a PDF report with heatmap statistics, top hotspots, and summary")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "PDF report generated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    public ResponseEntity<byte[]> exportHeatmapPdf(
+            @Parameter(description = "Tenant code", required = true)
+            @RequestParam String tenantCode,
+
+            @Parameter(description = "Heatmap mode: activity, violations, dwell", required = true)
+            @RequestParam String mode,
+
+            @Parameter(description = "Start date (ISO 8601)")
+            @RequestParam(required = false) String startDate,
+
+            @Parameter(description = "End date (ISO 8601)")
+            @RequestParam(required = false) String endDate,
+
+            @Parameter(description = "Grid size (10m, 25m, 50m, 100m)")
+            @RequestParam(defaultValue = "25m") String gridSize) {
+
+        logger.info("GET /api/tracking/heatmap/export/pdf - mode={}, tenant={}", mode, tenantCode);
+
+        String effectiveStartDate = startDate != null ? startDate : LocalDate.now().minusDays(7).toString();
+        String effectiveEndDate = endDate != null ? endDate : LocalDate.now().toString();
+        validateDateRange(effectiveStartDate, effectiveEndDate);
+
+        // Get heatmap data based on mode
+        List<HeatmapDataDTO> heatmapData = getHeatmapDataByMode(mode, tenantCode, effectiveStartDate, effectiveEndDate, gridSize);
+
+        // Generate PDF report
+        byte[] pdfBytes = heatmapExportService.generateHeatmapReportPDF(
+                heatmapData, mode, tenantCode, effectiveStartDate, effectiveEndDate, gridSize);
+
+        // Generate filename
+        String filename = String.format("heatmap_report_%s_%s_%s_to_%s.pdf",
+                mode, tenantCode, effectiveStartDate, effectiveEndDate);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+
+    /**
+     * Helper method to get heatmap data by mode.
+     */
+    private List<HeatmapDataDTO> getHeatmapDataByMode(String mode, String tenantCode,
+                                                       String startDate, String endDate, String gridSize) {
+        return switch (mode.toLowerCase()) {
+            case "activity" -> heatmapService.getActivityHeatmap(tenantCode, startDate, endDate, gridSize);
+            case "violations" -> heatmapService.getViolationHeatmap(tenantCode, startDate, endDate, gridSize);
+            case "dwell" -> heatmapService.getDwellHeatmap(tenantCode, startDate, endDate, gridSize);
+            default -> throw new IllegalArgumentException("Invalid mode: " + mode + ". Must be 'activity', 'violations', or 'dwell'");
+        };
     }
 }
