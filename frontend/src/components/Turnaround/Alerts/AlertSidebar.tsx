@@ -18,8 +18,8 @@ const AlertSidebar: React.FC<AlertSidebarProps> = ({ alerts }) => {
                     alerts.map(alert => (
                         <div key={alert.id} className={`p-3 rounded border-l-4 ${getSeverityColor(alert.severity)} bg-gray-700`}>
                             <div className="flex justify-between items-start mb-1">
-                                <span className="font-bold text-white text-sm">{alert.alertType}</span>
-                                <span className="text-xs text-gray-400">{new Date(alert.createdAt).toLocaleTimeString()}</span>
+                                <span className="font-bold text-white text-sm">{alert.alertType || alert.type}</span>
+                                <span className="text-xs text-gray-400">{alert.createdAt || alert.timestamp ? new Date(alert.createdAt || alert.timestamp || '').toLocaleTimeString() : ''}</span>
                             </div>
                             <p className="text-sm text-gray-300">{alert.message}</p>
                         </div>

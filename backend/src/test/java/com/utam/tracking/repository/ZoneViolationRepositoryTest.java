@@ -77,7 +77,7 @@ class ZoneViolationRepositoryTest {
                 .violationType("OVERSTAY")
                 .severity(ViolationSeverity.HIGH)
                 .acknowledged(true)
-                .acknowledgedBy("admin@vidp.airport")
+                .acknowledgedBy(UUID.randomUUID())
                 .acknowledgedAt(now.minusMinutes(30))
                 .tenantCode(tenantCode)
                 .timestamp(now.minusHours(2))

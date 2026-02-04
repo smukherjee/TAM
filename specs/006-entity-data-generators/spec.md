@@ -414,6 +414,18 @@ As a system user, I want all ground vehicle and asset movements to stay within a
   - Time remaining to resolve
 - **FR-067**: Alerts MUST show cost impact using standard rates ($100-150/minute delay)
 - **FR-068**: Critical alerts MUST include network cascade impact (downstream flights affected)
+- **FR-084**: Alert de-duplication: Same condition alerts MUST NOT be regenerated within 30 minutes
+- **FR-085**: Cascade recalculation MUST run in batch mode every 15 minutes
+- **FR-086**: For MVP demo, alert notification channel is UI only (no email/SMS/push)
+- **FR-087**: For MVP demo, alert acknowledgement and escalation features are deferred
+- **FR-088**: Alert severity distribution SHOULD be random for demo purposes
+- **FR-089**: Alert generation frequency MUST be real-time based on simulated turnaround data
+- **FR-095**: Alert trigger conditions and thresholds SHOULD be random for demo purposes but MUST be configurable post-MVP
+- **FR-096**: Alert lifecycle states MUST include: New, Acknowledged, Resolved, Expired
+- **FR-097**: Vehicle Delay Risk alert threshold: vehicle late by 5+ minutes
+- **FR-098**: Task Behind Schedule alert threshold: time variance +5 minutes
+- **FR-099**: Milestone Missed alert threshold: 5 minutes grace period
+- **FR-100**: Alert content (recommended actions, time remaining) SHOULD be random for demo but MUST be configurable post-MVP
 
 #### Financial Impact Tracking
 
@@ -427,6 +439,18 @@ As a system user, I want all ground vehicle and asset movements to stay within a
   - Additional ATMs enabled
   - Annualized revenue impact
 - **FR-074**: Financial data MUST demonstrate the $11M+ annual opportunity from 5-minute turnaround improvement
+- **FR-090**: For MVP demo, currency display and timezone handling for financial calculations are deferred
+- **FR-091**: For MVP demo, financial calculation auditability UI is deferred
+- **FR-092**: For MVP demo, financial summary chart/export features are deferred
+- **FR-093**: For MVP demo, historical comparison features (vs yesterday/week/month) are deferred
+- **FR-094**: Financial impact values SHOULD use random variation within defined ranges for demo realism
+- **FR-102**: For MVP demo, all financial calculation clarity items (rate rules, slot bands, methodology) are deferred
+- **FR-103**: For MVP demo, all network cascade requirements (algorithms, depth, passenger/crew impacts) are deferred
+- **FR-104**: For MVP demo, financial summary requirements (timezone, ATM methodology, annualization) are deferred
+- **FR-105**: For MVP demo, all edge cases and exception scenarios are deferred
+- **FR-106**: For MVP demo, acceptance criteria measurability validation is deferred (random data for demo)
+- **FR-107**: For MVP demo, dependency and assumption validation is deferred
+- **FR-108**: For MVP demo, consistency checks are deferred (random data acceptable)
 
 ### Key Entities
 
@@ -506,7 +530,7 @@ The following entities require data generators:
 
 ## Assumptions
 
-- Java 17+ is used with Spring Boot 3.x framework
+- Java 21+ is used with Spring Boot 3.x framework (per constitution Principle IV)
 - Generators will be placed in `/backend/src/main/java/com/utam/simulation/` package
 - PostGIS extension is available for spatial data (Point, Polygon types)
 - Existing Mock*Generator classes provide patterns to follow

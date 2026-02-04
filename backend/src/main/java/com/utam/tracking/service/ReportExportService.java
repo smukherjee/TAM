@@ -49,12 +49,16 @@ public class ReportExportService {
     private static final Logger logger = LoggerFactory.getLogger(ReportExportService.class);
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
+    
+    @SuppressWarnings("unused") // Reserved for filename generation feature
     private static final DateTimeFormatter FILENAME_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     // PDF Fonts
     private static final Font TITLE_FONT = new Font(Font.HELVETICA, 18, Font.BOLD, Color.DARK_GRAY);
     private static final Font HEADER_FONT = new Font(Font.HELVETICA, 10, Font.BOLD, Color.WHITE);
     private static final Font CELL_FONT = new Font(Font.HELVETICA, 9, Font.NORMAL, Color.BLACK);
+    
+    @SuppressWarnings("unused") // Reserved for PDF subtitle sections
     private static final Font SUBTITLE_FONT = new Font(Font.HELVETICA, 12, Font.BOLD, Color.DARK_GRAY);
 
     // Severity Colors
@@ -89,7 +93,9 @@ public class ReportExportService {
 
             // Create header styles
             CellStyle headerStyle = createHeaderStyle(workbook);
+            @SuppressWarnings("unused") // Style prepared for date column formatting
             CellStyle dateStyle = createDateStyle(workbook);
+            @SuppressWarnings("unused") // Style prepared for severity column formatting
             CellStyle severityStyle = createSeverityStyle(workbook);
 
             // Title row

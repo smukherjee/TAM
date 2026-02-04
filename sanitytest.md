@@ -29,21 +29,25 @@
 **Purpose**: Core API and business logic
 
 ### Health Check
-- [ ] Visit http://localhost:8080/actuator/health
+
+- [ ] Visit <http://localhost:8080/actuator/health>
 - [ ] Verify JSON response shows `"status": "UP"`
 - [ ] Check all components: db, redis, diskSpace, ssl are "UP"
 
 ### API Endpoints
+
 - [ ] Test basic endpoint: `curl http://localhost:8080/api/flights`
 - [ ] Verify JSON response contains flight data or empty array
 - [ ] Test another endpoint: `curl http://localhost:8080/api/alerts`
 - [ ] Verify JSON response contains alert data or empty array
 
 ### Java Version Verification
+
 - [ ] Run: `docker exec tam-backend-1 java -version`
 - [ ] Confirm OpenJDK 21.x.x is running
 
 ### Manual Simulation Testing (if auto-start fails)
+
 - [ ] Run ADS-B simulation: `./simulate_ba249.sh` (simulates flight data)
 - [ ] Run Telit simulation: `./simulate_ek500.sh` (simulates vehicle data)
 - [ ] Verify data ingestion: Check that data appears in NiFi and flows to Kafka topics
@@ -54,16 +58,19 @@
 **Purpose**: Web user interface
 
 ### Basic Access
-- [ ] Visit http://localhost:3000 in browser
+
+- [ ] Visit <http://localhost:3000> in browser
 - [ ] Verify page loads without errors
 - [ ] Check browser console for JavaScript errors
 
 ### UI Elements
+
 - [ ] Verify main navigation loads
 - [ ] Test responsive design on different screen sizes
 - [ ] Check for any broken images or links
 
 ### API Integration
+
 - [ ] Perform actions that call backend APIs
 - [ ] Verify data loads from backend
 
@@ -72,16 +79,19 @@
 **Port**: 5432  
 **Purpose**: Primary data storage with time-series extensions
 
-### Connection Test
+### Database Connection Test
+
 - [ ] Run: `docker exec -it tam-timescaledb-1 psql -U postgres -d utam`
 - [ ] Verify connection succeeds
 
 ### Schema Verification
+
 - [ ] List tables: `\dt`
 - [ ] Verify expected tables exist (flights, vehicles, alerts, etc.)
 - [ ] Check TimescaleDB extensions: `SELECT * FROM pg_extension WHERE extname = 'timescaledb';`
 
 ### Data Integrity
+
 - [ ] Run basic queries on sample data
 - [ ] Verify foreign key constraints
 - [ ] Check for any corrupted data
@@ -91,16 +101,19 @@
 **Port**: 6379  
 **Purpose**: High-performance caching layer
 
-### Connection Test
+### Redis Connection Test
+
 - [ ] Run: `docker exec -it tam-redis-1 redis-cli ping`
 - [ ] Verify "PONG" response
 
 ### Basic Operations
+
 - [ ] Set test key: `SET test_key "hello"`
 - [ ] Get test key: `GET test_key`
 - [ ] Verify value returns correctly
 
 ### Persistence
+
 - [ ] Check if data persists across container restarts
 - [ ] Verify Redis configuration for persistence
 
@@ -110,15 +123,18 @@
 **Purpose**: S3-compatible object storage for archival
 
 ### Console Access
-- [ ] Visit http://localhost:9001
+
+- [ ] Visit <http://localhost:9001>
 - [ ] Login with default credentials (minio/minio123)
 - [ ] Verify buckets list loads
 
 ### API Test
+
 - [ ] Run: `curl http://localhost:9000/minio/health/live`
 - [ ] Verify "OK" response
 
 ### Bucket Operations
+
 - [ ] Create test bucket via console
 - [ ] Upload test file
 - [ ] Download and verify file integrity
@@ -129,17 +145,20 @@
 **Port**: 9092  
 **Purpose**: Event streaming and messaging
 
-### Connection Test
+### Kafka Connection Test
+
 - [ ] Run: `docker exec -it tam-redpanda-1 rpk cluster info`
 - [ ] Verify cluster is healthy
 
 ### REST API Tests
+
 - [ ] Check topics via API: `curl http://localhost:18082/topics`
 - [ ] Verify expected topics exist: flight-raw-json, vehicle-raw-json, alerts-json
 - [ ] Verify topic count matches expectations (at least 10 topics)
 - [ ] **Note**: REST API provides programmatic access alternative to CLI tools
 
 ### REST API Message Verification
+
 - [ ] **Note**: Message consumption via REST API may have limited support in current Redpanda version
 - [ ] Use CLI tools for detailed message inspection: `docker exec -it tam-redpanda-1 rpk topic consume flight-raw-json --num 5`
 - [ ] Verify message format: JSON with icao, lat, lon fields
@@ -151,15 +170,18 @@
 **Purpose**: Stream processing for real-time analytics
 
 ### REST API Test
-- [ ] Visit http://localhost:8088/info
+
+- [ ] Visit <http://localhost:8088/info>
 - [ ] Verify ksqlDB server info returns
 
 ### Query Test
+
 - [ ] Run: `docker exec -it tam-ksqldb-cli-1 ksql http://ksqldb-server:8088`
 - [ ] Execute: `SHOW STREAMS;`
 - [ ] Verify streams are listed
 
 ### Stream Processing
+
 - [ ] Test tenant ID extraction from messages
 - [ ] Verify domain-prefixed topics are processed correctly
 
@@ -169,11 +191,13 @@
 **Purpose**: Data ingestion and routing
 
 ### Web UI Access
-- [ ] Visit http://localhost:8091/nifi
+
+- [ ] Visit <http://localhost:8091/nifi>
 - [ ] Verify NiFi canvas loads
 - [ ] Check for any flow errors
 
-### REST API Tests
+### NiFi REST API Tests
+
 - [ ] Check NiFi status: `curl http://localhost:8091/nifi-api/flow/status`
 - [ ] Verify flow is running: Check "controllerStatus" shows "running"
 - [ ] Check processors: `curl http://localhost:8091/nifi-api/flow/process-groups/root/processors`
@@ -183,6 +207,7 @@
 - [ ] **Note**: API checks provide programmatic verification alternative to UI inspection
 
 ### Data Ingestion Endpoints
+
 - [ ] Test ADS-B data endpoint: `curl -X POST http://localhost:8090/contentListener -H "Content-Type: application/json" -d '{"icao": "ABC123", "lat": 40.7128, "lon": -74.0060}'`
 - [ ] Test Telit data endpoint: `curl -X POST http://localhost:8090/contentListener -H "Content-Type: application/json" -d '{"vehicleId": "V001", "lat": 40.7128, "lon": -74.0060}'`
 - [ ] Verify data reaches Kafka: Check that messages appear in flight-raw-json and vehicle-raw-json topics
@@ -193,11 +218,13 @@
 **Purpose**: Visualization and monitoring dashboards
 
 ### Access
-- [ ] Visit http://localhost:3001
+
+- [ ] Visit <http://localhost:3001>
 - [ ] Login with admin/admin
 - [ ] Verify dashboard loads
 
 ### Dashboards
+
 - [ ] Check infrastructure metrics dashboard
 - [ ] Verify tenant variable functionality
 - [ ] Test cache metrics panels
@@ -206,6 +233,7 @@
 - [ ] Test Turnaround Performance dashboard queries
 
 ### Data Sources
+
 - [ ] Verify Prometheus data source connection
 - [ ] Check Loki logs integration
 - [ ] Test dashboard refresh and updates
@@ -216,16 +244,19 @@
 **Purpose**: Metrics collection and alerting
 
 ### Web UI
-- [ ] Visit http://localhost:9090
+
+- [ ] Visit <http://localhost:9090>
 - [ ] Verify targets page shows all services up
 - [ ] Check metrics collection
 
-### Query Test
+### Prometheus Query Test
+
 - [ ] Query: `up{job="backend"}`
 - [ ] Verify backend metrics are collected
 - [ ] Test custom metrics (cache hits/misses, tenant counters)
 
 ### Alerting
+
 - [ ] Check alert rules configuration
 - [ ] Verify alert manager integration
 
@@ -234,17 +265,20 @@
 **Port**: 8089  
 **Purpose**: Business intelligence and data exploration
 
-### Access
-- [ ] Visit http://localhost:8089
+### Superset Access
+
+- [ ] Visit <http://localhost:8089>
 - [ ] Login with admin/admin
 - [ ] Verify dashboard loads
 
 ### Data Connections
+
 - [ ] Check TimescaleDB connection
 - [ ] Verify datasets are accessible
 - [ ] Test chart creation
 
-### Dashboards
+### Superset Dashboards
+
 - [ ] Review existing dashboards
 - [ ] Test data filtering and drill-down
 
@@ -253,11 +287,13 @@
 **Port**: 3100  
 **Purpose**: Log aggregation
 
-### API Test
+### Loki API Test
+
 - [ ] Run: `curl http://localhost:3100/ready`
 - [ ] Verify "ready" response
 
 ### Log Queries
+
 - [ ] Test log queries in Grafana Explore
 - [ ] Verify logs from all services are ingested
 - [ ] Check log retention and querying performance
@@ -267,12 +303,14 @@
 **Port**: 8090  
 **Purpose**: Kafka cluster management UI
 
-### Access
-- [ ] Visit http://localhost:8090
+### Redpanda Console Access
+
+- [ ] Visit <http://localhost:8090>
 - [ ] Verify topics and messages display
 - [ ] Check consumer group status
 
 ### Monitoring
+
 - [ ] Review topic throughput metrics
 - [ ] Check for message lag
 - [ ] Verify schema registry integration
@@ -280,6 +318,7 @@
 ## Integration Tests
 
 ### End-to-End Data Flow
+
 - [ ] Start simulation: Verify backend auto-starts simulation or run manual scripts
 - [ ] Monitor NiFi ingestion: Check that data is received on NiFi endpoints
 - [ ] Verify Kafka publishing: Confirm messages appear in flight-raw-json and vehicle-raw-json topics
@@ -288,11 +327,13 @@
 - [ ] Confirm frontend display: Check that flight/vehicle data appears in dashboard
 
 ### Tenant Isolation
+
 - [ ] Test multi-tenant data separation
 - [ ] Verify tenant-specific buckets in MinIO
 - [ ] Check tenant headers in Kafka messages
 
 ### Archival System
+
 - [ ] Trigger domain event archiving
 - [ ] Verify Parquet files created in tenant buckets
 - [ ] Check lifecycle policies applied
@@ -300,11 +341,13 @@
 ## Performance Verification
 
 ### Load Testing
+
 - [ ] Run simulated data ingestion
 - [ ] Monitor system metrics in Grafana
 - [ ] Verify no performance degradation
 
 ### Resource Usage
+
 - [ ] Check container resource usage
 - [ ] Monitor memory and CPU consumption
 - [ ] Verify auto-scaling if configured
@@ -321,9 +364,9 @@
 ## Troubleshooting
 
 If any check fails:
+
 1. Check container logs: `docker-compose -f docker-compose.dev.yml logs [service]`
 2. Verify network connectivity between containers
 3. Check configuration files for syntax errors
 4. Restart failed services: `docker-compose -f docker-compose.dev.yml restart [service]`
-5. Review docker-compose.dev.yml for port conflicts or missing dependencies</content>
-<parameter name="filePath">/Users/sujoymukherjee/code/TAM/sanitytest.md
+5. Review docker-compose.dev.yml for port conflicts or missing dependencies

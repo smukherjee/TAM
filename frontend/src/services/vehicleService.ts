@@ -12,9 +12,10 @@ export interface Vehicle {
   speed: number;
   status: string;
   vehicle_name: string;
-  company: string;
-  location: string;
-  ign: string;
+  // Fields below are optional - may not be present from backend
+  company?: string;
+  location?: string;
+  ign?: string;
 }
 
 export const getVehicles = async (): Promise<Vehicle[]> => {

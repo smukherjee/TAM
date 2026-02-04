@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -76,7 +75,7 @@ public class MovementTrailIngestionService {
         ZoneDetectionResult zoneResult = detectZones(location, tenantCode);
 
         // Step 2: Write movement trail
-        AssetMovementTrail trail = writeMovementTrail(
+        writeMovementTrail(
                 assetId, assetIdentifier, location, latitude, longitude,
                 speed, heading, status, timestamp, tenantCode,
                 zoneResult);

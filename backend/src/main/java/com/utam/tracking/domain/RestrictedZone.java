@@ -43,12 +43,16 @@ public class RestrictedZone {
     @Column(name = "zone_type", length = 20, nullable = false)
     private String zoneType; // PROHIBITED, RESTRICTED, CONTROLLED, MAINTENANCE
 
-    @Column(name = "boundary", columnDefinition = "geometry(Polygon,4326)", nullable = false)
+    @Column(name = "geometry", columnDefinition = "geometry(Polygon,4326)", nullable = false)
     private Polygon boundary;
 
     @Column(name = "authorized_asset_categories", columnDefinition = "text[]")
     @JdbcTypeCode(SqlTypes.ARRAY)
     private String[] authorizedAssetCategories;
+
+    @Column(name = "authorized_asset_ids", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private String[] authorizedAssetIds;
 
     @Column(name = "description", length = 500)
     private String description;

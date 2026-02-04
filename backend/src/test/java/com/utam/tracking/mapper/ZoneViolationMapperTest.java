@@ -62,7 +62,7 @@ class ZoneViolationMapperTest {
                 .durationSeconds(300)
                 .timestamp(timestamp)
                 .acknowledged(true)
-                .acknowledgedBy("admin@airport.com")
+                .acknowledgedBy(UUID.randomUUID())
                 .acknowledgedAt(acknowledgedAt)
                 .resolutionNotes("Authorized after verification")
                 .tenantCode("VIDP")

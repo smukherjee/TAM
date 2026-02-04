@@ -11,8 +11,8 @@ public class TagController {
 
     @GetMapping
     public ApiResponse<List<Object>> getAllTags(@RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
-        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
-        // TODO: Implement tags repository and service
+        // TODO: Implement tenant-specific tags repository and service
+        // tenantCode: icaoCode != null ? icaoCode : "VIDP"
         return ApiResponse.success(Collections.emptyList());
     }
 }

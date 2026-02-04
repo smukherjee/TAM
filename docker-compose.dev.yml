@@ -163,6 +163,9 @@ services:
       MINIO_SECRET_KEY: minioadmin
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SIMULATION_ADSB_URL: http://nifi:8092/adsb-ingest
+      SIMULATION_VEHICLE_URL: http://nifi:8093/vehicle-ingest
+      SIMULATION_CV_URL: http://nifi:8094/cv-event-ingest
     depends_on:
       timescaledb:
         condition: service_healthy
@@ -248,6 +251,7 @@ services:
     volumes:
       - superset_data:/app/superset_home
       - ./infrastructure/superset/superset_config.py:/app/pythonpath/superset_config.py
+      - ./infrastructure/superset:/bootstrap
     depends_on:
       timescaledb:
         condition: service_healthy
@@ -258,6 +262,23 @@ services:
       superset init &&
       superset run -h 0.0.0.0 -p 8088
       "
+
+  # Sidecar to automatically provision Superset and seed demo data after start
+  superset-bootstrap:
+    image: alpine:3.19
+    depends_on:
+      superset:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - ./infrastructure/superset/create-all-reports.sh:/scripts/create-all-reports.sh:ro
+      - ./infrastructure/superset/sidecar-bootstrap.sh:/scripts/sidecar-bootstrap.sh:ro
+      - ./infrastructure/db/init/11-demo-seed.sql:/seeds/11-demo-seed.sql:ro
+    entrypoint: ["/bin/sh","/scripts/sidecar-bootstrap.sh"]
+
+  # One-shot bootstrap removed (duplicate)
+  # superset-bootstrap: ... (merged above)
 
   # ============================================
   # DOCUMENTATION - SchemaSpy

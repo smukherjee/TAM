@@ -1,0 +1,90 @@
+{
+  "tenantCode": "YBBN",
+  "airportName": "Brisbane Airport",
+  "city": "Brisbane",
+  "country": "Australia",
+  "timezone": "Australia/Brisbane",
+  "center": {
+    "latitude": -27.3842,
+    "longitude": 153.1175
+  },
+  "boundary": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [153.0900, -27.4100],
+        [153.1450, -27.4100],
+        [153.1450, -27.3600],
+        [153.0900, -27.3600],
+        [153.0900, -27.4100]
+      ]
+    ]
+  },
+  "stands": [
+    {"standId": "D1", "name": "Domestic Stand 1", "latitude": -27.3855, "longitude": 153.1200, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D2", "name": "Domestic Stand 2", "latitude": -27.3858, "longitude": 153.1205, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D3", "name": "Domestic Stand 3", "latitude": -27.3861, "longitude": 153.1210, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D4", "name": "Domestic Stand 4", "latitude": -27.3864, "longitude": 153.1215, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D5", "name": "Domestic Stand 5", "latitude": -27.3867, "longitude": 153.1220, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D6", "name": "Domestic Stand 6", "latitude": -27.3870, "longitude": 153.1225, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D7", "name": "Domestic Stand 7", "latitude": -27.3873, "longitude": 153.1230, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "D8", "name": "Domestic Stand 8", "latitude": -27.3876, "longitude": 153.1235, "terminalId": "DOM", "standType": "CONTACT"},
+    {"standId": "DR1", "name": "Domestic Remote 1", "latitude": -27.3835, "longitude": 153.1240, "terminalId": "DOM", "standType": "REMOTE"},
+    {"standId": "DR2", "name": "Domestic Remote 2", "latitude": -27.3838, "longitude": 153.1245, "terminalId": "DOM", "standType": "REMOTE"},
+    {"standId": "I1", "name": "International Stand 1", "latitude": -27.3810, "longitude": 153.1130, "terminalId": "INT", "standType": "CONTACT"},
+    {"standId": "I2", "name": "International Stand 2", "latitude": -27.3813, "longitude": 153.1135, "terminalId": "INT", "standType": "CONTACT"},
+    {"standId": "I3", "name": "International Stand 3", "latitude": -27.3816, "longitude": 153.1140, "terminalId": "INT", "standType": "CONTACT"},
+    {"standId": "I4", "name": "International Stand 4", "latitude": -27.3819, "longitude": 153.1145, "terminalId": "INT", "standType": "CONTACT"},
+    {"standId": "I5", "name": "International Stand 5", "latitude": -27.3822, "longitude": 153.1150, "terminalId": "INT", "standType": "CONTACT"},
+    {"standId": "I6", "name": "International Stand 6", "latitude": -27.3825, "longitude": 153.1155, "terminalId": "INT", "standType": "CONTACT"},
+    {"standId": "IR1", "name": "International Remote 1", "latitude": -27.3795, "longitude": 153.1160, "terminalId": "INT", "standType": "REMOTE"},
+    {"standId": "IR2", "name": "International Remote 2", "latitude": -27.3798, "longitude": 153.1165, "terminalId": "INT", "standType": "REMOTE"},
+    {"standId": "C1", "name": "Cargo Stand 1", "latitude": -27.3920, "longitude": 153.1080, "terminalId": "CGO", "standType": "CONTACT"},
+    {"standId": "C2", "name": "Cargo Stand 2", "latitude": -27.3923, "longitude": 153.1085, "terminalId": "CGO", "standType": "CONTACT"}
+  ],
+  "depots": [
+    {"depotType": "FUEL", "name": "Fuel Farm Main", "latitude": -27.3950, "longitude": 153.1050, "capacity": 25},
+    {"depotType": "FUEL", "name": "Fuel Farm East", "latitude": -27.3945, "longitude": 153.1250, "capacity": 15},
+    {"depotType": "BAGGAGE", "name": "Baggage Hall Domestic", "latitude": -27.3860, "longitude": 153.1195, "capacity": 35},
+    {"depotType": "BAGGAGE", "name": "Baggage Hall International", "latitude": -27.3815, "longitude": 153.1125, "capacity": 30},
+    {"depotType": "CATERING", "name": "Flight Catering Centre", "latitude": -27.3980, "longitude": 153.1100, "capacity": 20},
+    {"depotType": "GPU", "name": "GPU Pool Domestic", "latitude": -27.3858, "longitude": 153.1190, "capacity": 20},
+    {"depotType": "GPU", "name": "GPU Pool International", "latitude": -27.3812, "longitude": 153.1120, "capacity": 15},
+    {"depotType": "PUSHBACK", "name": "Pushback Depot Central", "latitude": -27.3870, "longitude": 153.1180, "capacity": 18},
+    {"depotType": "WATER", "name": "Water Service Depot", "latitude": -27.3930, "longitude": 153.1070, "capacity": 10},
+    {"depotType": "LAVATORY", "name": "Lavatory Service Depot", "latitude": -27.3932, "longitude": 153.1075, "capacity": 10},
+    {"depotType": "STAIRS", "name": "Passenger Stairs Pool", "latitude": -27.3875, "longitude": 153.1175, "capacity": 12},
+    {"depotType": "BUS", "name": "Bus Depot", "latitude": -27.3900, "longitude": 153.1150, "capacity": 12},
+    {"depotType": "CARGO", "name": "Cargo Handling Facility", "latitude": -27.3925, "longitude": 153.1090, "capacity": 12},
+    {"depotType": "MAINTENANCE", "name": "Engineering Hangar", "latitude": -27.3960, "longitude": 153.1020, "capacity": 20}
+  ],
+  "vehicleTypes": [
+    {"code": "FUEL", "name": "Fuel Truck", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 18, "defaultDepotType": "FUEL", "iconColor": "#FF6B00"},
+    {"code": "CATERING", "name": "Catering High-Lift", "minSpeed": 5, "maxSpeed": 25, "defaultQuantity": 12, "defaultDepotType": "CATERING", "iconColor": "#4CAF50"},
+    {"code": "BAGGAGE_TUG", "name": "Baggage Tractor", "minSpeed": 10, "maxSpeed": 35, "defaultQuantity": 28, "defaultDepotType": "BAGGAGE", "iconColor": "#2196F3"},
+    {"code": "BAGGAGE_CART", "name": "Baggage Cart", "minSpeed": 0, "maxSpeed": 0, "defaultQuantity": 90, "defaultDepotType": "BAGGAGE", "iconColor": "#90CAF9"},
+    {"code": "BELT_LOADER", "name": "Belt Loader", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 22, "defaultDepotType": "BAGGAGE", "iconColor": "#3F51B5"},
+    {"code": "GPU", "name": "Ground Power Unit", "minSpeed": 5, "maxSpeed": 25, "defaultQuantity": 18, "defaultDepotType": "GPU", "iconColor": "#FFC107"},
+    {"code": "PUSHBACK", "name": "Pushback Tug", "minSpeed": 5, "maxSpeed": 15, "defaultQuantity": 14, "defaultDepotType": "PUSHBACK", "iconColor": "#9C27B0"},
+    {"code": "STAIRS", "name": "Passenger Stairs", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 8, "defaultDepotType": "STAIRS", "iconColor": "#607D8B"},
+    {"code": "WATER", "name": "Water Service Truck", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 6, "defaultDepotType": "WATER", "iconColor": "#00BCD4"},
+    {"code": "LAVATORY", "name": "Lavatory Service Truck", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 6, "defaultDepotType": "LAVATORY", "iconColor": "#795548"},
+    {"code": "DEICING", "name": "De-icing Truck", "minSpeed": 10, "maxSpeed": 25, "defaultQuantity": 2, "defaultDepotType": "MAINTENANCE", "iconColor": "#E91E63"},
+    {"code": "ASU", "name": "Air Start Unit", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 4, "defaultDepotType": "MAINTENANCE", "iconColor": "#FF5722"},
+    {"code": "BUS", "name": "Passenger Bus", "minSpeed": 10, "maxSpeed": 40, "defaultQuantity": 8, "defaultDepotType": "BUS", "iconColor": "#009688"},
+    {"code": "CARGO", "name": "Cargo Loader", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 8, "defaultDepotType": "CARGO", "iconColor": "#8BC34A"},
+    {"code": "AMBULIFT", "name": "Ambulift Vehicle", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 2, "defaultDepotType": "MAINTENANCE", "iconColor": "#F44336"}
+  ],
+  "airlines": [
+    {"code": "QF", "name": "Qantas", "iata": "QF", "icao": "QFA"},
+    {"code": "VA", "name": "Virgin Australia", "iata": "VA", "icao": "VOZ"},
+    {"code": "JQ", "name": "Jetstar", "iata": "JQ", "icao": "JST"},
+    {"code": "TT", "name": "Tigerair Australia", "iata": "TT", "icao": "TGW"},
+    {"code": "NZ", "name": "Air New Zealand", "iata": "NZ", "icao": "ANZ"},
+    {"code": "SQ", "name": "Singapore Airlines", "iata": "SQ", "icao": "SIA"},
+    {"code": "CX", "name": "Cathay Pacific", "iata": "CX", "icao": "CPA"},
+    {"code": "EK", "name": "Emirates", "iata": "EK", "icao": "UAE"},
+    {"code": "MH", "name": "Malaysia Airlines", "iata": "MH", "icao": "MAS"},
+    {"code": "FJ", "name": "Fiji Airways", "iata": "FJ", "icao": "FJI"}
+  ]
+}

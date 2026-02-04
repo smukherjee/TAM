@@ -1,6 +1,7 @@
 package com.utam.simulation;
 
 import com.utam.model.Vehicle;
+import com.utam.simulation.config.SimulationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ public class MockTelitGenerator {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
     private final io.micrometer.core.instrument.Counter vehicleCounter;
+    private final SimulationConfig simulationConfig;
 
     @Value("${simulation.vehicle-url}")
     private String ingestionUrl;
@@ -31,14 +33,18 @@ public class MockTelitGenerator {
     private final String icao = "VIDP";
 
     private static class VehicleConfig {
-        String no;
-        String name;
-        String type;
+        final String no;
+        final String name;
+        final String type;
 
         VehicleConfig(String no, String name, String type) {
             this.no = no;
             this.name = name;
             this.type = type;
+        }
+        
+        String getName() {
+            return name;
         }
     }
 
@@ -50,8 +56,9 @@ public class MockTelitGenerator {
             new VehicleConfig("DL1GC0005", "Baggage 1", "Baggage Loader")
     );
 
-    public MockTelitGenerator(io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockTelitGenerator(io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {
         this.restTemplate = new RestTemplate();
+        this.simulationConfig = simulationConfig;
         this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulation.vehicles.generated")
                 .description("Number of simulated vehicle events")
                 .register(registry);
@@ -59,6 +66,11 @@ public class MockTelitGenerator {
 
     @Scheduled(fixedRate = 3000) // Every 3 seconds
     public void generateVehicleData() {
+        // Respect simulation config - only generate if enabled and continuous mode is on
+        if (!simulationConfig.isEnabled() || !simulationConfig.isContinuousEnabled()) {
+            return;
+        }
+
         VehicleConfig config = configs.get(random.nextInt(configs.size()));
 
         Vehicle vehicle = new Vehicle();
@@ -86,7 +98,7 @@ public class MockTelitGenerator {
         // vehicle.setIgn("ON"); // Removed from entity
         // vehicle.setLocation("IGIA, New Delhi"); // Removed from entity
 
-        log.info("Generated vehicle data: {}", vehicle);
+        log.info("Generated vehicle data for {}: {}", config.getName(), vehicle);
 
         try {
             restTemplate.postForObject(ingestionUrl, Collections.singletonList(vehicle), Void.class);

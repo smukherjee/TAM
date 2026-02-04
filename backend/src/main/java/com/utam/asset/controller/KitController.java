@@ -11,8 +11,7 @@ public class KitController {
 
     @GetMapping
     public ApiResponse<List<Object>> getAllKits(@RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
-        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
-        // TODO: Implement kits repository and service
+        // TODO: Use icaoCode for tenant filtering when implementing kits repository and service
         return ApiResponse.success(Collections.emptyList());
     }
 }

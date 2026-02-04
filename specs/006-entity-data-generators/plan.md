@@ -200,6 +200,8 @@ curl http://localhost:8080/actuator/prometheus | grep simulator
 
 ## Phase 2: Implementation Phases
 
+> **Note**: This section provides a summary. See [tasks.md](tasks.md) for the authoritative detailed breakdown (94 tasks).
+
 ### Phase 2.1: Core Infrastructure (Week 1)
 
 | Task | Description | Files |

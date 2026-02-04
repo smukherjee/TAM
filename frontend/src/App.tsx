@@ -23,6 +23,11 @@ const RestrictedZoneReportPage = lazy(() => import('./pages/RestrictedZoneReport
 const MovementDiscrepancyReportPage = lazy(() => import('./pages/MovementDiscrepancyReportPage'));
 const MovementTrailPage = lazy(() => import('./pages/MovementTrailPage'));
 
+// Lazy-loaded Admin Pages
+const DataGeneratorAdminPage = lazy(() => import('./components/admin/DataGeneratorAdminPage'));
+const ZoneEditorPage = lazy(() => import('./pages/admin/ZoneEditorPage'));
+const PathEditorPage = lazy(() => import('./pages/admin/PathEditorPage'));
+
 // Create a QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -168,6 +173,36 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <PlatformAdminPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Admin - Data Generator Management (requires ADMIN role) */}
+      <Route path="/admin/generators" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <DataGeneratorAdminPage />
+            </Suspense>
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Admin - Zone Editor (requires ADMIN role) */}
+      <Route path="/admin/zones" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <ZoneEditorPage />
+            </Suspense>
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      {/* Admin - Path Editor (requires ADMIN role) */}
+      <Route path="/admin/paths" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <PathEditorPage />
+            </Suspense>
           </MainLayout>
         </ProtectedRoute>
       } />

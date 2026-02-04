@@ -29,25 +29,32 @@ public class AssetLocationRegister {
     @Column(name = "asset_id")
     private UUID assetId;
 
-    @Column(name = "asset_identifier", length = 20, nullable = false)
+    @Column(name = "asset_identifier", length = 50, nullable = false, unique = true)
     private String assetIdentifier;
 
-    @Column(name = "current_location", columnDefinition = "geometry(Point,4326)", nullable = false)
+    @Column(name = "tenant_code", length = 4, nullable = false)
+    private String tenantCode;
+
+    @Column(name = "current_latitude")
+    private Double currentLatitude;
+
+    @Column(name = "current_longitude")
+    private Double currentLongitude;
+
+    @Column(name = "current_location", columnDefinition = "geometry(Point,4326)")
     private Point currentLocation;
+
+    @Column(name = "current_zone", length = 100)
+    private String currentZone;
 
     @Column(name = "current_zone_name", length = 100)
     private String currentZoneName;
 
+    @Column(name = "current_restricted_zone_id")
+    private UUID currentRestrictedZoneId;
+
     @Column(name = "restricted_zone_id")
     private UUID restrictedZoneId;
-
-    @Column(name = "is_in_restricted_zone", nullable = false)
-    @Builder.Default
-    private Boolean isInRestrictedZone = false;
-
-    @Column(name = "is_authorized", nullable = false)
-    @Builder.Default
-    private Boolean isAuthorized = true;
 
     @Column(name = "speed")
     private Double speed;
@@ -55,14 +62,26 @@ public class AssetLocationRegister {
     @Column(name = "heading")
     private Double heading;
 
-    @Column(name = "status", length = 20)
+    @Column(name = "status", length = 50)
     private String status;
+
+    @Column(name = "last_movement_at")
+    private ZonedDateTime lastMovementAt;
+
+    @Column(name = "is_in_restricted_zone")
+    @Builder.Default
+    private Boolean isInRestrictedZone = false;
+
+    @Column(name = "is_authorized_for_zone")
+    @Builder.Default
+    private Boolean isAuthorizedForZone = true;
+
+    @Column(name = "is_authorized")
+    @Builder.Default
+    private Boolean isAuthorized = true;
 
     @Column(name = "last_updated", nullable = false)
     private ZonedDateTime lastUpdated;
-
-    @Column(name = "tenant_code", length = 4, nullable = false)
-    private String tenantCode;
 
     @PreUpdate
     protected void onUpdate() {

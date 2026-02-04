@@ -1,5 +1,6 @@
 package com.utam.turnaround.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.turnaround.domain.TurnaroundSession;
 import com.utam.turnaround.domain.TurnaroundTask;
@@ -45,12 +46,14 @@ public class CVEventConsumer {
             }
 
             if (message.trim().startsWith("[")) {
-                List<Map<String, Object>> events = objectMapper.readValue(message, List.class);
+                List<Map<String, Object>> events = objectMapper.readValue(
+                        message, new TypeReference<List<Map<String, Object>>>() {});
                 for (Map<String, Object> event : events) {
                     processOne(event);
                 }
             } else {
-                Map<String, Object> event = objectMapper.readValue(message, Map.class);
+                Map<String, Object> event = objectMapper.readValue(
+                        message, new TypeReference<Map<String, Object>>() {});
                 processOne(event);
             }
 
@@ -65,8 +68,11 @@ public class CVEventConsumer {
         }
 
         String flightId = (String) (event.containsKey("flight_id") ? event.get("flight_id") : event.get("flightId"));
-        String eventType = (String) (event.containsKey("event_type") ? event.get("event_type") : event.get("eventType"));
-        String timestampStr = (String) event.getOrDefault("timestamp", event.get("eventTimeStamp"));
+        Object eventTypeObj = event.containsKey("event_type") ? event.get("event_type") : event.get("eventType");
+        String eventType = eventTypeObj != null ? String.valueOf(eventTypeObj) : null;
+
+        Object timestampObj = event.containsKey("timestamp") ? event.get("timestamp") : event.get("eventTimeStamp");
+        ZonedDateTime timestamp = parseTimestamp(timestampObj);
 
         // Prefer explicit tenant_code; fall back to icao_code for now (VIDP/LIRN/YBBN), else default.
         String tenantCode = (String) event.getOrDefault("tenant_code", event.getOrDefault("icao_code", "VIDP"));
@@ -99,23 +105,21 @@ public class CVEventConsumer {
             logger.info("Created new turnaround session {} for flight {} (tenant={})", session.getId(), flightId, tenantCode);
         }
 
-        updateSessionWithEvent(session, eventType, timestampStr);
+        updateSessionWithEvent(session, eventType, timestamp);
         session.setUpdatedAt(ZonedDateTime.now());
         sessionRepository.save(session);
     }
 
-    private void updateSessionWithEvent(TurnaroundSession session, String eventType, String timestampStr) {
-        if (eventType == null || timestampStr == null) {
+    private void updateSessionWithEvent(TurnaroundSession session, String eventType, ZonedDateTime timestamp) {
+        if (eventType == null || timestamp == null) {
             return;
         }
-        ZonedDateTime timestamp = ZonedDateTime.parse(timestampStr); // Ensure format matches
 
         // Map CV events to Tasks
         String taskType = mapEventToTaskType(eventType);
         if (taskType != null) {
             updateTask(session, taskType, eventType, timestamp);
         }
-
         // Update Session Milestones
         if ("bridge_connect".equalsIgnoreCase(eventType)) {
             session.setAibt(timestamp);
@@ -124,6 +128,39 @@ public class CVEventConsumer {
             session.setAobt(timestamp);
             session.setStatus("OFF_BLOCK");
         }
+    }
+
+    private ZonedDateTime parseTimestamp(Object timestampObj) {
+        if (timestampObj == null) {
+            return null;
+        }
+
+        if (timestampObj instanceof String ts) {
+            try {
+                return ZonedDateTime.parse(ts);
+            } catch (Exception e) {
+                logger.debug("Unable to parse timestamp string: {}", ts);
+                return null;
+            }
+        }
+
+        if (timestampObj instanceof List<?> list && list.size() >= 6) {
+            try {
+                int year = ((Number) list.get(0)).intValue();
+                int month = ((Number) list.get(1)).intValue();
+                int day = ((Number) list.get(2)).intValue();
+                int hour = ((Number) list.get(3)).intValue();
+                int minute = ((Number) list.get(4)).intValue();
+                int second = ((Number) list.get(5)).intValue();
+                int nano = list.size() > 6 ? ((Number) list.get(6)).intValue() : 0;
+                return ZonedDateTime.of(year, month, day, hour, minute, second, nano, java.time.ZoneOffset.UTC);
+            } catch (Exception e) {
+                logger.debug("Unable to parse timestamp array: {}", list);
+                return null;
+            }
+        }
+
+        return null;
     }
 
     private String mapEventToTaskType(String eventType) {

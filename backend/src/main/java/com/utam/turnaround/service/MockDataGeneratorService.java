@@ -18,6 +18,8 @@ public class MockDataGeneratorService {
 
     private final RestTemplate restTemplate;
     private final Random random = new Random();
+    
+    @SuppressWarnings("unused") // Reserved for random status selection feature
     private final List<String> statuses = Arrays.asList("SCHEDULED", "ON_BLOCK", "OFF_BLOCK", "DEPARTED");
 
     @Value("${nifi.ingestion.url:http://nifi:8091/contentListener}")

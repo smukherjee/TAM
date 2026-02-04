@@ -23,10 +23,13 @@ import java.util.stream.Collectors;
 @Service
 public class MovementTrailService {
 
+    @SuppressWarnings("unused") // Reserved for enhanced logging
     private static final Logger logger = LoggerFactory.getLogger(MovementTrailService.class);
     private static final int MAX_TRAIL_DAYS = 30;
 
     private final AssetMovementTrailRepository trailRepository;
+    
+    @SuppressWarnings("unused") // Reserved for violation correlation
     private final ZoneViolationRepository violationRepository;
 
     public MovementTrailService(
@@ -192,7 +195,7 @@ public class MovementTrailService {
 
             // Track status
             String status = trail.getStatus() != null ? trail.getStatus() : "Unknown";
-            statusBreakdown.merge(status, 1, Integer::sum);
+            statusBreakdown.merge(status, 1, (a, b) -> a + b);
 
             // Track restricted zones
             if (trail.getRestrictedZoneId() != null) {

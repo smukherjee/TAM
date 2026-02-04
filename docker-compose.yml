@@ -274,6 +274,7 @@ services:
     volumes:
       - superset_data:/app/superset_home
       - ./infrastructure/superset/superset_config.py:/app/pythonpath/superset_config.py
+      - ./infrastructure/superset:/bootstrap
     depends_on:
       timescaledb:
         condition: service_healthy
@@ -284,6 +285,36 @@ services:
       superset init &&
       superset run -h 0.0.0.0 -p 8088
       "
+
+  superset-bootstrap:
+    image: alpine:3.19
+    depends_on:
+      superset:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - ./infrastructure/superset/create-all-reports.sh:/scripts/create-all-reports.sh:ro
+      - ./infrastructure/superset/sidecar-bootstrap.sh:/scripts/sidecar-bootstrap.sh:ro
+      - ./infrastructure/db/init/11-demo-seed.sql:/seeds/11-demo-seed.sql:ro
+    entrypoint: ["/bin/sh","/scripts/sidecar-bootstrap.sh"]
+
+  superset-bootstrap:
+    image: alpine:3.19
+    depends_on:
+      superset:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - ./infrastructure/superset:/work/superset
+      - ./infrastructure/db/init:/work/dbinit
+    environment:
+      SUPERSET_URL: http://superset:8088
+    command: >
+      /bin/sh -c "apk add --no-cache bash curl jq && \
+      bash /work/superset/create-all-reports.sh && \
+      echo 'Superset bootstrap complete'"
 
 # ============================================
 # VOLUMES

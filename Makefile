@@ -69,6 +69,22 @@ dev-logs-nifi:
 dev-ps:
 	docker-compose -f docker-compose.dev.yml ps
 
+# Superset provisioning
+superset-provision:
+	bash infrastructure/superset/create-all-reports.sh
+
+superset-bootstrap:
+	bash infrastructure/superset/bootstrap-superset.sh
+
+superset-purge:
+	bash infrastructure/superset/purge-all-reports.sh
+
+superset-reprovision:
+	$(MAKE) superset-purge && $(MAKE) superset-provision
+
+superset-dedupe:
+	bash infrastructure/superset/dedupe-charts.sh
+
 # Start only infrastructure (no app build)
 infra-up:
 	docker-compose -f docker-compose.dev.yml up -d redpanda redpanda-console nifi timescaledb minio minio-init redis prometheus grafana loki

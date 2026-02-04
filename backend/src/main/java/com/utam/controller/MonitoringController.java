@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.model.dto.PipelineStatusDto;
 import com.utam.monitoring.KafkaLagMonitor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -76,6 +75,7 @@ public class MonitoringController {
         return ResponseEntity.ok(alertConfiguration);
     }
 
+    @SuppressWarnings("unused") // Rate and health values are calculated for side effects (caching in maps)
     private List<PipelineStatusDto> getStatusList() {
         List<PipelineStatusDto> statusList = new ArrayList<>();
         long now = System.currentTimeMillis();
@@ -212,6 +212,7 @@ public class MonitoringController {
         return 0.0;
     }
 
+    @SuppressWarnings("unused") // avgLatency computed for reference, liveAvgLatency used in actual response
     private PipelineStatusDto createStatus(String name, String type, String icao, double lag) {
         long now = System.currentTimeMillis();
 

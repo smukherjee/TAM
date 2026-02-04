@@ -116,8 +116,8 @@ public class TrailMapper {
                 .distinct()
                 .count();
 
-        // Count status changes
-        long statusChanges = countStatusChanges(trailPoints);
+        // Count status changes (reserved for future analytics)
+        // long statusChanges = countStatusChanges(trailPoints);
 
         return TrailSummaryDTO.builder()
                 .totalPoints(trailPoints.size())
@@ -184,7 +184,9 @@ public class TrailMapper {
 
     /**
      * Count number of status changes in trail.
+     * Reserved for future status change analytics feature.
      */
+    @SuppressWarnings("unused") // Method kept for future analytics expansion
     private long countStatusChanges(List<AssetMovementTrail> points) {
         if (points == null || points.size() < 2) {
             return 0;

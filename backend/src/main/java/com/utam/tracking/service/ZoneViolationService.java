@@ -82,7 +82,7 @@ public class ZoneViolationService {
                 .orElseThrow(() -> new RuntimeException("Violation not found: " + violationId));
 
         violation.setAcknowledged(true);
-        violation.setAcknowledgedBy(userId);
+        violation.setAcknowledgedBy(userId != null ? UUID.fromString(userId) : null);
         violation.setAcknowledgedAt(ZonedDateTime.now());
         violation.setResolutionNotes(notes);
 
@@ -183,7 +183,7 @@ public class ZoneViolationService {
                 .timestamp(entity.getTimestamp())
                 .durationSeconds(entity.getDurationSeconds() != null ? entity.getDurationSeconds().longValue() : null)
                 .acknowledged(entity.getAcknowledged())
-                .acknowledgedBy(entity.getAcknowledgedBy())
+                .acknowledgedBy(entity.getAcknowledgedBy() != null ? entity.getAcknowledgedBy().toString() : null)
                 .acknowledgedAt(entity.getAcknowledgedAt())
                 .resolutionNotes(entity.getResolutionNotes())
                 .tenantCode(entity.getTenantCode())

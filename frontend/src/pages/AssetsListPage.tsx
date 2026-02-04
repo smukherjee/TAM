@@ -48,7 +48,7 @@ const AssetsListPage: React.FC = () => {
 
     return (
         <div className="p-6 bg-gray-900 min-h-screen">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
@@ -92,7 +92,7 @@ const AssetsListPage: React.FC = () => {
                 </div>
 
                 {/* Assets Table */}
-                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                <div className="bg-gray-800 rounded-lg overflow-hidden max-h-[70vh] overflow-y-auto">
                     {loading ? (
                         <div className="p-8 text-center text-gray-400">Loading assets...</div>
                     ) : filteredAssets.length === 0 ? (

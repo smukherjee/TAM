@@ -39,7 +39,7 @@ public class ZoneViolationMapper {
                 .timestamp(entity.getTimestamp())
                 .durationSeconds(entity.getDurationSeconds() != null ? entity.getDurationSeconds().longValue() : null)
                 .acknowledged(entity.getAcknowledged())
-                .acknowledgedBy(entity.getAcknowledgedBy())
+                .acknowledgedBy(entity.getAcknowledgedBy() != null ? entity.getAcknowledgedBy().toString() : null)
                 .acknowledgedAt(entity.getAcknowledgedAt())
                 .resolutionNotes(entity.getResolutionNotes())
                 .tenantCode(entity.getTenantCode());
@@ -79,7 +79,7 @@ public class ZoneViolationMapper {
                 .durationSeconds(dto.getDurationSeconds() != null ? 
                         dto.getDurationSeconds().intValue() : null)
                 .acknowledged(dto.getAcknowledged())
-                .acknowledgedBy(dto.getAcknowledgedBy())
+                .acknowledgedBy(dto.getAcknowledgedBy() != null ? java.util.UUID.fromString(dto.getAcknowledgedBy()) : null)
                 .acknowledgedAt(dto.getAcknowledgedAt())
                 .resolutionNotes(dto.getResolutionNotes())
                 .tenantCode(dto.getTenantCode())
@@ -106,7 +106,7 @@ public class ZoneViolationMapper {
             entity.setAcknowledged(dto.getAcknowledged());
         }
         if (dto.getAcknowledgedBy() != null) {
-            entity.setAcknowledgedBy(dto.getAcknowledgedBy());
+            entity.setAcknowledgedBy(java.util.UUID.fromString(dto.getAcknowledgedBy()));
         }
         if (dto.getAcknowledgedAt() != null) {
             entity.setAcknowledgedAt(dto.getAcknowledgedAt());

@@ -102,6 +102,7 @@ Developer writes unit tests for domain logic without starting Kafka, Redis, or d
 ## Architectural Principles
 
 ### Lean Core & Authorization
+
 - **Identity Propagation Only**: The Platform Core is responsible ONLY for propagating the `TenantContext` (Identity, Tenant ID, Roles) to downstream services.
 - **Decentralized Enforcement**: The Platform Core MUST NOT enforce business-level permissions (RBAC). Domain services (e.g., Turnaround, Flight) are solely responsible for checking if the propagated roles allow the requested operation.
 - **Agnostic Roles**: The Platform Core treats roles as opaque strings (e.g., `["ROLE_A", "ROLE_B"]`) and does not validate their semantic meaning.
@@ -118,7 +119,7 @@ Developer writes unit tests for domain logic without starting Kafka, Redis, or d
 - Q: When tenant context is not set (background jobs, system events), what should TenantContextService do? → A: Use a default "SYSTEM" tenant for all non-user operations, treating system operations as a special tenant with its own data isolation
 - Q: When EventBus encounters infrastructure failure (Kafka down per edge case), what should the failure handling strategy be? → A: Queue events locally in bounded in-memory buffer (e.g., 10,000 events), retry with exponential backoff, drop oldest if buffer full with metric alert
 - Q: When CacheService is unavailable (Redis down per edge case), what should the fallback behavior be? → A: Automatically fallback to database queries, use circuit breaker to stop cache attempts after repeated failures, resume when Redis recovers
- - Q: When a tenant is deleted or offboarded, what should happen to its existing data and operations? → A: Treat deletion as a soft delete / disable: mark tenant as DISABLED, reject new writes and logins, keep historical data read-only for audit/reporting, and clear tenant cache entries
+- Q: When a tenant is deleted or offboarded, what should happen to its existing data and operations? → A: Treat deletion as a soft delete / disable: mark tenant as DISABLED, reject new writes and logins, keep historical data read-only for audit/reporting, and clear tenant cache entries
 - Q: How should circular event dependencies (Event A → Event B → Event A) be detected and prevented? → A: Detect at publish time by tracking event chain depth via correlation metadata; reject publish if depth exceeds threshold (default 5), log warning and emit metric
 - Q: How should tenant-specific rate limits be enforced when multiple tenants share infrastructure? → A: Defer to future phase; rate limiting is out of scope for Phase 1 MVP, rely on infrastructure-level limits (Kafka quotas, Redis maxmemory) for now
 - Q: When multiple multi-tenant applications (different business domains) are onboarded, how should database isolation work? → A: Domain-scoped database routing via ConfigurationService: each domain maps to its own database connection (TAM→DB1, ResourceMgmt→DB2); TenantContextService includes domainId alongside tenantId; platform routes queries to correct datasource
@@ -284,6 +285,7 @@ The following performance targets are intentionally deferred and will be validat
 This platform layer addresses the critical architectural debt identified in the senior architect review. The design follows Hexagonal Architecture (Ports & Adapters) principles to ensure business logic independence from infrastructure.
 
 **Cloud Portability Strategy**: While cloud portability is a core architectural requirement, actual deployment to Azure/AWS is deferred to a future phase. This feature focuses on:
+
 - Defining clean abstraction interfaces that eliminate cloud-specific dependencies
 - Implementing and validating with local/Docker infrastructure (Kafka, Redis, MinIO)
 - Documenting configuration contracts for future cloud substitution
@@ -292,6 +294,7 @@ This platform layer addresses the critical architectural debt identified in the 
 The design is deliberately cloud-ready (interfaces can accommodate EventHubs, Azure Redis, S3) but implementation and testing is limited to local environments. This allows architecture validation without cloud costs and complexity.
 
 Key design principles:
+
 - **Contract-first**: Define interfaces before implementations
 - **Dependency inversion**: Business domains depend on platform abstractions, not implementations
 - **Single responsibility**: Each platform service has one clear purpose
@@ -299,6 +302,7 @@ Key design principles:
 - **Testability**: All platform services have in-memory test doubles
 
 The phased rollout strategy allows gradual adoption without big-bang rewrite:
+
 1. Phase 1: Implement core platform services (TenantContext, EventBus, CacheService)
 2. Phase 2: Refactor one domain (Turnaround) to use platform services
 3. Phase 3: Migrate remaining domains (Flight tracking, Alerting)

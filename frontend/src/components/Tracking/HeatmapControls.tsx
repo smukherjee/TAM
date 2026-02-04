@@ -158,6 +158,8 @@ const HeatmapControls: React.FC<HeatmapControlsProps> = ({
                     value={gridSize}
                     onChange={(e) => onGridSizeChange(Number(e.target.value) as GridSize)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="Grid Resolution"
+                    aria-label="Select grid resolution"
                 >
                     <option value={10}>10m (Fine)</option>
                     <option value={25}>25m (Medium)</option>
@@ -270,6 +272,8 @@ const HeatmapControls: React.FC<HeatmapControlsProps> = ({
                     value={intensity}
                     onChange={(e) => onIntensityChange(Number(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    title={`Intensity: ${intensity}%`}
+                    aria-label="Adjust heatmap intensity"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>Low</span>
@@ -282,11 +286,16 @@ const HeatmapControls: React.FC<HeatmapControlsProps> = ({
                 <label className="text-sm font-medium text-gray-700">
                     Auto-refresh (60s)
                 </label>
+                {/* eslint-disable-next-line jsx-a11y/aria-proptypes */}
                 <button
                     onClick={() => onAutoRefreshToggle(!autoRefresh)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
                         autoRefresh ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
+                    title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+                    aria-label="Toggle auto-refresh"
+                    role="switch"
+                    aria-checked={autoRefresh}
                 >
                     <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${

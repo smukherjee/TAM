@@ -24,17 +24,19 @@ For detailed instructions, please refer to the [SETUP_GUIDE.md](SETUP_GUIDE.md).
 
 ### Quick Start
 
-1.  **Start Infrastructure**:
-    ```bash
-    make dev-up
-    ```
+1. **Start Infrastructure**:
 
-2.  **Configure NiFi** (Wait ~60s for NiFi to start first):
-    ```bash
-    make setup-nifi
-    ```
+   ```bash
+   make dev-up
+   ```
 
-3.  **Access Services**:
+2. **Configure NiFi** (Wait ~60s for NiFi to start first):
+
+   ```bash
+   make setup-nifi
+   ```
+
+3. **Access Services**:
     - **Frontend**: [http://localhost:3000](http://localhost:3000) (Login: `admin_vidp / admin`, `admin_lirn / admin`, or `admin_ybbn / admin`)
     - **Backend API**: [http://localhost:8080](http://localhost:8080)
     - **NiFi UI**: [http://localhost:8091/nifi](http://localhost:8091/nifi)
@@ -43,13 +45,13 @@ For detailed instructions, please refer to the [SETUP_GUIDE.md](SETUP_GUIDE.md).
 
 Run the entire stack (Infrastructure, Backend, Frontend) in Docker containers.
 
-1.  **Build and Start**:
+1. **Build and Start**:
 
-    ```bash
-    docker-compose up --build -d
-    ```
+   ```bash
+   docker-compose up --build -d
+   ```
 
-2.  **Access Services**:
+2. **Access Services**:
     - **Frontend**: [http://localhost:3000](http://localhost:3000)
     - **Backend API**: [http://localhost:8080](http://localhost:8080)
     - **NiFi UI**: [http://localhost:8091/nifi](http://localhost:8091/nifi)
@@ -109,6 +111,54 @@ The simulation data generators are integrated into the Spring Boot Backend as sc
 - **Computer Vision Events**: Generated every 5 seconds.
 
 To configure the simulation URLs (e.g., if NiFi is running on a different host/port), update `backend/src/main/resources/application.yml`.
+
+## Data Generator Administration
+
+The comprehensive data generator system supports **24 entity types** with realistic airport simulation data.
+
+### Admin Dashboard
+
+Access the generator admin dashboard at [http://localhost:3000/admin/generators](http://localhost:3000/admin/generators) (requires ADMIN role).
+
+Features:
+
+- **Overview**: Generator status, quick actions
+- **Controls**: Per-generator start/stop, batch/continuous modes
+- **Metrics**: Real-time throughput and performance
+- **Security**: Role verification, audit logging
+
+### Quick Commands
+
+```bash
+# Start batch population
+curl -X POST http://localhost:8080/api/admin/generators/batch/start \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Enable continuous real-time simulation
+curl -X POST http://localhost:8080/api/admin/generators/continuous/start \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Check status
+curl http://localhost:8080/api/admin/generators/status
+```
+
+### Entity Types Generated
+
+| Category   | Entities                                              |
+| ---------- | ----------------------------------------------------- |
+| Reference  | Stands, Depots, VehicleTypes, AirportBoundaries       |
+| Core       | Flights, Vehicles (15 GSE types), Assets, Turnarounds |
+| Tracking   | VehiclePositions, FlightPositions, MovementTrails     |
+| Operations | VehicleAssignments, VehiclePaths, Dispatches          |
+| Alerts     | Alerts (12 types), FinancialMetrics                   |
+| Security   | RestrictedZones, Violations, MovementDiscrepancies    |
+
+### Supported Tenants
+
+- **VIDP** (Delhi) - Center: 28.5665, 77.1031, Timezone: Asia/Kolkata
+- **YBBN** (Brisbane) - Center: -27.3942, 153.1218, Timezone: Australia/Brisbane
+
+For detailed documentation, see [backend/src/main/java/com/utam/simulation/README.md](backend/src/main/java/com/utam/simulation/README.md).
 
 ## Architecture Overview
 

@@ -1,6 +1,7 @@
 package com.utam.simulation;
 
 import com.utam.model.Flight;
+import com.utam.simulation.config.SimulationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ public class MockAdsbGenerator_YBBN {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
     private final io.micrometer.core.instrument.Counter flightCounter;
+    private final SimulationConfig simulationConfig;
 
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
@@ -31,8 +33,9 @@ public class MockAdsbGenerator_YBBN {
     private final List<String> callsigns = Arrays.asList("QF401", "VA823", "JQ520", "NZ175", "SQ245");
     private final String icao = "YBBN";
 
-    public MockAdsbGenerator_YBBN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockAdsbGenerator_YBBN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {
         this.restTemplate = restTemplate;
+        this.simulationConfig = simulationConfig;
         this.flightCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
                 .tag("type", "flight")
                 .tag("icao", "YBBN")
@@ -42,6 +45,11 @@ public class MockAdsbGenerator_YBBN {
 
     @Scheduled(fixedRate = 2000) // Every 2 seconds
     public void generateFlightData() {
+        // Respect simulation config - only generate if enabled and continuous mode is on
+        if (!simulationConfig.isEnabled() || !simulationConfig.isContinuousEnabled()) {
+            return;
+        }
+
         String callsign = callsigns.get(random.nextInt(callsigns.size()));
 
         Flight flight = new Flight();

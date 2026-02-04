@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import MapComponent from '../components/Map/MapComponent';
 import FlightLayer from '../components/Map/FlightLayer';
 import VehicleLayer from '../components/Map/VehicleLayer';
+import AssetLayer from '../components/Map/AssetLayer';
 import EnhancedAlertList from '../components/EnhancedAlertList';
 import MapControlPanel from '../components/MapControlPanel';
 import api from '../services/api';
@@ -23,7 +24,7 @@ const MapPage: React.FC = () => {
     const { user } = useAuth();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
-    const [layers, setLayers] = useState({ vehicles: true, flights: true, alerts: true, assets: false });
+    const [layers, setLayers] = useState({ vehicles: true, flights: true, alerts: true, assets: true });
     const [mapTheme, setMapTheme] = useState<'dark' | 'light'>('dark');
     const icao = user?.icaoCode || 'VIDP';
 
@@ -111,6 +112,7 @@ const MapPage: React.FC = () => {
                 <MapComponent center={getCenter()} zoom={14} theme={mapTheme}>
                     {layers.flights && <FlightLayer />}
                     {layers.vehicles && <VehicleLayer vehicles={vehicles} />}
+                    {layers.assets && <AssetLayer />}
                 </MapComponent>
                 
                 {/* Map Control Panel */}

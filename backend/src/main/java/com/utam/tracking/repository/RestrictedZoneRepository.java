@@ -45,7 +45,7 @@ public interface RestrictedZoneRepository extends JpaRepository<RestrictedZone, 
     @Query(value = "SELECT z.* FROM restricted_zones z " +
             "WHERE z.tenant_code = :tenantCode " +
             "AND z.is_active = true " +
-            "AND ST_Contains(z.boundary, :location)",
+            "AND ST_Contains(z.geometry, :location)",
             nativeQuery = true)
     List<RestrictedZone> findZonesContainingPoint(@Param("location") Point location,
                                                    @Param("tenantCode") String tenantCode);
@@ -61,7 +61,7 @@ public interface RestrictedZoneRepository extends JpaRepository<RestrictedZone, 
     @Query(value = "SELECT z.* FROM restricted_zones z " +
             "WHERE z.tenant_code = :tenantCode " +
             "AND z.is_active = true " +
-            "AND ST_DWithin(z.boundary::geography, :location::geography, :distanceMeters)",
+            "AND ST_DWithin(z.geometry::geography, CAST(:location AS geography), :distanceMeters)",
             nativeQuery = true)
     List<RestrictedZone> findZonesWithinDistance(@Param("location") Point location,
                                                    @Param("distanceMeters") double distanceMeters,

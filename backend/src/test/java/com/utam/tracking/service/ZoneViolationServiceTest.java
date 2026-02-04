@@ -22,7 +22,6 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -89,7 +88,7 @@ class ZoneViolationServiceTest {
                 .violationType("OVERSTAY")
                 .severity(ViolationSeverity.HIGH)
                 .acknowledged(true)
-                .acknowledgedBy("admin@vidp.airport")
+                .acknowledgedBy(UUID.randomUUID())
                 .acknowledgedAt(now.minusMinutes(30))
                 .tenantCode(tenantCode)
                 .timestamp(now.minusHours(2))

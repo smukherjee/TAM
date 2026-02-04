@@ -11,8 +11,7 @@ public class LocationController {
 
     @GetMapping
     public ApiResponse<List<Object>> getAllLocations(@RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
-        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
-        // TODO: Implement locations repository and service
+        // TODO: Use icaoCode for tenant filtering when implementing locations repository and service
         return ApiResponse.success(Collections.emptyList());
     }
 }

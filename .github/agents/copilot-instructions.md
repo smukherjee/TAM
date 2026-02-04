@@ -15,6 +15,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-07
 - PostgreSQL 16 (TimescaleDB), Redis (Cache), MinIO (Object Storage) (004-platform-services-layer)
 - Java 21 + Spring Boot 3.x, Parquet Hadoop libraries, MinIO SDK (001-refine-platform-spec)
 - MinIO with tenant-isolated buckets (tenant-{tenantId}-archive) (001-refine-platform-spec)
+- Java 21+ (Spring Boot 3.x), TypeScript (React 18+) + Spring Boot, Spring Scheduling, Micrometer, Leaflet/MapLibre, PostGIS (006-entity-data-generators)
+- PostgreSQL 16+ with TimescaleDB, PostGIS for spatial data (006-entity-data-generators)
 
 - Java 17+ (Spring Boot 3.x), TypeScript (React 18+) + Spring Boot Web, Spring Kafka, React, Leaflet, react-leafle (001-mvp-core-tracking)
 
@@ -34,9 +36,9 @@ npm test && npm run lint
 Java 17+ (Spring Boot 3.x), TypeScript (React 18+): Follow standard conventions
 
 ## Recent Changes
+- 006-entity-data-generators: Added Java 21+ (Spring Boot 3.x), TypeScript (React 18+) + Spring Boot, Spring Scheduling, Micrometer, Leaflet/MapLibre, PostGIS
 - 001-refine-platform-spec: Added Java 21 + Spring Boot 3.x, Parquet Hadoop libraries, MinIO SDK
 - 004-platform-services-layer: Added Java 21 (Required for Virtual Threads/ScopedValue per FR-006) + Spring Boot 3.2+, Micrometer, Resilience4j, Kafka Clients, Redis Clients (Lettuce), MinIO Java SDK
-- 004-platform-services-layer: Added Java 21 (Virtual Threads enabled) + Spring Boot 3.x, Resilience4j (Circuit Breaker), Micrometer (Context Propagation + Tracing), Spring Tx (Synchronization)
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -35,7 +35,7 @@ public class ZoneViolation {
     @Column(name = "asset_id", nullable = false)
     private UUID assetId;
 
-    @Column(name = "asset_identifier", length = 20, nullable = false)
+    @Column(name = "asset_identifier", length = 50, nullable = false)
     private String assetIdentifier;
 
     @Column(name = "asset_name", length = 100)
@@ -56,6 +56,12 @@ public class ZoneViolation {
     @Column(name = "violation_type", length = 50, nullable = false)
     private String violationType; // UNAUTHORIZED_ENTRY, OVERSTAY, etc.
 
+    @Column(name = "entry_latitude")
+    private Double entryLatitude;
+
+    @Column(name = "entry_longitude")
+    private Double entryLongitude;
+
     @Column(name = "entry_location", columnDefinition = "geometry(Point,4326)")
     private Point entryLocation;
 
@@ -70,8 +76,8 @@ public class ZoneViolation {
     @Builder.Default
     private Boolean acknowledged = false;
 
-    @Column(name = "acknowledged_by", length = 100)
-    private String acknowledgedBy;
+    @Column(name = "acknowledged_by")
+    private UUID acknowledgedBy;
 
     @Column(name = "acknowledged_at")
     private ZonedDateTime acknowledgedAt;
@@ -81,6 +87,9 @@ public class ZoneViolation {
 
     @Column(name = "timestamp", nullable = false)
     private ZonedDateTime timestamp;
+
+    @Column(name = "created_at")
+    private ZonedDateTime createdAt;
 
     @Column(name = "tenant_code", length = 4, nullable = false)
     private String tenantCode;

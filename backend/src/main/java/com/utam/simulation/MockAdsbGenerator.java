@@ -1,6 +1,7 @@
 package com.utam.simulation;
 
 import com.utam.model.Flight;
+import com.utam.simulation.config.SimulationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,16 +24,23 @@ public class MockAdsbGenerator {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
     private final io.micrometer.core.instrument.Counter flightCounter;
+    private final SimulationConfig simulationConfig;
 
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
 
     // Simulated flights
     private final List<String> callsigns = Arrays.asList("AI101", "BA249", "LH760", "EK500", "QF1");
+    
+    /**
+     * List of supported airport ICAO codes.
+     */
+    @SuppressWarnings("unused") // Reserved for future tenant filtering
     private final List<String> airports = Arrays.asList("VIDP", "YBBN");
 
-    public MockAdsbGenerator(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockAdsbGenerator(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {
         this.restTemplate = restTemplate;
+        this.simulationConfig = simulationConfig;
         this.flightCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
                 .tag("type", "flight")
                 .tag("icao", "VIDP")
@@ -42,6 +50,11 @@ public class MockAdsbGenerator {
 
     @Scheduled(fixedRate = 2000) // Every 2 seconds
     public void generateFlightData() {
+        // Respect simulation config - only generate if enabled and continuous mode is on
+        if (!simulationConfig.isEnabled() || !simulationConfig.isContinuousEnabled()) {
+            return;
+        }
+
         String callsign = callsigns.get(random.nextInt(callsigns.size()));
         
         // Map flights to their correct airports

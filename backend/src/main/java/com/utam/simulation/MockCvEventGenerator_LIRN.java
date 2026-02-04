@@ -1,6 +1,7 @@
 package com.utam.simulation;
 
 import com.utam.model.dto.CvEventDto;
+import com.utam.simulation.config.SimulationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,7 @@ public class MockCvEventGenerator_LIRN {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
     private final io.micrometer.core.instrument.Counter eventCounter;
+    private final SimulationConfig simulationConfig;
 
     @Value("${simulation.cv-url}")
     private String ingestionUrl;
@@ -36,8 +38,9 @@ public class MockCvEventGenerator_LIRN {
 
     private final List<String> stands = Arrays.asList("NAP_1", "NAP_2", "NAP_3");
 
-    public MockCvEventGenerator_LIRN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockCvEventGenerator_LIRN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {
         this.restTemplate = restTemplate;
+        this.simulationConfig = simulationConfig;
         this.eventCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
                 .tag("type", "turnaround")
                 .tag("icao", "LIRN")
@@ -47,6 +50,11 @@ public class MockCvEventGenerator_LIRN {
 
     @Scheduled(fixedRate = 2000)
     public void generateCvEvent() {
+        // Respect simulation config - only generate if enabled and continuous mode is on
+        if (!simulationConfig.isEnabled() || !simulationConfig.isContinuousEnabled()) {
+            return;
+        }
+
         for (String stand : stands) {
             processStand(stand);
         }

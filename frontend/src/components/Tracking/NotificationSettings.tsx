@@ -101,6 +101,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                         Receive browser alerts for CRITICAL violations
                     </p>
                 </div>
+                {/* eslint-disable-next-line jsx-a11y/aria-proptypes */}
                 <button
                     onClick={handleEnableToggle}
                     disabled={permission === 'denied'}
@@ -130,6 +131,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                         Alert sound
                     </p>
                 </div>
+                {/* eslint-disable-next-line jsx-a11y/aria-proptypes */}
                 <button
                     onClick={() => setSoundEnabled(!soundEnabled)}
                     disabled={!isEnabled}

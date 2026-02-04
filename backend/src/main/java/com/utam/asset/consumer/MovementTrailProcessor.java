@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utam.asset.event.AssetPositionEvent;
 import com.utam.asset.service.AssetService;
+import com.utam.asset.service.VehicleAssetMapService;
+import com.utam.asset.service.VehicleAssetMapService.AssetInfo;
 import com.utam.tracking.service.MovementTrailIngestionService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -16,9 +18,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -44,29 +44,30 @@ public class MovementTrailProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MovementTrailProcessor.class);
     
     private final JdbcTemplate jdbcTemplate;
-    private final AssetService assetService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
     private final MovementTrailIngestionService ingestionService;
+    private final VehicleAssetMapService vehicleAssetMapService;
     
     // Metrics
     private final Timer latencyTimer;
     private final Counter processedCounter;
     private final Counter errorCounter;
-    private final Counter violationCounter;
 
     public MovementTrailProcessor(
             JdbcTemplate jdbcTemplate,
-            AssetService assetService,
+            @SuppressWarnings("unused") AssetService assetService,
             SimpMessagingTemplate messagingTemplate,
             ObjectMapper objectMapper,
             MovementTrailIngestionService ingestionService,
+            VehicleAssetMapService vehicleAssetMapService,
             MeterRegistry registry) {
         this.jdbcTemplate = jdbcTemplate;
-        this.assetService = assetService;
+        // assetService reserved for future use
         this.messagingTemplate = messagingTemplate;
         this.objectMapper = objectMapper;
         this.ingestionService = ingestionService;
+        this.vehicleAssetMapService = vehicleAssetMapService;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         
         // Initialize metrics
@@ -85,7 +86,8 @@ public class MovementTrailProcessor {
                 .description("Number of failed position events")
                 .register(registry);
         
-        this.violationCounter = Counter.builder("asset.tracking.violations.detected")
+        // violationCounter registered but tracking happens in ingestion service
+        Counter.builder("asset.tracking.violations.detected")
                 .tag("type", "zone")
                 .description("Number of zone violations detected")
                 .register(registry);
@@ -152,25 +154,31 @@ public class MovementTrailProcessor {
             String assetIdentifier = null;
             String assetName = null;
             String assetCategory = null;
-            
+
             if (assetId == null) {
-                AssetInfo assetInfo = matchVehicleToAsset(event.getVehicleId(), event.getTenantCode());
+                AssetInfo assetInfo = resolveAssetFromMapping(event.getVehicleId(), event.getTenantCode());
+
                 if (assetInfo == null) {
-                    logger.debug("No asset matched for vehicle: {} (tenant: {})", 
+                    assetInfo = matchVehicleToAsset(event.getVehicleId(), event.getTenantCode());
+                }
+
+                if (assetInfo == null) {
+                    logger.debug("No asset matched for vehicle: {} (tenant: {})",
                             event.getVehicleId(), event.getTenantCode());
                     return;
                 }
-                assetId = assetInfo.id;
-                assetIdentifier = assetInfo.identifier;
-                assetName = assetInfo.name;
-                assetCategory = assetInfo.category;
+
+                assetId = assetInfo.id();
+                assetIdentifier = assetInfo.identifier();
+                assetName = assetInfo.name();
+                assetCategory = assetInfo.category();
             } else {
                 // Fetch asset details for enrichment
                 AssetInfo assetInfo = getAssetDetails(assetId);
                 if (assetInfo != null) {
-                    assetIdentifier = assetInfo.identifier;
-                    assetName = assetInfo.name;
-                    assetCategory = assetInfo.category;
+                    assetIdentifier = assetInfo.identifier();
+                    assetName = assetInfo.name();
+                    assetCategory = assetInfo.category();
                 }
             }
             
@@ -209,12 +217,30 @@ public class MovementTrailProcessor {
     }
 
     /**
-     * Match vehicle_id to asset_id using qr_id.
-     * Assumes vehicles.vehicle_id = assets.qr_id for tracking.
+     * Prefer explicit vehicle↔asset mapping; fallback to legacy QR matching.
+     */
+    private AssetInfo resolveAssetFromMapping(String vehicleId, String tenantCode) {
+        try {
+            return vehicleAssetMapService.findByVehicle(vehicleId, tenantCode).orElse(null);
+        } catch (Exception e) {
+            logger.error("Failed to resolve vehicle mapping: vehicleId={}, tenant={}, error={}",
+                    vehicleId, tenantCode, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Legacy fallback: match vehicle_id to asset via qr_id when no explicit mapping exists.
      */
     private AssetInfo matchVehicleToAsset(String vehicleId, String tenantCode) {
         try {
-            String sql = "SELECT id, identifier, name, category FROM assets WHERE qr_id = ? AND tenant_code = ? LIMIT 1";
+            String sql = """
+                SELECT id, asset_id AS identifier, name, category
+                FROM assets
+                WHERE (qr_id = ? OR asset_id = ?)
+                  AND tenant_code = ?
+                LIMIT 1
+                """;
             List<AssetInfo> results = jdbcTemplate.query(
                     sql,
                     (rs, rowNum) -> new AssetInfo(
@@ -223,12 +249,13 @@ public class MovementTrailProcessor {
                             rs.getString("name"),
                             rs.getString("category")
                     ),
-                    vehicleId,
+                vehicleId,
+                vehicleId,
                     tenantCode
             );
             return results.isEmpty() ? null : results.get(0);
         } catch (Exception e) {
-            logger.error("Failed to match vehicle to asset: vehicleId={}, tenant={}, error={}", 
+            logger.error("Failed to match vehicle to asset via QR: vehicleId={}, tenant={}, error={}",
                     vehicleId, tenantCode, e.getMessage());
             return null;
         }
@@ -239,7 +266,12 @@ public class MovementTrailProcessor {
      */
     private AssetInfo getAssetDetails(UUID assetId) {
         try {
-            String sql = "SELECT identifier, name, category FROM assets WHERE id = ? LIMIT 1";
+            String sql = """
+                SELECT asset_id AS identifier, name, category
+                FROM assets
+                WHERE id = ?
+                LIMIT 1
+                """;
             List<AssetInfo> results = jdbcTemplate.query(
                     sql,
                     (rs, rowNum) -> new AssetInfo(
@@ -286,20 +318,4 @@ public class MovementTrailProcessor {
         }
     }
 
-    /**
-     * Helper class for asset information
-     */
-    private static class AssetInfo {
-        final UUID id;
-        final String identifier;
-        final String name;
-        final String category;
-
-        AssetInfo(UUID id, String identifier, String name, String category) {
-            this.id = id;
-            this.identifier = identifier;
-            this.name = name;
-            this.category = category;
-        }
-    }
 }

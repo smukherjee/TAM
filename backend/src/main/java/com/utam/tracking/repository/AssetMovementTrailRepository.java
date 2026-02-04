@@ -19,7 +19,7 @@ import java.util.UUID;
  * Feature: 005-asset-tracking-security
  */
 @Repository
-public interface AssetMovementTrailRepository extends JpaRepository<AssetMovementTrail, Long> {
+public interface AssetMovementTrailRepository extends JpaRepository<AssetMovementTrail, UUID> {
 
     /**
      * Find movement trail for a specific asset within a time range

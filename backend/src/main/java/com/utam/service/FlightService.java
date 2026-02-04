@@ -26,7 +26,7 @@ public class FlightService {
     }
 
     public List<Flight> getActiveFlights(String icaoCode) {
-        // Try Redis first
+        // Try Redis first, but only trust it if we have enough active flights to be meaningful
         String icao = icaoCode != null && !icaoCode.isEmpty() ? icaoCode : "VIDP";
         java.util.Set<Object> activeCallsigns = redisService.getSetMembers("active_flights:" + icao);
 
@@ -37,7 +37,8 @@ public class FlightService {
                 java.util.Optional<Flight> flightOpt = redisService.get("flight:" + icao + ":" + callsign, Flight.class);
                 flightOpt.ifPresent(flights::add);
             }
-            if (!flights.isEmpty()) {
+            // If Redis has at least 20 flights, assume it is authoritative; otherwise fall back to DB
+            if (flights.size() >= 20) {
                 return flights;
             }
         }

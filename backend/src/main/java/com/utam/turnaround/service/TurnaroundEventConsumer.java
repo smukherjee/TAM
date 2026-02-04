@@ -1,5 +1,6 @@
 package com.utam.turnaround.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.utam.turnaround.domain.TurnaroundSession;
 import com.utam.turnaround.repository.TurnaroundSessionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +38,9 @@ public class TurnaroundEventConsumer {
                 System.out.println("After first deserialization: " + actualMessage.substring(0, Math.min(100, actualMessage.length())));
             }
             
-            Map<String, Object> event = objectMapper.readValue(actualMessage, Map.class);
+            Map<String, Object> event = objectMapper.readValue(actualMessage, 
+                    new TypeReference<Map<String, Object>>() {});
+            @SuppressWarnings("unchecked") // Payload structure is well-defined by upstream contract
             Map<String, Object> payload = (Map<String, Object>) event.get("payload");
             String tenantCode = (String) event.getOrDefault("tenantCode", "VIDP");
             

@@ -134,7 +134,7 @@ public class AssetLocationService {
         params.add(queryLimit);
         params.add(queryOffset);
 
-        return jdbcTemplate.query(sql.toString(), params.toArray(), new AssetLocationRowMapper());
+        return jdbcTemplate.query(sql.toString(), new AssetLocationRowMapper(), params.toArray());
     }
 
     /**
@@ -167,7 +167,7 @@ public class AssetLocationService {
             params.add(zoneId);
         }
 
-        Long count = jdbcTemplate.queryForObject(sql.toString(), params.toArray(), Long.class);
+        Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
         return count != null ? count : 0L;
     }
 

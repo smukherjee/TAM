@@ -1,6 +1,7 @@
 package com.utam.simulation;
 
 import com.utam.model.Vehicle;
+import com.utam.simulation.config.SimulationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ public class MockTelitGenerator_LIRN {
     private final RestTemplate restTemplate;
     private final Random random = new Random();
     private final io.micrometer.core.instrument.Counter vehicleCounter;
+    private final SimulationConfig simulationConfig;
 
     @Value("${simulation.vehicle-url}")
     private String ingestionUrl;
@@ -30,14 +32,19 @@ public class MockTelitGenerator_LIRN {
     private final String icao = "LIRN";
 
     private static class VehicleConfig {
-        String no;
-        String name;
-        String type;
+        final String no;
+        final String name;
+        final String type;
 
         VehicleConfig(String no, String name, String type) {
             this.no = no;
             this.name = name;
             this.type = type;
+        }
+        
+        @SuppressWarnings("unused") // Reserved for detailed logging
+        String getName() {
+            return name;
         }
     }
 
@@ -49,8 +56,9 @@ public class MockTelitGenerator_LIRN {
             new VehicleConfig("GESAC005", "Baggage 1", "Baggage Loader")
     );
 
-    public MockTelitGenerator_LIRN(io.micrometer.core.instrument.MeterRegistry registry) {
+    public MockTelitGenerator_LIRN(io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {
         this.restTemplate = new RestTemplate();
+        this.simulationConfig = simulationConfig;
         this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulation.vehicles.generated")
                 .tag("icao", icao)
                 .description("Number of simulated vehicle events for LIRN")
@@ -59,6 +67,11 @@ public class MockTelitGenerator_LIRN {
 
     @Scheduled(fixedRate = 3000) // Every 3 seconds
     public void generateVehicleData() {
+        // Respect simulation config
+        if (!simulationConfig.isEnabled() || !simulationConfig.isContinuousEnabled()) {
+            return;
+        }
+
         VehicleConfig config = configs.get(random.nextInt(configs.size()));
 
         Vehicle vehicle = new Vehicle();

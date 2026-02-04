@@ -3,6 +3,7 @@ package com.utam.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -28,7 +30,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        // Actuator endpoints open for monitoring
                         .requestMatchers("/actuator/**").permitAll()
+                        // All API endpoints open for development (authentication handled by individual controllers)
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/veh_live_data_con").permitAll()
                         .anyRequest().permitAll());
@@ -37,13 +41,30 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("deprecation") // Using withDefaultPasswordEncoder() for development convenience
     public UserDetailsService userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
+        // Default admin user with ADMIN role for generator management
+        UserDetails admin = User.withDefaultPasswordEncoder()
                 .username("admin")
                 .password("admin")
+                .roles("USER", "ADMIN")
+                .build();
+        
+        // Standard user without admin privileges
+        UserDetails user = User.withDefaultPasswordEncoder()
+                .username("user")
+                .password("user")
                 .roles("USER")
                 .build();
-        return new InMemoryUserDetailsManager(user);
+        
+        // Super admin with all privileges
+        UserDetails superAdmin = User.withDefaultPasswordEncoder()
+                .username("superadmin")
+                .password("superadmin")
+                .roles("USER", "ADMIN", "SUPER_ADMIN")
+                .build();
+        
+        return new InMemoryUserDetailsManager(admin, user, superAdmin);
     }
 
     @Bean
