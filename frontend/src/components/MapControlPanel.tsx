@@ -33,7 +33,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   const [selectedVehicleTypes, setSelectedVehicleTypes] = useState<string[]>([]);
   const { handleMouseDown, style } = useDraggable(20, 20);
 
-  const allVehicleTypes = ['bus', 'fuel_truck', 'tug', 'belt_loader', 'catering', 'other'];
+  const allVehicleTypes = ['bus', 'fuel_truck', 'tug', 'belt_loader', 'catering', 'deicing', 'stairs', 'gpu', 'other'];
 
   const handleVehicleTypeToggle = (type: string) => {
     const newTypes = selectedVehicleTypes.includes(type)

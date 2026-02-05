@@ -23,6 +23,8 @@ public interface SimAssetRepository extends JpaRepository<Asset, UUID> {
 
     Optional<Asset> findByAssetId(String assetId);
 
+    boolean existsByAssetId(String assetId);
+
     @Query("SELECT a FROM SimulationAsset a WHERE a.tenantCode = :tenantCode AND a.lastSeen > :since")
     List<Asset> findActiveAssets(String tenantCode, Instant since);
 

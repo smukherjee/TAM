@@ -1,6 +1,7 @@
 package com.utam.simulation.vehicle;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.utam.asset.service.VehicleAssetMapService;
 import com.utam.entity.Depot;
 import com.utam.entity.Stand;
 import com.utam.entity.VehicleType;
@@ -36,6 +37,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
     private final StandRepository standRepository;
     private final DepotRepository depotRepository;
     private final RestTemplate restTemplate;
+    private final VehicleAssetMapService vehicleAssetMapService;
     
     @SuppressWarnings("unused") // Reserved for JSON serialization of complex vehicle data
     private final ObjectMapper objectMapper;
@@ -57,23 +59,32 @@ public class VehicleDataGenerator extends BaseDataGenerator {
     private final Map<String, List<Stand>> stands = new ConcurrentHashMap<>();
     private final Map<String, List<Depot>> depots = new ConcurrentHashMap<>();
 
-    // GSE vehicle naming prefixes
+    // GSE vehicle naming prefixes - matches database vehicle_types.code
     private static final Map<String, String> VEHICLE_PREFIXES = Map.ofEntries(
-            Map.entry("FUEL", "FT"),
-            Map.entry("CATERING", "CT"),
-            Map.entry("BAGGAGE_TUG", "BT"),
-            Map.entry("BAGGAGE_CART", "BC"),
-            Map.entry("BELT_LOADER", "BL"),
-            Map.entry("GPU", "GP"),
-            Map.entry("PUSHBACK", "PB"),
-            Map.entry("STAIRS", "ST"),
-            Map.entry("WATER", "WT"),
-            Map.entry("LAVATORY", "LV"),
-            Map.entry("DEICING", "DI"),
-            Map.entry("ASU", "AS"),
-            Map.entry("BUS", "BU"),
-            Map.entry("CARGO", "CG"),
-            Map.entry("AMBULIFT", "AM")
+            // Standard database codes
+            Map.entry("BAG", "BT"),           // Baggage Tractor
+            Map.entry("BAGGAGE", "BC"),       // Baggage Cart
+            Map.entry("BELT", "BL"),          // Belt Loader
+            Map.entry("FUEL", "FT"),          // Fuel Truck
+            Map.entry("HYDR", "HD"),          // Hydrant Dispenser
+            Map.entry("CAT", "CT"),           // Catering Truck
+            Map.entry("CATERING", "CT"),      // Catering (alternate code)
+            Map.entry("GPU", "GP"),           // Ground Power Unit
+            Map.entry("ASU", "AS"),           // Air Start Unit
+            Map.entry("PB", "PB"),            // Pushback Tug
+            Map.entry("PUSHBACK", "PB"),      // Pushback (alternate code)
+            Map.entry("TWB", "TB"),           // Towbar
+            Map.entry("PAX", "BU"),           // Passenger Bus
+            Map.entry("BUS", "BU"),           // Bus (alternate code)
+            Map.entry("STRS", "ST"),          // Stairs
+            Map.entry("WATER", "WT"),         // Water Truck
+            Map.entry("LAV", "LV"),           // Lavatory Service
+            Map.entry("LAVATORY", "LV"),      // Lavatory (alternate code)
+            Map.entry("CARGO", "CG"),         // Cargo Loader
+            Map.entry("DEICE", "DI"),         // De-icing Truck
+            Map.entry("DEICING", "DI"),       // De-icing (alternate code)
+            Map.entry("EMERGENCY", "EM"),     // Emergency Vehicle
+            Map.entry("AMBULIFT", "AM")       // Ambulift
     );
 
     public VehicleDataGenerator(SimulationConfig config, MeterRegistry meterRegistry,
@@ -83,7 +94,8 @@ public class VehicleDataGenerator extends BaseDataGenerator {
                                 StandRepository standRepository,
                                 DepotRepository depotRepository,
                                 ObjectMapper objectMapper,
-                                RestTemplate restTemplate) {
+                                RestTemplate restTemplate,
+                                VehicleAssetMapService vehicleAssetMapService) {
         super(config, meterRegistry);
         this.vehicleRepository = vehicleRepository;
         this.vehiclePositionRepository = vehiclePositionRepository;
@@ -92,6 +104,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
         this.depotRepository = depotRepository;
         this.objectMapper = objectMapper;
         this.restTemplate = restTemplate;
+        this.vehicleAssetMapService = vehicleAssetMapService;
     }
 
     @Override
@@ -148,13 +161,22 @@ public class VehicleDataGenerator extends BaseDataGenerator {
             return 0;
         }
 
+        // Reload reference data if empty
         List<VehicleType> types = vehicleTypes.get(tenantCode);
+        if (types == null || types.isEmpty()) {
+            log.info("Reloading reference data for VehicleDataGenerator...");
+            loadReferenceData();
+            types = vehicleTypes.get(tenantCode);
+        }
+
         if (types == null || types.isEmpty()) {
             log.warn("No vehicle types loaded for tenant: {}", tenantCode);
             return 0;
         }
 
         int generated = 0;
+        int skipped = 0;
+        int assetsMapped = 0;
         SimulationConfig.FleetConfig fleetConfig = config.getFleet();
 
         // Distribute vehicles across types according to fleet config
@@ -166,34 +188,62 @@ public class VehicleDataGenerator extends BaseDataGenerator {
             for (int i = 0; i < count && generated < batchSize; i++) {
                 Vehicle vehicle = createVehicle(tenantCode, tenantConfig, type, i + 1);
                 if (vehicle != null) {
+                    // Check if vehicle already exists to avoid duplicate key errors
+                    if (vehicleRepository.existsByVehicleId(vehicle.getVehicleId())) {
+                        skipped++;
+                        continue;
+                    }
                     vehicleRepository.save(vehicle);
+                    
+                    // Create corresponding asset entry and mapping
+                    var assetInfo = vehicleAssetMapService.createOrUpdateAssetForVehicle(
+                            vehicle.getVehicleId(),
+                            vehicle.getVehicleName(),
+                            type.getName(),
+                            tenantCode
+                    );
+                    if (assetInfo.isPresent()) {
+                        assetsMapped++;
+                    }
+                    
                     registerActiveVehicle(vehicle);
                     generated++;
                 }
             }
         }
 
-        log.info("Generated {} vehicles for tenant {} across {} types", 
-                generated, tenantCode, types.size());
+        if (skipped > 0) {
+            log.info("Skipped {} existing vehicles for tenant {}", skipped, tenantCode);
+        }
+        log.info("Generated {} vehicles for tenant {} across {} types (assets mapped: {})", 
+                generated, tenantCode, types.size(), assetsMapped);
+        
+        // Update asset statuses after generation:
+        // - Vehicle-linked assets → "In Use"
+        // - Standalone assets → Random "Available" or "Maintenance" with random locations
+        if (generated > 0 || assetsMapped > 0) {
+            vehicleAssetMapService.updateAssetStatuses(tenantCode);
+        }
+        
         return generated;
     }
 
     private int getFleetSizeForType(SimulationConfig.FleetConfig fleetConfig, 
                                     String typeCode, int defaultCount) {
         return switch (typeCode) {
-            case "FUEL" -> fleetConfig.getFuelTrucks();
-            case "CATERING" -> fleetConfig.getCateringTrucks();
-            case "BAGGAGE_TUG" -> fleetConfig.getBaggageTugs();
-            case "BAGGAGE_CART" -> fleetConfig.getBaggageCarts();
-            case "BELT_LOADER" -> fleetConfig.getBeltLoaders();
+            case "FUEL", "HYDR" -> fleetConfig.getFuelTrucks();
+            case "CAT", "CATERING" -> fleetConfig.getCateringTrucks();
+            case "BAG" -> fleetConfig.getBaggageTugs();
+            case "BAGGAGE" -> fleetConfig.getBaggageCarts();
+            case "BELT" -> fleetConfig.getBeltLoaders();
             case "GPU" -> fleetConfig.getGpus();
-            case "PUSHBACK" -> fleetConfig.getPushbackTractors();
-            case "STAIRS" -> fleetConfig.getStairs();
+            case "PB", "PUSHBACK", "TWB" -> fleetConfig.getPushbackTractors();
+            case "STRS" -> fleetConfig.getStairs();
             case "WATER" -> fleetConfig.getWaterTrucks();
-            case "LAVATORY" -> fleetConfig.getLavatoryTrucks();
-            case "DEICING" -> fleetConfig.getDeicingTrucks();
+            case "LAV", "LAVATORY" -> fleetConfig.getLavatoryTrucks();
+            case "DEICE", "DEICING" -> fleetConfig.getDeicingTrucks();
             case "ASU" -> fleetConfig.getAsus();
-            case "BUS" -> fleetConfig.getBuses();
+            case "PAX", "BUS" -> fleetConfig.getBuses();
             case "CARGO" -> fleetConfig.getCargoLoaders();
             case "AMBULIFT" -> fleetConfig.getAmbulifts();
             default -> defaultCount;

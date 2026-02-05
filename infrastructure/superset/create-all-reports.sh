@@ -25,12 +25,18 @@ AUTH_HEADER="Authorization: Bearer $TOKEN"
 # 2) Ensure TimescaleDB connection exists
 DB_ID=$(req -X GET "$SUPERSET_URL/api/v1/database/" -H "$AUTH_HEADER" | jq -r '.result[] | select(.database_name == "TimescaleDB") | .id')
 
-if [ -z "$DB_ID" ]; then
+if [ -z "$DB_ID" ] || [ "$DB_ID" == "null" ]; then
   echo "ℹ️ Creating TimescaleDB database connection"
   PAYLOAD=$(jq -n \
     '{database_name: "TimescaleDB", sqlalchemy_uri: "postgresql+psycopg2://postgres:password@timescaledb:5432/utam", expose_in_sqllab: true, allow_run_async: true}')
   RESP=$(req -X POST "$SUPERSET_URL/api/v1/database/" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$PAYLOAD")
   DB_ID=$(echo "$RESP" | jq -r '.id')
+fi
+
+# Fallback: if DB_ID is still null, use ID 1 (known from SQLite)
+if [ -z "$DB_ID" ] || [ "$DB_ID" == "null" ]; then
+  echo "ℹ️ Using fallback database ID 1"
+  DB_ID=1
 fi
 echo "   ✅ Database ID: $DB_ID"
 

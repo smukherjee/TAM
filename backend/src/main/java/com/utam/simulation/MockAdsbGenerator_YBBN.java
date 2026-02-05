@@ -29,8 +29,29 @@ public class MockAdsbGenerator_YBBN {
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
 
-    // Simulated flights for Brisbane
-    private final List<String> callsigns = Arrays.asList("QF401", "VA823", "JQ520", "NZ175", "SQ245");
+    // Simulated flights for Brisbane - Australian and Asia-Pacific carriers
+    private final List<String> callsigns = Arrays.asList(
+        // Qantas
+        "QF401", "QF402", "QF403", "QF501", "QF502", "QF601", "QF602", "QF603",
+        // Virgin Australia
+        "VA823", "VA824", "VA825", "VA901", "VA902", "VA903",
+        // Jetstar
+        "JQ520", "JQ521", "JQ522", "JQ620", "JQ621", "JQ622",
+        // Air New Zealand
+        "NZ175", "NZ176", "NZ177", "NZ275", "NZ276",
+        // Singapore Airlines
+        "SQ245", "SQ246", "SQ247", "SQ345",
+        // Emirates
+        "EK432", "EK433", "EK434",
+        // Cathay Pacific
+        "CX155", "CX156", "CX157",
+        // Malaysia Airlines
+        "MH123", "MH124", "MH125",
+        // China Southern
+        "CZ305", "CZ306",
+        // Korean Air
+        "KE123", "KE124"
+    );
     private final String icao = "YBBN";
 
     public MockAdsbGenerator_YBBN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {

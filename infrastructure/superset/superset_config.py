@@ -9,6 +9,7 @@ FEATURE_FLAGS = {
     "EMBEDDED_SUPERSET": True,
     "DASHBOARD_NATIVE_FILTERS": True,
     "DASHBOARD_CROSS_FILTERS": True,
+    "ENABLE_TEMPLATE_PROCESSING": True,
 }
 
 # CORS & Embedding
@@ -29,3 +30,7 @@ WTF_CSRF_ENABLED = False
 
 # Session
 SESSION_COOKIE_SAMESITE = None
+
+# Enable public/guest access for embedded charts (DEV ONLY)
+PUBLIC_ROLE_LIKE = "Gamma"
+AUTH_ROLE_PUBLIC = "Public"

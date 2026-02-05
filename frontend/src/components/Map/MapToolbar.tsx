@@ -14,7 +14,7 @@ interface LayerState {
     flights: boolean;
     vehicles: boolean;
     assets: boolean;
-    heatmap: boolean;
+    heatmap?: boolean;
     zones: boolean;
     alerts: boolean;
 }
@@ -26,6 +26,7 @@ interface MapToolbarProps {
     onHeatmapModeChange?: (mode: 'activity' | 'violations' | 'dwell' | null) => void;
     onOpenFilters?: () => void;
     alertCount?: number;
+    showHeatmapToggle?: boolean;
 }
 
 /**
@@ -38,7 +39,8 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
     heatmapMode,
     onHeatmapModeChange,
     onOpenFilters,
-    alertCount = 0
+    alertCount = 0,
+    showHeatmapToggle = true
 }) => {
     const [showHeatmapOptions, setShowHeatmapOptions] = useState(false);
 
@@ -80,52 +82,56 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
                     </button>
                 ))}
 
-                {/* Divider */}
-                <div className="w-px h-8 bg-gray-700 mx-1" />
+                {/* Heatmap Toggle with Dropdown - only show if enabled */}
+                {showHeatmapToggle && (
+                    <>
+                        {/* Divider */}
+                        <div className="w-px h-8 bg-gray-700 mx-1" />
 
-                {/* Heatmap Toggle with Dropdown */}
-                <div className="relative">
-                    <button
-                        onClick={() => {
-                            if (heatmapMode) {
-                                onHeatmapModeChange?.(null);
-                                setShowHeatmapOptions(false);
-                            } else {
-                                setShowHeatmapOptions(!showHeatmapOptions);
-                            }
-                        }}
-                        className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                            heatmapMode
-                                ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30'
-                                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
-                        }`}
-                    >
-                        <Flame className={`w-4 h-4 ${heatmapMode ? 'text-orange-400' : ''}`} />
-                        <span className="text-xs font-medium hidden sm:inline">
-                            {heatmapMode ? heatmapMode.charAt(0).toUpperCase() + heatmapMode.slice(1) : 'Heatmap'}
-                        </span>
-                        <ChevronDown className={`w-3 h-3 transition-transform ${showHeatmapOptions ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {/* Heatmap Mode Dropdown */}
-                    {showHeatmapOptions && !heatmapMode && (
-                        <div className="absolute top-full mt-2 left-0 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[160px]">
-                            {heatmapModes.map(mode => (
-                                <button
-                                    key={mode.key}
-                                    onClick={() => {
-                                        onHeatmapModeChange?.(mode.key);
+                        <div className="relative">
+                            <button
+                                onClick={() => {
+                                    if (heatmapMode) {
+                                        onHeatmapModeChange?.(null);
                                         setShowHeatmapOptions(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-left hover:bg-gray-800 transition-colors"
-                                >
-                                    <div className="text-sm text-white">{mode.label}</div>
-                                    <div className="text-xs text-gray-500">{mode.description}</div>
-                                </button>
-                            ))}
+                                    } else {
+                                        setShowHeatmapOptions(!showHeatmapOptions);
+                                    }
+                                }}
+                                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                                    heatmapMode
+                                        ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30'
+                                        : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
+                                }`}
+                            >
+                                <Flame className={`w-4 h-4 ${heatmapMode ? 'text-orange-400' : ''}`} />
+                                <span className="text-xs font-medium hidden sm:inline">
+                                    {heatmapMode ? heatmapMode.charAt(0).toUpperCase() + heatmapMode.slice(1) : 'Heatmap'}
+                                </span>
+                                <ChevronDown className={`w-3 h-3 transition-transform ${showHeatmapOptions ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Heatmap Mode Dropdown */}
+                            {showHeatmapOptions && !heatmapMode && (
+                                <div className="absolute top-full mt-2 left-0 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[160px]">
+                                    {heatmapModes.map(mode => (
+                                        <button
+                                            key={mode.key}
+                                            onClick={() => {
+                                                onHeatmapModeChange?.(mode.key);
+                                                setShowHeatmapOptions(false);
+                                            }}
+                                            className="w-full px-4 py-2 text-left hover:bg-gray-800 transition-colors"
+                                        >
+                                            <div className="text-sm text-white">{mode.label}</div>
+                                            <div className="text-xs text-gray-500">{mode.description}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </>
+                )}
 
                 {/* Divider */}
                 <div className="w-px h-8 bg-gray-700 mx-1" />

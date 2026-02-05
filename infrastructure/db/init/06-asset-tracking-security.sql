@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS restricted_zones (
     authorized_asset_categories TEXT[], -- Array of allowed categories
     authorized_asset_ids TEXT[], -- Array of specific allowed asset IDs
     is_active BOOLEAN DEFAULT TRUE,
+    effective_from TIMESTAMPTZ, -- When the zone restriction begins
+    effective_to TIMESTAMPTZ,   -- When the zone restriction ends (NULL = indefinite)
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

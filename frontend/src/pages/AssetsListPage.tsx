@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, Search, Filter, Route } from 'lucide-react';
 import api from '../services/api';
 
 interface Asset {
@@ -17,10 +18,15 @@ interface Asset {
 }
 
 const AssetsListPage: React.FC = () => {
+    const navigate = useNavigate();
     const [assets, setAssets] = useState<Asset[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
+
+    const handleViewMovementTrail = (assetId: string) => {
+        navigate(`/tracking/trail?assetId=${encodeURIComponent(assetId)}`);
+    };
 
     useEffect(() => {
         fetchAssets();
@@ -109,6 +115,7 @@ const AssetsListPage: React.FC = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Location</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-700">
@@ -129,6 +136,16 @@ const AssetsListPage: React.FC = () => {
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.description || '-'}</td>
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.category || '-'}</td>
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.location || '-'}</td>
+                                            <td className="px-6 py-4 text-sm">
+                                                <button
+                                                    onClick={() => handleViewMovementTrail(asset.assetId)}
+                                                    className="flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors"
+                                                    title="View Movement Trail"
+                                                >
+                                                    <Route size={16} />
+                                                    <span>Trail</span>
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

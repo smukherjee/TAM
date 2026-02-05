@@ -2,6 +2,8 @@ package com.utam.service;
 
 import com.utam.model.Flight;
 import com.utam.repository.FlightRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +13,8 @@ import java.util.List;
 
 @Service
 public class FlightService {
+
+    private static final Logger logger = LoggerFactory.getLogger(FlightService.class);
 
     private final FlightRepository flightRepository;
     private final RedisService redisService;
@@ -29,6 +33,8 @@ public class FlightService {
         // Try Redis first, but only trust it if we have enough active flights to be meaningful
         String icao = icaoCode != null && !icaoCode.isEmpty() ? icaoCode : "VIDP";
         java.util.Set<Object> activeCallsigns = redisService.getSetMembers("active_flights:" + icao);
+        logger.info("FlightService: icao={}, Redis activeCallsigns={}", icao, 
+                activeCallsigns != null ? activeCallsigns.size() : "null");
 
         if (activeCallsigns != null && !activeCallsigns.isEmpty()) {
             List<Flight> flights = new java.util.ArrayList<>();
@@ -37,17 +43,23 @@ public class FlightService {
                 java.util.Optional<Flight> flightOpt = redisService.get("flight:" + icao + ":" + callsign, Flight.class);
                 flightOpt.ifPresent(flights::add);
             }
+            logger.info("FlightService: Retrieved {} flights from Redis", flights.size());
             // If Redis has at least 20 flights, assume it is authoritative; otherwise fall back to DB
             if (flights.size() >= 20) {
                 return flights;
             }
+            logger.info("FlightService: Redis has <20 flights, falling back to DB");
         }
 
         // Fallback to DB
         Instant fiveMinutesAgo = Instant.now().minus(5, ChronoUnit.MINUTES);
         if (icaoCode != null && !icaoCode.isEmpty()) {
-            return flightRepository.findLatestFlightsByIcao(fiveMinutesAgo, icaoCode);
+            List<Flight> dbFlights = flightRepository.findLatestFlightsByIcao(fiveMinutesAgo, icaoCode);
+            logger.info("FlightService: Retrieved {} flights from DB for icao={}", dbFlights.size(), icaoCode);
+            return dbFlights;
         }
-        return flightRepository.findLatestFlights(fiveMinutesAgo);
+        List<Flight> dbFlights = flightRepository.findLatestFlights(fiveMinutesAgo);
+        logger.info("FlightService: Retrieved {} flights from DB (all tenants)", dbFlights.size());
+        return dbFlights;
     }
 }

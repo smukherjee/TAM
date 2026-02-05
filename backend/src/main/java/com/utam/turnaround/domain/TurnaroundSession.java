@@ -1,5 +1,6 @@
 package com.utam.turnaround.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -37,9 +38,11 @@ public class TurnaroundSession {
     private ZonedDateTime updatedAt;
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("session")
     private List<TurnaroundTask> tasks;
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("session")
     private List<Alert> alerts;
 
     public TurnaroundSession() {}

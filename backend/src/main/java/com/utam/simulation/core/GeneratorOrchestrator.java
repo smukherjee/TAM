@@ -560,6 +560,65 @@ public class GeneratorOrchestrator {
     }
 
     /**
+     * Clear simulation data for a specific tenant.
+     * Delegates to SimulationDataService for actual database operations.
+     */
+    @Autowired(required = false)
+    private com.utam.simulation.service.SimulationDataService simulationDataService;
+
+    @Autowired(required = false)
+    private com.utam.asset.service.VehicleAssetMapService vehicleAssetMapService;
+
+    public int clearSimulationData(String tenantCode) {
+        log.info("Clearing simulation data for tenant: {}", tenantCode);
+        if (simulationDataService != null) {
+            return simulationDataService.clearDataForTenant(tenantCode);
+        }
+        log.warn("SimulationDataService not available, no data cleared");
+        return 0;
+    }
+
+    /**
+     * Clear simulation data for all tenants.
+     */
+    public int clearAllSimulationData() {
+        log.info("Clearing simulation data for all tenants");
+        if (simulationDataService != null) {
+            return simulationDataService.clearAllData();
+        }
+        log.warn("SimulationDataService not available, no data cleared");
+        return 0;
+    }
+
+    /**
+     * Refresh materialized views after data generation.
+     */
+    public void refreshMaterializedViews() {
+        log.info("Refreshing materialized views");
+        if (simulationDataService != null) {
+            simulationDataService.refreshMaterializedViews();
+        } else {
+            log.warn("SimulationDataService not available, views not refreshed");
+        }
+    }
+
+    /**
+     * Sync all vehicles to assets with proper mappings.
+     * This ensures every vehicle has a corresponding asset entry.
+     * 
+     * @param tenantCode The tenant code, or null for all tenants
+     * @return Number of mappings created
+     */
+    public int syncVehiclesToAssets(String tenantCode) {
+        log.info("Syncing vehicles to assets for tenant: {}", tenantCode != null ? tenantCode : "ALL");
+        if (vehicleAssetMapService != null) {
+            return vehicleAssetMapService.syncVehiclesToAssets(tenantCode);
+        }
+        log.warn("VehicleAssetMapService not available, no sync performed");
+        return 0;
+    }
+
+    /**
      * Status record for a tenant's simulation.
      */
     public record SimulationStatus(boolean isRunning, Map<String, Object> generatorStats) {

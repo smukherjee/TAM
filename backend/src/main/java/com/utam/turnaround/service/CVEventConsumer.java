@@ -2,6 +2,8 @@ package com.utam.turnaround.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.utam.entity.Stand;
+import com.utam.repository.StandRepository;
 import com.utam.turnaround.domain.TurnaroundSession;
 import com.utam.turnaround.domain.TurnaroundTask;
 import com.utam.turnaround.repository.TurnaroundSessionRepository;
@@ -17,7 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CVEventConsumer {
@@ -25,14 +29,39 @@ public class CVEventConsumer {
     private static final Logger logger = LoggerFactory.getLogger(CVEventConsumer.class);
     private final TurnaroundSessionRepository sessionRepository;
     private final TurnaroundTaskRepository taskRepository;
+    private final StandRepository standRepository;
     private final ObjectMapper objectMapper;
+    private final Random random = new Random();
+    private final ConcurrentHashMap<String, List<Stand>> standCache = new ConcurrentHashMap<>();
 
     public CVEventConsumer(TurnaroundSessionRepository sessionRepository, 
                            TurnaroundTaskRepository taskRepository,
+                           StandRepository standRepository,
                            ObjectMapper objectMapper) {
         this.sessionRepository = sessionRepository;
         this.taskRepository = taskRepository;
+        this.standRepository = standRepository;
         this.objectMapper = objectMapper;
+    }
+    
+    /**
+     * Get a random stand for the given tenant code.
+     */
+    private String getRandomStandId(String tenantCode) {
+        List<Stand> stands = standCache.computeIfAbsent(tenantCode, 
+            tc -> standRepository.findByTenantCodeAndActive(tc, true));
+        
+        if (stands == null || stands.isEmpty()) {
+            stands = standRepository.findByTenantCode(tenantCode);
+            if (stands != null && !stands.isEmpty()) {
+                standCache.put(tenantCode, stands);
+            }
+        }
+        
+        if (stands != null && !stands.isEmpty()) {
+            return stands.get(random.nextInt(stands.size())).getStandId();
+        }
+        return "1";
     }
 
     @KafkaListener(topics = "turnaround-raw-json", groupId = "turnaround-cv-group")
@@ -77,8 +106,12 @@ public class CVEventConsumer {
         // Prefer explicit tenant_code; fall back to icao_code for now (VIDP/LIRN/YBBN), else default.
         String tenantCode = (String) event.getOrDefault("tenant_code", event.getOrDefault("icao_code", "VIDP"));
 
-        // Optional stand fields; default to A1 for demo data.
-        String standId = (String) event.getOrDefault("stand", event.getOrDefault("stand_id", "A1"));
+        // Optional stand fields; use random stand if not provided
+        Object standObj = event.get("stand");
+        if (standObj == null) {
+            standObj = event.get("stand_id");
+        }
+        String standId = standObj != null ? String.valueOf(standObj) : getRandomStandId(tenantCode);
 
         if (flightId == null || flightId.isBlank()) {
             // Camera events don't have flight_id; ignore quietly to avoid log spam.

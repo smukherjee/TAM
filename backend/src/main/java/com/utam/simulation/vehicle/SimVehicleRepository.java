@@ -29,5 +29,7 @@ public interface SimVehicleRepository extends JpaRepository<Vehicle, UUID> {
     @Query("SELECT COUNT(v) FROM SimulationVehicle v WHERE v.tenantCode = :tenantCode AND v.status = :status")
     long countByTenantCodeAndStatus(String tenantCode, String status);
 
+    boolean existsByVehicleId(String vehicleId);
+
     void deleteByTenantCode(String tenantCode);
 }

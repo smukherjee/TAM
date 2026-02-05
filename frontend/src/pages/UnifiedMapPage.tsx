@@ -14,17 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { webSocketService } from '../services/WebSocketService';
 import { Vehicle } from '../services/vehicleService';
 import { AssetLocation, AssetLocationResponse, AssetFilters } from '../types/assetTracking';
-import {
-    fetchActivityHeatmap,
-    fetchViolationsHeatmap,
-    fetchDwellHeatmap,
-    transformToLeafletHeatFormat,
-    HeatmapFilters
-} from '../services/heatmapService';
 import { Loader2 } from 'lucide-react';
-
-// Lazy load the heat layer to avoid issues when not used
-const HeatLayer = React.lazy(() => import('../components/Tracking/HeatLayer'));
 
 interface Alert {
     alertId: string;
@@ -40,7 +30,7 @@ interface LayerState {
     flights: boolean;
     vehicles: boolean;
     assets: boolean;
-    heatmap: boolean;
+    heatmap?: boolean;
     zones: boolean;
     alerts: boolean;
 }
@@ -58,7 +48,6 @@ const UnifiedMapPage: React.FC = () => {
         flights: true,
         vehicles: true,
         assets: true,
-        heatmap: false,
         zones: true,
         alerts: true
     });
@@ -71,7 +60,6 @@ const UnifiedMapPage: React.FC = () => {
     // Filters and UI state
     const [assetFilters, setAssetFilters] = useState<AssetFilters>({});
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-    const [heatmapMode, setHeatmapMode] = useState<'activity' | 'violations' | 'dwell' | null>(null);
 
     const getCenter = (): [number, number] => {
         if (tenantCode === 'VABB') return [19.0896, 72.8656];
@@ -125,43 +113,6 @@ const UnifiedMapPage: React.FC = () => {
         refetchInterval: 5000,
         staleTime: 5000
     });
-
-    // Fetch heatmap data
-    const { data: heatmapData, isLoading: heatmapLoading } = useQuery({
-        queryKey: ['heatmap', heatmapMode, tenantCode],
-        queryFn: async () => {
-            if (!heatmapMode) return null;
-            
-            const now = new Date();
-            const start = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Last 24 hours
-            
-            const filters: HeatmapFilters = {
-                tenantCode,
-                gridSize: 25,
-                startTime: start.toISOString(),
-                endTime: now.toISOString()
-            };
-
-            switch (heatmapMode) {
-                case 'activity':
-                    return await fetchActivityHeatmap(filters);
-                case 'violations':
-                    return await fetchViolationsHeatmap(filters);
-                case 'dwell':
-                    return await fetchDwellHeatmap(filters);
-                default:
-                    return null;
-            }
-        },
-        enabled: !!heatmapMode && layers.heatmap,
-        staleTime: 60000 // 1 minute
-    });
-
-    // Transform heatmap data for Leaflet
-    const leafletHeatData = useMemo(() => {
-        if (!heatmapData?.data) return [];
-        return transformToLeafletHeatFormat(heatmapData.data, heatmapData.maxIntensity || 1);
-    }, [heatmapData]);
 
     // Update assets when data changes
     useEffect(() => {
@@ -232,12 +183,6 @@ const UnifiedMapPage: React.FC = () => {
         setLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
     };
 
-    // Handle heatmap mode change
-    const handleHeatmapModeChange = (mode: 'activity' | 'violations' | 'dwell' | null) => {
-        setHeatmapMode(mode);
-        setLayers(prev => ({ ...prev, heatmap: mode !== null }));
-    };
-
     // Handle alert dismiss
     const handleAlertDismiss = (alertId: string) => {
         setAlerts(prev => prev.filter(a => a.alertId !== alertId));
@@ -256,7 +201,7 @@ const UnifiedMapPage: React.FC = () => {
         }));
     }, [alerts]);
 
-    const isLoading = assetsLoading || heatmapLoading;
+    const isLoading = assetsLoading;
 
     return (
         <div className="h-full w-full relative">
@@ -272,10 +217,9 @@ const UnifiedMapPage: React.FC = () => {
             <MapToolbar
                 layers={layers}
                 onLayerToggle={handleLayerToggle}
-                heatmapMode={heatmapMode}
-                onHeatmapModeChange={handleHeatmapModeChange}
                 onOpenFilters={() => setIsFilterDrawerOpen(true)}
                 alertCount={enhancedAlerts.length}
+                showHeatmapToggle={false}
             />
 
             {/* Filter Drawer */}
@@ -293,17 +237,6 @@ const UnifiedMapPage: React.FC = () => {
                 {/* Zone Boundaries */}
                 {layers.zones && <ZoneBoundariesLayer />}
                 
-                {/* Heatmap Layer */}
-                {layers.heatmap && heatmapMode && leafletHeatData.length > 0 && (
-                    <React.Suspense fallback={null}>
-                        <HeatLayer
-                            data={leafletHeatData}
-                            gridSize={25}
-                            intensity={75}
-                        />
-                    </React.Suspense>
-                )}
-                
                 {/* Entity Layers */}
                 {layers.flights && <FlightLayer />}
                 {layers.vehicles && vehicles && Array.isArray(vehicles) && vehicles.length > 0 && (
@@ -319,8 +252,6 @@ const UnifiedMapPage: React.FC = () => {
                 showFlights={layers.flights}
                 showVehicles={layers.vehicles}
                 showAssets={layers.assets}
-                showHeatmap={layers.heatmap}
-                heatmapMode={heatmapMode}
             />
 
             {/* Alert List */}

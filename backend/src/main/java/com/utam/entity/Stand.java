@@ -36,7 +36,10 @@ public class Stand {
     private String terminalId;
 
     @Column(name = "stand_type", length = 20)
-    private String standType;  // CONTACT, REMOTE
+    private String standType;  // CONTACT, REMOTE, PUSHBACK
+
+    @Column(name = "apron", length = 50)
+    private String apron;  // Apron 1, Apron 2, North Remote, etc.
 
     @Column(nullable = false)
     private Boolean active = true;
@@ -95,6 +98,9 @@ public class Stand {
 
     public String getStandType() { return standType; }
     public void setStandType(String standType) { this.standType = standType; }
+
+    public String getApron() { return apron; }
+    public void setApron(String apron) { this.apron = apron; }
 
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }

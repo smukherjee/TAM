@@ -128,21 +128,21 @@ public class HeatmapService {
                     ST_Y(snapped_location) AS latitude,
                     ST_X(snapped_location) AS longitude,
                     SUM(violation_count) AS violation_count,
-                    SUM(unique_violators) AS unique_assets,
-                    AVG(avg_speed) AS avg_speed,
-                    MAX(max_speed) AS max_speed,
+                    SUM(unique_violating_assets) AS unique_assets,
+                    SUM(critical_count) AS critical_count,
+                    SUM(high_count) AS high_count,
                     MIN(first_violation) AS first_activity,
                     MAX(last_violation) AS last_activity
                 FROM (
                     SELECT
                         ST_SnapToGrid(grid_location, ?) AS snapped_location,
                         violation_count,
-                        unique_violators,
-                        avg_speed,
-                        max_speed,
+                        unique_violating_assets,
+                        critical_count,
+                        high_count,
                         first_violation,
                         last_violation
-                    FROM asset_violation_heatmap
+                    FROM violation_heatmap
                     WHERE tenant_code = ?
                     AND time_bucket >= ?::timestamp
                     AND time_bucket <= ?::timestamp
@@ -429,8 +429,8 @@ public class HeatmapService {
                 .metadata(HeatmapDataDTO.HeatmapMetadata.builder()
                         .activityCount(rs.getLong("violation_count"))
                         .uniqueAssets(rs.getInt("unique_assets"))
-                        .avgSpeed(rs.getDouble("avg_speed"))
-                        .maxSpeed(rs.getDouble("max_speed"))
+                        .criticalCount(rs.getLong("critical_count"))
+                        .highCount(rs.getLong("high_count"))
                         .firstActivity(rs.getTimestamp("first_activity") != null ?
                                 rs.getTimestamp("first_activity").toInstant().toString() : null)
                         .lastActivity(rs.getTimestamp("last_activity") != null ?

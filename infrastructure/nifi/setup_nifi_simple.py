@@ -40,26 +40,33 @@ def create_publish_kafka(pg_id, name, topic):
                 "type":"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
                 "name":name,
                 "position":{"x":100,"y":300},
-                "config":{"properties":{
-                    "bootstrap.servers":REDPANDA,
-                    "topic":topic,
-                    "use-transactions":"false"
-                }}
+                "config":{
+                    "properties":{
+                        "bootstrap.servers":REDPANDA,
+                        "topic":topic,
+                        "use-transactions":"false"
+                    },
+                    "autoTerminatedRelationships":["success","failure"]
+                }
             }
         })
     return r.json().get('id')
 
 def create_connection(pg_id, src_id, dest_id, relationships):
+    payload = {
+        "revision":{"version":0},
+        "component":{
+            "source":{"id":src_id,"groupId":pg_id,"type":"PROCESSOR"},
+            "destination":{"id":dest_id,"groupId":pg_id,"type":"PROCESSOR"},
+            "selectedRelationships":relationships
+        }
+    }
     r = requests.post(f"{NIFI_URL}/process-groups/{pg_id}/connections",
         headers={"Content-Type": "application/json"},
-        json={
-            "revision":{"version":0},
-            "component":{
-                "source":{"id":src_id,"type":"PROCESSOR"},
-                "destination":{"id":dest_id,"type":"PROCESSOR"},
-                "selectedRelationships":relationships
-            }
-        })
+        json=payload)
+    if r.status_code != 201:
+        print(f"    Connection error: {r.status_code} - {r.text[:200]}")
+        return None
     return r.json().get('id')
 
 def start_pg(pg_id):

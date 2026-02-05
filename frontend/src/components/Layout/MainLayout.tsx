@@ -75,7 +75,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         </>
                     )}
                     {showTurnaround && <NavItem to="/turnaround" icon={<Activity size={20} />} label="Turnaround" isOpen={isOpen} />}
-                    {showReports && <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics" isOpen={isOpen} />}
+                    {showReports && <NavItem to="/reports" icon={<BarChart3 size={20} />} label="Analytics Hub" isOpen={isOpen} />}
                     
                     {/* Airside Operations Section - Hotspot Analysis only (Assets integrated into Live Map) */}
                     {showAirsideOps && (

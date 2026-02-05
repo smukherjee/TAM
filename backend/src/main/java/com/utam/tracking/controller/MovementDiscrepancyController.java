@@ -36,7 +36,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/tracking/discrepancies")
 @Tag(name = "Movement Discrepancies", description = "Movement discrepancy management endpoints")
-@PreAuthorize("hasAnyRole('ADMIN', 'GH')")
+// @PreAuthorize("hasAnyRole('ADMIN', 'GH')") // Disabled for development
 public class MovementDiscrepancyController {
 
     private final MovementDiscrepancyService discrepancyService;

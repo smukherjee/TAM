@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Pause, Square, RefreshCw, AlertTriangle, CheckCircle, Clock, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Pause, Square, RefreshCw, AlertTriangle, CheckCircle, Clock, Settings, ChevronDown, ChevronUp, Trash2, Database, Globe } from 'lucide-react';
 
 // Types - matches backend BaseDataGenerator.GeneratorStats record
 interface GeneratorStatus {
@@ -28,6 +28,20 @@ interface GeneratorConfig {
   alertsPerHour: number;
 }
 
+interface TenantInfo {
+  icaoCode: string;
+  name: string;
+  location: string;
+  timezone: string;
+}
+
+// Supported airports
+const SUPPORTED_TENANTS: TenantInfo[] = [
+  { icaoCode: 'VIDP', name: 'Indira Gandhi International Airport', location: 'Delhi, India', timezone: 'Asia/Kolkata' },
+  { icaoCode: 'LIRN', name: 'Naples International Airport', location: 'Naples, Italy', timezone: 'Europe/Rome' },
+  { icaoCode: 'YBBN', name: 'Brisbane Airport', location: 'Brisbane, Australia', timezone: 'Australia/Brisbane' },
+];
+
 interface GeneratorControlsProps {
   tenantCode?: string;
   onStatusChange?: (status: OrchestratorStatus) => void;
@@ -36,14 +50,18 @@ interface GeneratorControlsProps {
 /**
  * T083: GeneratorControls component for admin control panel.
  * Provides UI controls for starting/stopping data generators.
+ * Supports multi-tenant data generation for VIDP, LIRN, YBBN.
  */
 export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
-  tenantCode = 'YBBN',
+  tenantCode: initialTenantCode = 'YBBN',
   onStatusChange,
 }) => {
+  const [selectedTenant, setSelectedTenant] = useState(initialTenantCode);
   const [status, setStatus] = useState<OrchestratorStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [config, setConfig] = useState<GeneratorConfig>({
     flightsPerHour: 20,
@@ -73,20 +91,143 @@ export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
+  // Clear success message after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   // Control actions
-  const startBatchPopulation = async () => {
+  const startBatchPopulation = async (tenant: string = selectedTenant) => {
     setLoading(true);
+    setActionInProgress('batch');
     setError(null);
     try {
-      const response = await fetch(`/api/admin/generators/batch/${tenantCode}`, {
+      const response = await fetch(`/api/admin/generators/batch/${tenant}?batchSize=${config.batchSize}`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Failed to start batch');
+      const result = await response.json();
+      setSuccessMessage(`Generated batch data for ${tenant}: ${Object.values(result.results || {}).reduce((a: number, b: unknown) => a + (b as number), 0)} records`);
       await fetchStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start batch');
     } finally {
       setLoading(false);
+      setActionInProgress(null);
+    }
+  };
+
+  const clearData = async (tenant: string = selectedTenant) => {
+    if (!confirm(`Are you sure you want to clear all simulation data for ${tenant}? This cannot be undone.`)) {
+      return;
+    }
+    setLoading(true);
+    setActionInProgress('clear');
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/generators/clear/${tenant}`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to clear data');
+      const result = await response.json();
+      setSuccessMessage(`Cleared ${result.deletedCount} records for ${tenant}`);
+      await fetchStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to clear data');
+    } finally {
+      setLoading(false);
+      setActionInProgress(null);
+    }
+  };
+
+  const generateFreshData = async (tenant: string = selectedTenant) => {
+    setLoading(true);
+    setActionInProgress('fresh');
+    setError(null);
+    try {
+      // Step 1: Clear existing data
+      setSuccessMessage(`Clearing existing data for ${tenant}...`);
+      const clearResponse = await fetch(`/api/admin/generators/clear/${tenant}`, {
+        method: 'POST',
+      });
+      if (!clearResponse.ok) throw new Error('Failed to clear data');
+
+      // Step 2: Generate batch data
+      setSuccessMessage(`Generating batch data for ${tenant}...`);
+      const batchResponse = await fetch(`/api/admin/generators/batch/${tenant}?batchSize=${config.batchSize}`, {
+        method: 'POST',
+      });
+      if (!batchResponse.ok) throw new Error('Failed to generate batch data');
+
+      // Step 3: Generate historical data
+      setSuccessMessage(`Generating historical data for ${tenant}...`);
+      const histResponse = await fetch(`/api/admin/generators/historical/${tenant}?days=7&samplesPerDay=24`, {
+        method: 'POST',
+      });
+      if (!histResponse.ok) throw new Error('Failed to generate historical data');
+
+      // Step 4: Refresh views
+      setSuccessMessage(`Refreshing materialized views...`);
+      await fetch('/api/admin/generators/refresh-views', { method: 'POST' });
+
+      setSuccessMessage(`Successfully generated fresh data for ${tenant}!`);
+      await fetchStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate fresh data');
+    } finally {
+      setLoading(false);
+      setActionInProgress(null);
+    }
+  };
+
+  const generateForAllTenants = async () => {
+    if (!confirm('Generate fresh data for ALL airports (VIDP, LIRN, YBBN)? This will clear and regenerate all simulation data.')) {
+      return;
+    }
+    setLoading(true);
+    setActionInProgress('all');
+    setError(null);
+    try {
+      for (const tenant of SUPPORTED_TENANTS) {
+        setSuccessMessage(`Processing ${tenant.icaoCode} (${tenant.location})...`);
+        await generateFreshDataForTenant(tenant.icaoCode);
+      }
+      setSuccessMessage('Successfully generated data for all airports!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate data for all tenants');
+    } finally {
+      setLoading(false);
+      setActionInProgress(null);
+    }
+  };
+
+  const generateFreshDataForTenant = async (tenant: string) => {
+    const clearResponse = await fetch(`/api/admin/generators/clear/${tenant}`, { method: 'POST' });
+    if (!clearResponse.ok) throw new Error(`Failed to clear data for ${tenant}`);
+    
+    const batchResponse = await fetch(`/api/admin/generators/batch/${tenant}?batchSize=${config.batchSize}`, { method: 'POST' });
+    if (!batchResponse.ok) throw new Error(`Failed to generate batch for ${tenant}`);
+    
+    const histResponse = await fetch(`/api/admin/generators/historical/${tenant}?days=7&samplesPerDay=24`, { method: 'POST' });
+    if (!histResponse.ok) throw new Error(`Failed to generate history for ${tenant}`);
+  };
+
+  const refreshViews = async () => {
+    setLoading(true);
+    setActionInProgress('refresh');
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/generators/refresh-views', { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to refresh views');
+      setSuccessMessage('Materialized views refreshed successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to refresh views');
+    } finally {
+      setLoading(false);
+      setActionInProgress(null);
     }
   };
 
@@ -156,14 +297,15 @@ export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
     }
   };
 
-  const generateHistoricalData = async (days: number) => {
+  const generateHistoricalData = async (days: number, tenant: string = selectedTenant) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/generators/historical/${tenantCode}?days=${days}`, {
+      const response = await fetch(`/api/admin/generators/historical/${tenant}?days=${days}`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Failed to generate historical data');
+      setSuccessMessage(`Generated ${days} days of historical data for ${tenant}`);
       await fetchStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate historical data');
@@ -185,6 +327,14 @@ export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
         </button>
       </div>
 
+      {/* Success message */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-900/50 text-green-300 rounded-lg flex items-center gap-2 border border-green-700">
+          <CheckCircle className="w-5 h-5" />
+          {successMessage}
+        </div>
+      )}
+
       {/* Error display */}
       {error && (
         <div className="mb-4 p-3 bg-red-900/50 text-red-300 rounded-lg flex items-center gap-2 border border-red-700">
@@ -192,6 +342,99 @@ export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
           {error}
         </div>
       )}
+
+      {/* Tenant Selection */}
+      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+        <div className="flex items-center gap-2 mb-3">
+          <Globe className="w-5 h-5 text-blue-400" />
+          <span className="font-medium text-white">Select Airport</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {SUPPORTED_TENANTS.map((tenant) => (
+            <button
+              key={tenant.icaoCode}
+              onClick={() => setSelectedTenant(tenant.icaoCode)}
+              className={`p-3 rounded-lg border transition-all text-left ${
+                selectedTenant === tenant.icaoCode
+                  ? 'bg-blue-600/30 border-blue-500 text-white'
+                  : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:border-gray-500'
+              }`}
+            >
+              <div className="font-bold text-lg">{tenant.icaoCode}</div>
+              <div className="text-xs opacity-75">{tenant.name}</div>
+              <div className="text-xs opacity-50">{tenant.location}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Fresh Data Generation */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-700/50">
+        <div className="flex items-center gap-2 mb-3">
+          <Database className="w-5 h-5 text-blue-400" />
+          <span className="font-medium text-white">Data Generation</span>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => generateFreshData(selectedTenant)}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg 
+                     hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed"
+          >
+            {actionInProgress === 'fresh' ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Database className="w-4 h-4" />
+            )}
+            Generate Fresh Data ({selectedTenant})
+          </button>
+
+          <button
+            onClick={generateForAllTenants}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg 
+                     hover:from-green-700 hover:to-teal-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed"
+          >
+            {actionInProgress === 'all' ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Globe className="w-4 h-4" />
+            )}
+            Generate All Airports
+          </button>
+
+          <button
+            onClick={() => clearData(selectedTenant)}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg 
+                     hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+          >
+            {actionInProgress === 'clear' ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            Clear Data ({selectedTenant})
+          </button>
+
+          <button
+            onClick={refreshViews}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg 
+                     hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed"
+          >
+            {actionInProgress === 'refresh' ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+            Refresh Views
+          </button>
+        </div>
+        <p className="mt-3 text-xs text-gray-400">
+          "Generate Fresh Data" will clear existing data, generate batch data, create 7 days of historical data, and refresh views.
+        </p>
+      </div>
 
       {/* Configuration Panel */}
       <div className="mb-6 border border-gray-700 rounded-lg overflow-hidden">
@@ -324,13 +567,13 @@ export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
         <h3 className="text-sm font-medium text-gray-300">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={startBatchPopulation}
+            onClick={() => startBatchPopulation(selectedTenant)}
             disabled={loading || status?.batchMode}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg 
                      hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             <Play className="w-4 h-4" />
-            Run Batch ({tenantCode})
+            Run Batch ({selectedTenant})
           </button>
 
           {status?.continuousMode ? (
@@ -356,13 +599,13 @@ export const GeneratorControls: React.FC<GeneratorControlsProps> = ({
           )}
 
           <button
-            onClick={() => generateHistoricalData(7)}
+            onClick={() => generateHistoricalData(7, selectedTenant)}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg 
                      hover:bg-purple-700 disabled:bg-gray-600"
           >
             <Clock className="w-4 h-4" />
-            Generate 7 Days History
+            Generate 7 Days History ({selectedTenant})
           </button>
         </div>
       </div>

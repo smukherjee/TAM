@@ -5,7 +5,7 @@ import MainLayout from './components/Layout/MainLayout';
 import UnifiedMapPage from './pages/UnifiedMapPage';
 import TurnaroundPage from './pages/TurnaroundPage';
 import TurnaroundDetailPage from './pages/TurnaroundDetailPage';
-import AnalyticsPage from './pages/AnalyticsPage';
+import AnalyticsHubPage from './pages/AnalyticsHubPage';
 import PipelinePage from './pages/PipelinePage';
 import LoginPage from './pages/LoginPage';
 import PlatformAdminPage from './pages/PlatformAdminPage';
@@ -86,7 +86,7 @@ const AppRoutes = () => {
       <Route path="/reports" element={
         <ProtectedRoute>
           <MainLayout>
-            <AnalyticsPage />
+            <AnalyticsHubPage />
           </MainLayout>
         </ProtectedRoute>
       } />

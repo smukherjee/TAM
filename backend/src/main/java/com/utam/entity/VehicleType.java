@@ -24,7 +24,8 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "vehicle_types", indexes = {
-        @Index(name = "idx_vehicle_type_code", columnList = "code", unique = true)
+        @Index(name = "idx_vehicle_type_code", columnList = "code"),
+        @Index(name = "idx_vehicle_types_tenant", columnList = "tenant_code")
 })
 public class VehicleType {
 
@@ -32,7 +33,10 @@ public class VehicleType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(name = "tenant_code", nullable = false, length = 10)
+    private String tenantCode;
+
+    @Column(nullable = false, length = 20)
     private String code;
 
     @Column(nullable = false, length = 100)
@@ -41,32 +45,39 @@ public class VehicleType {
     @Column(length = 500)
     private String description;
 
-    @Column(name = "min_speed", nullable = false)
+    @Column(length = 50)
+    private String category;
+
+    @Column(name = "min_speed")
     private Integer minSpeed = 5;  // km/h
 
-    @Column(name = "max_speed", nullable = false)
+    @Column(name = "max_speed")
     private Integer maxSpeed = 40;  // km/h
 
-    @Column(name = "default_quantity", nullable = false)
+    @Column(name = "default_quantity")
     private Integer defaultQuantity = 10;
 
     @Column(name = "default_depot_type", length = 30)
     private String defaultDepotType;
 
-    @Column(name = "icon_name", length = 50)
+    @Column(name = "icon_name", length = 100)
     private String iconName;
 
-    @Column(name = "icon_color", length = 7)
+    @Column(name = "icon_color", length = 20)
     private String iconColor;
 
-    @Column(name = "is_motorized", nullable = false)
+    @Column(name = "is_motorized")
     private Boolean isMotorized = true;
+
+    @Column(name = "active")
+    private Boolean active = true;
 
     public VehicleType() {
     }
 
-    public VehicleType(String code, String name, String description, Integer minSpeed, Integer maxSpeed,
+    public VehicleType(String tenantCode, String code, String name, String description, Integer minSpeed, Integer maxSpeed,
                        Integer defaultQuantity, String defaultDepotType) {
+        this.tenantCode = tenantCode;
         this.code = code;
         this.name = name;
         this.description = description;
@@ -81,6 +92,9 @@ public class VehicleType {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public String getTenantCode() { return tenantCode; }
+    public void setTenantCode(String tenantCode) { this.tenantCode = tenantCode; }
+
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
 
@@ -89,6 +103,9 @@ public class VehicleType {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public Integer getMinSpeed() { return minSpeed; }
     public void setMinSpeed(Integer minSpeed) { this.minSpeed = minSpeed; }
@@ -111,10 +128,14 @@ public class VehicleType {
     public Boolean getIsMotorized() { return isMotorized; }
     public void setIsMotorized(Boolean isMotorized) { this.isMotorized = isMotorized; }
 
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
+
     @Override
     public String toString() {
         return "VehicleType{" +
-                "code='" + code + '\'' +
+                "tenantCode='" + tenantCode + '\'' +
+                ", code='" + code + '\'' +
                 ", name='" + name + '\'' +
                 ", defaultQuantity=" + defaultQuantity +
                 '}';

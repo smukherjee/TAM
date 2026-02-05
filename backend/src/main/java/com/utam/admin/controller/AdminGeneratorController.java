@@ -277,6 +277,99 @@ public class AdminGeneratorController {
     }
 
     /**
+     * Clear simulation data for a specific tenant.
+     * POST /api/admin/generators/clear/{tenantCode}
+     */
+    @PostMapping("/clear/{tenantCode}")
+    @Operation(summary = "Clear simulation data for a tenant")
+    public ResponseEntity<ClearDataResponse> clearData(@PathVariable String tenantCode) {
+        try {
+            log.info("Clearing simulation data for tenant: {}", tenantCode);
+            int deletedCount = orchestrator.clearSimulationData(tenantCode);
+            return ResponseEntity.ok(new ClearDataResponse(
+                    true,
+                    "Simulation data cleared for " + tenantCode,
+                    tenantCode,
+                    deletedCount
+            ));
+        } catch (Exception e) {
+            log.error("Failed to clear simulation data: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(new ClearDataResponse(
+                    false,
+                    "Failed: " + e.getMessage(),
+                    tenantCode,
+                    0
+            ));
+        }
+    }
+
+    /**
+     * Clear simulation data for all tenants.
+     * POST /api/admin/generators/clear/all
+     */
+    @PostMapping("/clear/all")
+    @Operation(summary = "Clear simulation data for all tenants")
+    public ResponseEntity<ClearDataResponse> clearAllData() {
+        try {
+            log.info("Clearing simulation data for all tenants");
+            int deletedCount = orchestrator.clearAllSimulationData();
+            return ResponseEntity.ok(new ClearDataResponse(
+                    true,
+                    "All simulation data cleared",
+                    "ALL",
+                    deletedCount
+            ));
+        } catch (Exception e) {
+            log.error("Failed to clear all simulation data: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(new ClearDataResponse(
+                    false,
+                    "Failed: " + e.getMessage(),
+                    "ALL",
+                    0
+            ));
+        }
+    }
+
+    /**
+     * Refresh materialized views after data generation.
+     * POST /api/admin/generators/refresh-views
+     */
+    @PostMapping("/refresh-views")
+    @Operation(summary = "Refresh materialized views")
+    public ResponseEntity<RefreshViewsResponse> refreshViews() {
+        try {
+            log.info("Refreshing materialized views");
+            orchestrator.refreshMaterializedViews();
+            return ResponseEntity.ok(new RefreshViewsResponse(
+                    true,
+                    "Materialized views refreshed successfully",
+                    List.of("asset_activity_heatmap", "violation_heatmap")
+            ));
+        } catch (Exception e) {
+            log.error("Failed to refresh materialized views: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(new RefreshViewsResponse(
+                    false,
+                    "Failed: " + e.getMessage(),
+                    List.of()
+            ));
+        }
+    }
+
+    /**
+     * Get list of supported tenants.
+     * GET /api/admin/generators/tenants
+     */
+    @GetMapping("/tenants")
+    @Operation(summary = "Get list of supported tenants")
+    public ResponseEntity<List<TenantInfo>> getTenants() {
+        return ResponseEntity.ok(List.of(
+                new TenantInfo("VIDP", "Indira Gandhi International Airport", "Delhi, India", "Asia/Kolkata"),
+                new TenantInfo("LIRN", "Naples International Airport", "Naples, Italy", "Europe/Rome"),
+                new TenantInfo("YBBN", "Brisbane Airport", "Brisbane, Australia", "Australia/Brisbane")
+        ));
+    }
+
+    /**
      * Export generator logs.
      * GET /api/admin/generators/logs/export
      */
@@ -299,6 +392,61 @@ public class AdminGeneratorController {
     @Operation(summary = "List all registered generators")
     public ResponseEntity<List<String>> listGenerators() {
         return ResponseEntity.ok(orchestrator.getRegisteredGenerators());
+    }
+
+    /**
+     * Sync vehicles to assets and create mappings.
+     * This ensures every vehicle has a corresponding asset entry.
+     * POST /api/admin/generators/sync-vehicle-assets/{tenantCode}
+     */
+    @PostMapping("/sync-vehicle-assets/{tenantCode}")
+    @Operation(summary = "Sync vehicles to assets for a tenant")
+    public ResponseEntity<SyncVehicleAssetsResponse> syncVehicleAssets(@PathVariable String tenantCode) {
+        try {
+            log.info("Syncing vehicles to assets for tenant: {}", tenantCode);
+            int mappingsCreated = orchestrator.syncVehiclesToAssets(tenantCode);
+            return ResponseEntity.ok(new SyncVehicleAssetsResponse(
+                    true,
+                    "Vehicle-asset sync completed for " + tenantCode,
+                    tenantCode,
+                    mappingsCreated
+            ));
+        } catch (Exception e) {
+            log.error("Failed to sync vehicles to assets: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(new SyncVehicleAssetsResponse(
+                    false,
+                    "Failed: " + e.getMessage(),
+                    tenantCode,
+                    0
+            ));
+        }
+    }
+
+    /**
+     * Sync vehicles to assets for all tenants.
+     * POST /api/admin/generators/sync-vehicle-assets/all
+     */
+    @PostMapping("/sync-vehicle-assets/all")
+    @Operation(summary = "Sync vehicles to assets for all tenants")
+    public ResponseEntity<SyncVehicleAssetsResponse> syncAllVehicleAssets() {
+        try {
+            log.info("Syncing vehicles to assets for all tenants");
+            int mappingsCreated = orchestrator.syncVehiclesToAssets(null);
+            return ResponseEntity.ok(new SyncVehicleAssetsResponse(
+                    true,
+                    "Vehicle-asset sync completed for all tenants",
+                    "ALL",
+                    mappingsCreated
+            ));
+        } catch (Exception e) {
+            log.error("Failed to sync vehicles to assets: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(new SyncVehicleAssetsResponse(
+                    false,
+                    "Failed: " + e.getMessage(),
+                    "ALL",
+                    0
+            ));
+        }
     }
 
     // Response DTOs
@@ -342,5 +490,32 @@ public class AdminGeneratorController {
             int totalRecords,
             long durationMs,
             Map<String, Integer> recordsByGenerator
+    ) {}
+
+    public record ClearDataResponse(
+            boolean success,
+            String message,
+            String tenantCode,
+            int deletedCount
+    ) {}
+
+    public record RefreshViewsResponse(
+            boolean success,
+            String message,
+            List<String> viewsRefreshed
+    ) {}
+
+    public record TenantInfo(
+            String icaoCode,
+            String name,
+            String location,
+            String timezone
+    ) {}
+
+    public record SyncVehicleAssetsResponse(
+            boolean success,
+            String message,
+            String tenantCode,
+            int mappingsCreated
     ) {}
 }

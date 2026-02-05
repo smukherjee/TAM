@@ -30,7 +30,14 @@ const AssetMarkersLayer: React.FC<AssetMarkersLayerProps> = ({ assets }) => {
             'Maintenance': 'maintenance',
             'Belt Loader': 'belt_loader',
             'Tug': 'tug',
+            'Baggage': 'tug',
             'Bus': 'bus',
+            'Passenger Bus': 'bus',
+            'De-icing': 'deicing',
+            'Deicing': 'deicing',
+            'De-Icing': 'deicing',
+            'Stairs': 'stairs',
+            'Passenger Stairs': 'stairs',
         };
         return categoryMap[category] || 'other';
     };

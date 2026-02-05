@@ -28,7 +28,7 @@ public class MovementTrailService {
     private static final int MAX_TRAIL_DAYS = 30;
 
     private final AssetMovementTrailRepository trailRepository;
-    
+
     @SuppressWarnings("unused") // Reserved for violation correlation
     private final ZoneViolationRepository violationRepository;
 
@@ -43,15 +43,21 @@ public class MovementTrailService {
      * Get movement trail for an asset within a date range.
      */
     @Transactional(readOnly = true)
-    public MovementTrailDTO getTrail(UUID assetId, ZonedDateTime startDate, ZonedDateTime endDate) {
+    public MovementTrailDTO getTrail(UUID assetId, String tenantCode, ZonedDateTime startDate, ZonedDateTime endDate) {
         // Validate date range
         long days = ChronoUnit.DAYS.between(startDate, endDate);
         if (days > MAX_TRAIL_DAYS) {
             throw new IllegalArgumentException("Date range cannot exceed " + MAX_TRAIL_DAYS + " days");
         }
 
+        // Validate tenant code
+        if (tenantCode == null || tenantCode.isEmpty()) {
+            throw new IllegalArgumentException("Tenant code is required for movement trail queries");
+        }
+
         List<AssetMovementTrail> trailPoints = trailRepository
-                .findByAssetIdAndTimestampBetweenOrderByTimestampAsc(assetId, startDate, endDate);
+                .findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(assetId, tenantCode, startDate,
+                        endDate);
 
         if (trailPoints.isEmpty()) {
             return MovementTrailDTO.builder()
@@ -176,13 +182,12 @@ public class MovementTrailService {
         Point prevPoint = null;
         for (AssetMovementTrail trail : trailPoints) {
             Point current = trail.getLocation();
-            
+
             // Calculate distance
             if (prevPoint != null) {
                 totalDistance += calculateDistance(
-                    prevPoint.getY(), prevPoint.getX(),
-                    current.getY(), current.getX()
-                );
+                        prevPoint.getY(), prevPoint.getX(),
+                        current.getY(), current.getX());
             }
             prevPoint = current;
 
@@ -207,17 +212,15 @@ public class MovementTrailService {
         Map<String, Long> dwellTimeByZone = zoneEntries.stream()
                 .filter(e -> e.getZoneName() != null)
                 .collect(Collectors.groupingBy(
-                    ZoneEntryDTO::getZoneName,
-                    Collectors.summingLong(e -> e.getDwellTimeSeconds() != null ? e.getDwellTimeSeconds() : 0)
-                ));
+                        ZoneEntryDTO::getZoneName,
+                        Collectors.summingLong(e -> e.getDwellTimeSeconds() != null ? e.getDwellTimeSeconds() : 0)));
 
         long totalDwellTime = dwellTimeByZone.values().stream().mapToLong(Long::longValue).sum();
         long totalDuration = 0;
         if (trailPoints.size() >= 2) {
             totalDuration = ChronoUnit.SECONDS.between(
-                trailPoints.get(0).getTimestamp(),
-                trailPoints.get(trailPoints.size() - 1).getTimestamp()
-            );
+                    trailPoints.get(0).getTimestamp(),
+                    trailPoints.get(trailPoints.size() - 1).getTimestamp());
         }
 
         return TrailSummaryDTO.builder()
@@ -237,24 +240,23 @@ public class MovementTrailService {
     /**
      * Export trail data as CSV string.
      */
-    public String exportTrailCsv(UUID assetId, ZonedDateTime startDate, ZonedDateTime endDate) {
-        MovementTrailDTO trail = getTrail(assetId, startDate, endDate);
-        
+    public String exportTrailCsv(UUID assetId, String tenantCode, ZonedDateTime startDate, ZonedDateTime endDate) {
+        MovementTrailDTO trail = getTrail(assetId, tenantCode, startDate, endDate);
+
         StringBuilder csv = new StringBuilder();
         csv.append("Timestamp,Latitude,Longitude,Speed,Heading,Status,Zone\n");
-        
+
         for (MovementTrailPointDTO point : trail.getPoints()) {
             csv.append(String.format("%s,%f,%f,%s,%s,%s,%s\n",
-                point.getTimestamp(),
-                point.getLatitude(),
-                point.getLongitude(),
-                point.getSpeed() != null ? point.getSpeed() : "",
-                point.getHeading() != null ? point.getHeading() : "",
-                point.getStatus() != null ? point.getStatus() : "",
-                point.getZoneName() != null ? point.getZoneName() : ""
-            ));
+                    point.getTimestamp(),
+                    point.getLatitude(),
+                    point.getLongitude(),
+                    point.getSpeed() != null ? point.getSpeed() : "",
+                    point.getHeading() != null ? point.getHeading() : "",
+                    point.getStatus() != null ? point.getStatus() : "",
+                    point.getZoneName() != null ? point.getZoneName() : ""));
         }
-        
+
         return csv.toString();
     }
 
@@ -284,8 +286,8 @@ public class MovementTrailService {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     }

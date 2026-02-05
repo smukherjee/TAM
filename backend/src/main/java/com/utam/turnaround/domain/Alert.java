@@ -1,5 +1,6 @@
 package com.utam.turnaround.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -15,6 +16,7 @@ public class Alert {
 
     @ManyToOne
     @JoinColumn(name = "session_id")
+    @JsonIgnoreProperties({"tasks", "alerts"})
     private TurnaroundSession session;
 
     @Column(nullable = false)

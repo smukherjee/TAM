@@ -130,8 +130,11 @@ public class VehicleService {
             }
         }
 
-        // Fallback to DB
+        // Fallback to DB - filter by tenant code
         Instant fiveMinutesAgo = Instant.now().minus(5, ChronoUnit.MINUTES);
+        if (icaoCode != null && !icaoCode.isEmpty()) {
+            return vehicleRepository.findLatestVehiclesByTenant(fiveMinutesAgo, icaoCode);
+        }
         return vehicleRepository.findLatestVehicles(fiveMinutesAgo);
     }
 }

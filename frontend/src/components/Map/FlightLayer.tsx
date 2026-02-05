@@ -22,16 +22,13 @@ const FlightLayer: React.FC = () => {
         const fetchFlights = async () => {
             const data = await getActiveFlights();
             const now = Date.now();
-            console.log('FlightLayer: Fetched initial flights for', icao, ':', data.length);
             setFlights(data.map(f => ({ ...f, lastUpdated: now })));
         };
 
         fetchFlights();
 
         // Subscribe to WebSocket
-        console.log('FlightLayer: Subscribing to /topic/flights/' + icao);
         const subscription = webSocketService.subscribe(`/topic/flights/${icao}`, (msg: any) => {
-            console.log('FlightLayer: Received flight via WebSocket:', msg);
             const flightDisplay: FlightDisplayWithTimestamp = {
                 livePlotId: msg.LivePlotId || msg.id || msg.livePlotId || 'unknown',
                 callsign: msg.CallSign || msg.callsign,
@@ -53,11 +50,9 @@ const FlightLayer: React.FC = () => {
                     // Update existing flight
                     const newFlights = [...prev];
                     newFlights[index] = flightDisplay;
-                    console.log('FlightLayer: Updated flight', flightDisplay.callsign, 'Total flights:', newFlights.length);
                     return newFlights;
                 } else {
                     // Add new flight
-                    console.log('FlightLayer: Added new flight', flightDisplay.callsign, 'Total flights:', prev.length + 1);
                     return [...prev, flightDisplay];
                 }
             });
@@ -82,11 +77,8 @@ const FlightLayer: React.FC = () => {
     const flightMarkers = useMemo(() => {
         // Defensive check: ensure throttledFlights is an array
         if (!throttledFlights || !Array.isArray(throttledFlights)) {
-            console.warn('FlightLayer: throttledFlights is not an array', throttledFlights);
             return [];
         }
-        
-        console.log('FlightLayer: Rendering', throttledFlights.length, 'flights');
         
         return throttledFlights.map(flight => {
             try {

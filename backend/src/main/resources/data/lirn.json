@@ -1,0 +1,76 @@
+{
+  "tenantCode": "LIRN",
+  "airportName": "Naples International Airport",
+  "city": "Naples",
+  "country": "Italy",
+  "timezone": "Europe/Rome",
+  "center": {
+    "latitude": 40.8860,
+    "longitude": 14.2908
+  },
+  "boundary": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [14.2600, 40.8600],
+        [14.3200, 40.8600],
+        [14.3200, 40.9100],
+        [14.2600, 40.9100],
+        [14.2600, 40.8600]
+      ]
+    ]
+  },
+  "stands": [
+    {"standId": "NAP_1", "name": "Stand 1", "latitude": 40.8855, "longitude": 14.2900, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_2", "name": "Stand 2", "latitude": 40.8858, "longitude": 14.2905, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_3", "name": "Stand 3", "latitude": 40.8861, "longitude": 14.2910, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_4", "name": "Stand 4", "latitude": 40.8864, "longitude": 14.2915, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_5", "name": "Stand 5", "latitude": 40.8867, "longitude": 14.2920, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_6", "name": "Stand 6", "latitude": 40.8870, "longitude": 14.2925, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_7", "name": "Stand 7", "latitude": 40.8873, "longitude": 14.2930, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_8", "name": "Stand 8", "latitude": 40.8876, "longitude": 14.2935, "terminalId": "T1", "standType": "CONTACT"},
+    {"standId": "NAP_R1", "name": "Remote Stand 1", "latitude": 40.8835, "longitude": 14.2940, "terminalId": "T1", "standType": "REMOTE"},
+    {"standId": "NAP_R2", "name": "Remote Stand 2", "latitude": 40.8838, "longitude": 14.2945, "terminalId": "T1", "standType": "REMOTE"},
+    {"standId": "NAP_C1", "name": "Cargo Stand 1", "latitude": 40.8920, "longitude": 14.2880, "terminalId": "CGO", "standType": "CONTACT"},
+    {"standId": "NAP_C2", "name": "Cargo Stand 2", "latitude": 40.8923, "longitude": 14.2885, "terminalId": "CGO", "standType": "CONTACT"}
+  ],
+  "depots": [
+    {"depotType": "FUEL", "name": "Fuel Farm Main", "latitude": 40.8950, "longitude": 14.2850, "capacity": 15},
+    {"depotType": "BAGGAGE", "name": "Baggage Hall", "latitude": 40.8860, "longitude": 14.2895, "capacity": 20},
+    {"depotType": "CATERING", "name": "Catering Centre", "latitude": 40.8980, "longitude": 14.2900, "capacity": 10},
+    {"depotType": "GPU", "name": "Ground Power Station", "latitude": 40.8830, "longitude": 14.2920, "capacity": 8},
+    {"depotType": "PUSHBACK", "name": "Pushback Tug Depot", "latitude": 40.8825, "longitude": 14.2890, "capacity": 6},
+    {"depotType": "BUS", "name": "Bus Depot", "latitude": 40.8900, "longitude": 14.2950, "capacity": 6}
+  ],
+  "vehicleTypes": [
+    {"code": "FUEL", "name": "Fuel Truck", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 10, "defaultDepotType": "FUEL", "iconColor": "#FF6B00"},
+    {"code": "CATERING", "name": "Catering High-Lift", "minSpeed": 5, "maxSpeed": 25, "defaultQuantity": 6, "defaultDepotType": "CATERING", "iconColor": "#4CAF50"},
+    {"code": "BAGGAGE_TUG", "name": "Baggage Tractor", "minSpeed": 10, "maxSpeed": 35, "defaultQuantity": 15, "defaultDepotType": "BAGGAGE", "iconColor": "#2196F3"},
+    {"code": "BAGGAGE_CART", "name": "Baggage Cart", "minSpeed": 0, "maxSpeed": 0, "defaultQuantity": 50, "defaultDepotType": "BAGGAGE", "iconColor": "#90CAF9"},
+    {"code": "BELT_LOADER", "name": "Belt Loader", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 12, "defaultDepotType": "BAGGAGE", "iconColor": "#3F51B5"},
+    {"code": "GPU", "name": "Ground Power Unit", "minSpeed": 5, "maxSpeed": 25, "defaultQuantity": 10, "defaultDepotType": "GPU", "iconColor": "#FFC107"},
+    {"code": "PUSHBACK", "name": "Pushback Tug", "minSpeed": 5, "maxSpeed": 15, "defaultQuantity": 8, "defaultDepotType": "PUSHBACK", "iconColor": "#9C27B0"},
+    {"code": "STAIRS", "name": "Passenger Stairs", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 6, "defaultDepotType": "STAIRS", "iconColor": "#607D8B"},
+    {"code": "WATER", "name": "Water Service Truck", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 4, "defaultDepotType": "WATER", "iconColor": "#00BCD4"},
+    {"code": "LAVATORY", "name": "Lavatory Service Truck", "minSpeed": 10, "maxSpeed": 30, "defaultQuantity": 4, "defaultDepotType": "LAVATORY", "iconColor": "#795548"},
+    {"code": "BUS", "name": "Passenger Bus", "minSpeed": 10, "maxSpeed": 40, "defaultQuantity": 6, "defaultDepotType": "BUS", "iconColor": "#009688"},
+    {"code": "CARGO", "name": "Cargo Loader", "minSpeed": 5, "maxSpeed": 20, "defaultQuantity": 4, "defaultDepotType": "CARGO", "iconColor": "#8BC34A"}
+  ],
+  "airlines": [
+    {"code": "AZ", "name": "ITA Airways", "iata": "AZ", "icao": "ITY"},
+    {"code": "FR", "name": "Ryanair", "iata": "FR", "icao": "RYR"},
+    {"code": "U2", "name": "easyJet", "iata": "U2", "icao": "EZY"},
+    {"code": "W6", "name": "Wizz Air", "iata": "W6", "icao": "WZZ"},
+    {"code": "VY", "name": "Vueling", "iata": "VY", "icao": "VLG"},
+    {"code": "LH", "name": "Lufthansa", "iata": "LH", "icao": "DLH"},
+    {"code": "BA", "name": "British Airways", "iata": "BA", "icao": "BAW"},
+    {"code": "AF", "name": "Air France", "iata": "AF", "icao": "AFR"},
+    {"code": "KL", "name": "KLM", "iata": "KL", "icao": "KLM"},
+    {"code": "IB", "name": "Iberia", "iata": "IB", "icao": "IBE"},
+    {"code": "TP", "name": "TAP Portugal", "iata": "TP", "icao": "TAP"},
+    {"code": "SK", "name": "SAS", "iata": "SK", "icao": "SAS"},
+    {"code": "OS", "name": "Austrian Airlines", "iata": "OS", "icao": "AUA"},
+    {"code": "LX", "name": "Swiss", "iata": "LX", "icao": "SWR"},
+    {"code": "EI", "name": "Aer Lingus", "iata": "EI", "icao": "EIN"}
+  ]
+}

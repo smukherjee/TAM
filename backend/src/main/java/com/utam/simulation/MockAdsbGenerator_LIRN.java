@@ -29,8 +29,39 @@ public class MockAdsbGenerator_LIRN {
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
 
-    // Simulated flights for Naples
-    private final List<String> callsigns = Arrays.asList("AZ123", "RYR45", "EJU99", "LH333", "BA777");
+    // Simulated flights for Naples - 15 European airlines operating at LIRN
+    private final List<String> callsigns = Arrays.asList(
+        // Alitalia / ITA Airways
+        "AZ123", "AZ456", "AZ789", "AZ234", "AZ567",
+        // Ryanair
+        "RYR101", "RYR202", "RYR303", "RYR404", "RYR505",
+        // EasyJet
+        "EJU111", "EJU222", "EJU333", "EJU444", "EJU555",
+        // Wizz Air
+        "WZZ161", "WZZ262", "WZZ363", "WZZ464",
+        // Vueling
+        "VLG171", "VLG272", "VLG373",
+        // Lufthansa
+        "LH181", "LH282", "LH383",
+        // British Airways
+        "BA191", "BA292", "BA393",
+        // Air France
+        "AFR201", "AFR302", "AFR403",
+        // KLM
+        "KLM211", "KLM312", "KLM413",
+        // Iberia
+        "IBE221", "IBE322",
+        // TAP Portugal
+        "TAP231", "TAP332",
+        // SAS
+        "SAS241", "SAS342",
+        // Austrian
+        "AUA251", "AUA352",
+        // Swiss
+        "SWR261", "SWR362",
+        // Aer Lingus
+        "EIN271", "EIN372"
+    );
     private final String icao = "LIRN";
 
     public MockAdsbGenerator_LIRN(RestTemplate restTemplate, io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {

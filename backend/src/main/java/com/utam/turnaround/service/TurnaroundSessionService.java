@@ -1,5 +1,7 @@
 package com.utam.turnaround.service;
 
+import com.utam.entity.Stand;
+import com.utam.repository.StandRepository;
 import com.utam.turnaround.domain.TurnaroundSession;
 import com.utam.turnaround.domain.TurnaroundTask;
 import com.utam.turnaround.dto.TaskSummaryDTO;
@@ -9,16 +11,47 @@ import com.utam.turnaround.dto.TurnaroundSessionSummaryDTO;
 import com.utam.turnaround.repository.TurnaroundSessionRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 public class TurnaroundSessionService {
 
     private final TurnaroundSessionRepository sessionRepository;
+    private final StandRepository standRepository;
+    private final Random random = new Random();
+    private final ConcurrentHashMap<String, List<Stand>> standCache = new ConcurrentHashMap<>();
 
-    public TurnaroundSessionService(TurnaroundSessionRepository sessionRepository) {
+    public TurnaroundSessionService(TurnaroundSessionRepository sessionRepository, 
+                                    StandRepository standRepository) {
         this.sessionRepository = sessionRepository;
+        this.standRepository = standRepository;
+    }
+    
+    /**
+     * Get a random stand for the given tenant code.
+     * Uses caching to avoid repeated database queries.
+     */
+    private String getRandomStandId(String tenantCode) {
+        List<Stand> stands = standCache.computeIfAbsent(tenantCode, 
+            tc -> standRepository.findByTenantCodeAndActive(tc, true));
+        
+        if (stands == null || stands.isEmpty()) {
+            // Fallback: try to get any stand for tenant
+            stands = standRepository.findByTenantCode(tenantCode);
+            if (stands != null && !stands.isEmpty()) {
+                standCache.put(tenantCode, stands);
+            }
+        }
+        
+        if (stands != null && !stands.isEmpty()) {
+            return stands.get(random.nextInt(stands.size())).getStandId();
+        }
+        
+        // Ultimate fallback if no stands found
+        return "1";
     }
 
     public List<TurnaroundSessionSummaryDTO> getAllSessions(String tenantCode) {
@@ -51,7 +84,7 @@ public class TurnaroundSessionService {
             session.setStatus("SCHEDULED");
             session.setCreatedAt(java.time.ZonedDateTime.now());
             session.setUpdatedAt(java.time.ZonedDateTime.now());
-            session.setStandId("A1"); // Default stand
+            session.setStandId(getRandomStandId(tenantCode)); // Random stand from database
             
             // Set scheduled timestamps for new sessions
             java.time.ZonedDateTime now = java.time.ZonedDateTime.now();

@@ -129,19 +129,32 @@ public class AssetDataGenerator extends BaseDataGenerator {
             return 0;
         }
 
+        // Reload reference data if empty
         List<VehicleType> types = vehicleTypes.get(tenantCode);
+        if (types == null || types.isEmpty()) {
+            log.info("Reloading reference data for AssetDataGenerator...");
+            loadReferenceData();
+            types = vehicleTypes.get(tenantCode);
+        }
+
         if (types == null || types.isEmpty()) {
             log.warn("No vehicle types loaded for tenant: {}", tenantCode);
             return 0;
         }
 
         int generated = 0;
+        int skipped = 0;
         int assetsPerType = Math.max(1, batchSize / types.size());
 
         for (VehicleType type : types) {
             for (int i = 0; i < assetsPerType && generated < batchSize; i++) {
                 Asset asset = createAsset(tenantCode, tenantConfig, type, i + 1);
                 if (asset != null) {
+                    // Check if asset already exists to avoid duplicate key errors
+                    if (simAssetRepository.existsByAssetId(asset.getAssetId())) {
+                        skipped++;
+                        continue;
+                    }
                     simAssetRepository.save(asset);
                     
                     // Sync to production tables
@@ -161,6 +174,9 @@ public class AssetDataGenerator extends BaseDataGenerator {
             }
         }
 
+        if (skipped > 0) {
+            log.info("Skipped {} existing assets for tenant {}", skipped, tenantCode);
+        }
         log.info("Generated {} assets for tenant {} across {} types", 
                 generated, tenantCode, types.size());
         return generated;

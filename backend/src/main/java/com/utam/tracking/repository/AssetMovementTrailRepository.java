@@ -21,48 +21,48 @@ import java.util.UUID;
 @Repository
 public interface AssetMovementTrailRepository extends JpaRepository<AssetMovementTrail, UUID> {
 
-    /**
-     * Find movement trail for a specific asset within a time range
-     */
-    List<AssetMovementTrail> findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-            UUID assetId,
-            ZonedDateTime startTime,
-            ZonedDateTime endTime
-    );
+        /**
+         * Find movement trail for a specific asset within a time range
+         */
+        List<AssetMovementTrail> findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                        UUID assetId,
+                        String tenantCode,
+                        ZonedDateTime startTime,
+                        ZonedDateTime endTime);
 
-    /**
-     * Find movement trail by asset identifier within a time range
-     */
-    List<AssetMovementTrail> findByAssetIdentifierAndTimestampBetweenOrderByTimestampAsc(
-            String assetIdentifier,
-            ZonedDateTime startTime,
-            ZonedDateTime endTime
-    );
+        /**
+         * Find movement trail by asset identifier within a time range
+         */
+        List<AssetMovementTrail> findByAssetIdentifierAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                        String assetIdentifier,
+                        String tenantCode,
+                        ZonedDateTime startTime,
+                        ZonedDateTime endTime);
 
-    /**
-     * Find recent movements for a tenant after a specific time
-     */
-    Page<AssetMovementTrail> findByTenantCodeAndTimestampAfterOrderByTimestampDesc(
-            String tenantCode,
-            ZonedDateTime after,
-            Pageable pageable
-    );
+        /**
+         * Find recent movements for a tenant after a specific time
+         */
+        Page<AssetMovementTrail> findByTenantCodeAndTimestampAfterOrderByTimestampDesc(
+                        String tenantCode,
+                        ZonedDateTime after,
+                        Pageable pageable);
 
-    /**
-     * Find movements in a specific zone
-     */
-    @Query("SELECT amt FROM AssetMovementTrail amt " +
-           "WHERE amt.restrictedZoneId = :zoneId " +
-           "AND amt.timestamp BETWEEN :startTime AND :endTime " +
-           "ORDER BY amt.timestamp DESC")
-    List<AssetMovementTrail> findByZoneAndTimeRange(
-            @Param("zoneId") UUID zoneId,
-            @Param("startTime") ZonedDateTime startTime,
-            @Param("endTime") ZonedDateTime endTime
-    );
+        /**
+         * Find movements in a specific zone
+         */
+        @Query("SELECT amt FROM AssetMovementTrail amt " +
+                        "WHERE amt.restrictedZoneId = :zoneId " +
+                        "AND amt.tenantCode = :tenantCode " +
+                        "AND amt.timestamp BETWEEN :startTime AND :endTime " +
+                        "ORDER BY amt.timestamp DESC")
+        List<AssetMovementTrail> findByZoneAndTimeRange(
+                        @Param("zoneId") UUID zoneId,
+                        @Param("tenantCode") String tenantCode,
+                        @Param("startTime") ZonedDateTime startTime,
+                        @Param("endTime") ZonedDateTime endTime);
 
-    /**
-     * Count movements for an asset in a time range
-     */
-    long countByAssetIdAndTimestampBetween(UUID assetId, ZonedDateTime startTime, ZonedDateTime endTime);
+        /**
+         * Count movements for an asset in a time range
+         */
+        long countByAssetIdAndTimestampBetween(UUID assetId, ZonedDateTime startTime, ZonedDateTime endTime);
 }

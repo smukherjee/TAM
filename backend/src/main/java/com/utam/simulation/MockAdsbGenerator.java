@@ -29,8 +29,31 @@ public class MockAdsbGenerator {
     @Value("${simulation.adsb-url}")
     private String ingestionUrl;
 
-    // Simulated flights
-    private final List<String> callsigns = Arrays.asList("AI101", "BA249", "LH760", "EK500", "QF1");
+    // Simulated flights for VIDP (Delhi) - Indian and international carriers
+    private final List<String> callsigns = Arrays.asList(
+        // Air India
+        "AI101", "AI102", "AI103", "AI201", "AI202", "AI303", "AI404", "AI505",
+        // IndiGo
+        "IGO101", "IGO202", "IGO303", "IGO404", "IGO505", "IGO606", "IGO707",
+        // Vistara (now merged with Air India)
+        "VTI101", "VTI202", "VTI303", "VTI404",
+        // SpiceJet
+        "SPC101", "SPC202", "SPC303", "SPC404",
+        // British Airways
+        "BA142", "BA143", "BA249", "BA256",
+        // Emirates
+        "EK510", "EK511", "EK512", "EK500",
+        // Lufthansa
+        "LH760", "LH761", "LH762",
+        // Singapore Airlines
+        "SQ402", "SQ403", "SQ404",
+        // Thai Airways
+        "TG315", "TG316", "TG317",
+        // Cathay Pacific
+        "CX697", "CX698",
+        // Qantas
+        "QF1", "QF2"
+    );
     
     /**
      * List of supported airport ICAO codes.

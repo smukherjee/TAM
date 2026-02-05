@@ -72,6 +72,15 @@ public class SimulationConfig {
         ybbn.setCenterLatitude(-27.3842);
         ybbn.setCenterLongitude(153.1175);
         tenants.put("YBBN", ybbn);
+
+        // LIRN - Naples
+        TenantConfig lirn = new TenantConfig();
+        lirn.setTimezone(ZoneId.of("Europe/Rome"));
+        lirn.setAirportCode("LIRN");
+        lirn.setAirportName("Naples International Airport");
+        lirn.setCenterLatitude(40.8860);
+        lirn.setCenterLongitude(14.2908);
+        tenants.put("LIRN", lirn);
     }
 
     // Getters and Setters
