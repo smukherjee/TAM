@@ -39,6 +39,9 @@ public class Asset {
     @Column(name = "location", length = 100)
     private String location;
 
+    @Column(name = "telematics_source_name", length = 100)
+    private String telematicsSourceName;
+
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
 
@@ -124,6 +127,14 @@ public class Asset {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getTelematicsSourceName() {
+        return telematicsSourceName;
+    }
+
+    public void setTelematicsSourceName(String telematicsSourceName) {
+        this.telematicsSourceName = telematicsSourceName;
     }
 
     public ZonedDateTime getCreatedAt() {

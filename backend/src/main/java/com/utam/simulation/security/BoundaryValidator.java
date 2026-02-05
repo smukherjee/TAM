@@ -12,7 +12,8 @@ import java.util.Optional;
 
 /**
  * Service for validating positions against airport boundaries.
- * Implements FR-028, FR-029, FR-031: All ground positions must stay within airport perimeter.
+ * Implements FR-028, FR-029, FR-031: All ground positions must stay within
+ * airport perimeter.
  */
 @Service
 public class BoundaryValidator {
@@ -29,16 +30,17 @@ public class BoundaryValidator {
 
     /**
      * Check if a position is within the airport boundary.
-     * Uses a quick bounding box check first, then ray casting for polygon containment.
+     * Uses a quick bounding box check first, then ray casting for polygon
+     * containment.
      *
      * @param tenantCode The tenant code
-     * @param latitude The latitude to check
-     * @param longitude The longitude to check
+     * @param latitude   The latitude to check
+     * @param longitude  The longitude to check
      * @return true if the position is within bounds, false otherwise
      */
     public boolean isWithinBoundary(String tenantCode, double latitude, double longitude) {
         Optional<AirportBoundary> boundaryOpt = boundaryRepository.findByTenantCode(tenantCode);
-        
+
         if (boundaryOpt.isEmpty()) {
             log.warn("No boundary defined for tenant {}, allowing all positions", tenantCode);
             return true;
@@ -53,7 +55,7 @@ public class BoundaryValidator {
 
         // Full polygon containment check using ray casting algorithm
         try {
-            return isPointInPolygon(boundary.getBoundaryGeoJson(), latitude, longitude);
+            return isPointInPolygon(boundary.getBoundaryPolygon(), latitude, longitude);
         } catch (Exception e) {
             log.error("Error checking polygon containment: {}", e.getMessage());
             return true; // Fail open - allow the position if we can't check
@@ -65,13 +67,13 @@ public class BoundaryValidator {
      * If the position is already within bounds, return it unchanged.
      *
      * @param tenantCode The tenant code
-     * @param latitude The latitude
-     * @param longitude The longitude
+     * @param latitude   The latitude
+     * @param longitude  The longitude
      * @return A ClampedPosition with potentially adjusted coordinates
      */
     public ClampedPosition clampToBoundary(String tenantCode, double latitude, double longitude) {
         Optional<AirportBoundary> boundaryOpt = boundaryRepository.findByTenantCode(tenantCode);
-        
+
         if (boundaryOpt.isEmpty()) {
             return new ClampedPosition(latitude, longitude, false);
         }
@@ -95,22 +97,22 @@ public class BoundaryValidator {
      */
     public Optional<double[]> getBoundaryCenter(String tenantCode) {
         Optional<AirportBoundary> boundaryOpt = boundaryRepository.findByTenantCode(tenantCode);
-        
+
         if (boundaryOpt.isEmpty()) {
             return Optional.empty();
         }
 
         AirportBoundary boundary = boundaryOpt.get();
-        
+
         if (boundary.getMinLatitude() == null || boundary.getMaxLatitude() == null ||
-            boundary.getMinLongitude() == null || boundary.getMaxLongitude() == null) {
+                boundary.getMinLongitude() == null || boundary.getMaxLongitude() == null) {
             return Optional.empty();
         }
 
         double centerLat = (boundary.getMinLatitude() + boundary.getMaxLatitude()) / 2;
         double centerLon = (boundary.getMinLongitude() + boundary.getMaxLongitude()) / 2;
 
-        return Optional.of(new double[]{centerLat, centerLon});
+        return Optional.of(new double[] { centerLat, centerLon });
     }
 
     /**
@@ -120,7 +122,7 @@ public class BoundaryValidator {
         try {
             JsonNode root = objectMapper.readTree(geoJson);
             JsonNode coordinates = root.get("coordinates");
-            
+
             if (coordinates == null || !coordinates.isArray() || coordinates.size() == 0) {
                 return true;
             }
@@ -139,14 +141,14 @@ public class BoundaryValidator {
             for (int i = 0, j = n - 1; i < n; j = i++) {
                 JsonNode pi = ring.get(i);
                 JsonNode pj = ring.get(j);
-                
+
                 double xi = pi.get(0).asDouble();
                 double yi = pi.get(1).asDouble();
                 double xj = pj.get(0).asDouble();
                 double yj = pj.get(1).asDouble();
 
                 if (((yi > y) != (yj > y)) &&
-                    (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                        (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                     inside = !inside;
                 }
             }
@@ -160,13 +162,16 @@ public class BoundaryValidator {
     }
 
     private double clamp(double value, Double min, Double max) {
-        if (min != null && value < min) return min;
-        if (max != null && value > max) return max;
+        if (min != null && value < min)
+            return min;
+        if (max != null && value > max)
+            return max;
         return value;
     }
 
     /**
      * Result of clamping a position to the boundary.
      */
-    public record ClampedPosition(double latitude, double longitude, boolean wasClamped) {}
+    public record ClampedPosition(double latitude, double longitude, boolean wasClamped) {
+    }
 }

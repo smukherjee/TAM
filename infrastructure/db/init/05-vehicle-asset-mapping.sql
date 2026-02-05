@@ -1,6 +1,10 @@
 -- ============================================================
--- Create Vehicle-Asset Mapping Table and Populate Assets
+-- Create Vehicle-Asset Mapping Table
 -- All vehicles are assets, this creates the link between them
+-- ============================================================
+-- NOTE: This script only creates the schema. Data population happens
+-- at runtime via the backend API (/api/admin/generators/sync-vehicle-assets)
+-- after vehicles have been generated.
 -- ============================================================
 
 -- 1. Create the vehicle_asset_map table (referenced by VehicleAssetMapService.java)
@@ -45,63 +49,3 @@ BEGIN
     END;
 END;
 $$ LANGUAGE plpgsql;
-
--- 3. Insert assets for all unique vehicles that don't already exist
--- Each vehicle becomes an asset with proper categorization
-INSERT INTO assets (asset_id, name, category, status, tenant_code, description, created_at)
-SELECT DISTINCT
-    v.vehicle_id AS asset_id,
-    COALESCE(
-        NULLIF(v.vehicle_name, ''),
-        v.vehicle_type || ' - ' || v.vehicle_id
-    ) AS name,
-    get_asset_category(v.vehicle_type) AS category,
-    'Available' AS status,
-    v.tenant_code,
-    'Auto-generated from vehicle tracking data. Type: ' || v.vehicle_type AS description,
-    now()
-FROM vehicles v
-WHERE NOT EXISTS (
-    SELECT 1 FROM assets a 
-    WHERE a.asset_id = v.vehicle_id 
-      AND a.tenant_code = v.tenant_code
-)
-ON CONFLICT DO NOTHING;
-
--- 4. Populate the vehicle_asset_map for all vehicles
-INSERT INTO vehicle_asset_map (tenant_code, vehicle_id, asset_id)
-SELECT DISTINCT
-    v.tenant_code,
-    v.vehicle_id,
-    a.id
-FROM vehicles v
-JOIN assets a ON a.asset_id = v.vehicle_id AND a.tenant_code = v.tenant_code
-WHERE NOT EXISTS (
-    SELECT 1 FROM vehicle_asset_map vam 
-    WHERE vam.vehicle_id = v.vehicle_id 
-      AND vam.tenant_code = v.tenant_code
-)
-ON CONFLICT DO NOTHING;
-
--- 5. Report the results
-DO $$
-DECLARE
-    asset_count INTEGER;
-    map_count INTEGER;
-BEGIN
-    SELECT COUNT(*) INTO asset_count FROM assets;
-    SELECT COUNT(*) INTO map_count FROM vehicle_asset_map;
-    
-    RAISE NOTICE '===========================================';
-    RAISE NOTICE 'Vehicle-Asset Mapping Complete';
-    RAISE NOTICE '===========================================';
-    RAISE NOTICE 'Total Assets: %', asset_count;
-    RAISE NOTICE 'Vehicle-Asset Mappings: %', map_count;
-    RAISE NOTICE '===========================================';
-END $$;
-
--- Show category distribution
-SELECT category, COUNT(*) as count 
-FROM assets 
-GROUP BY category 
-ORDER BY count DESC;

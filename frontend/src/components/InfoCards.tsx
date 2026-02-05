@@ -12,6 +12,7 @@ interface VehicleInfoCardProps {
     speed?: number;
     lastUpdate: Date;
   };
+  loading?: boolean;
   onClose: () => void;
 }
 
@@ -30,19 +31,19 @@ interface FlightInfoCardProps {
   onClose: () => void;
 }
 
-export const VehicleInfoCard: React.FC<VehicleInfoCardProps> = ({ vehicle, onClose }) => {
+export const VehicleInfoCard: React.FC<VehicleInfoCardProps> = ({ vehicle, loading, onClose }) => {
   const { handleMouseDown, style: draggableStyle } = useDraggable(20, window.innerHeight - 300);
-  
+
   return (
-    <div 
-      className="info-card glass-panel" 
+    <div
+      className="info-card glass-panel"
       onMouseDown={handleMouseDown}
       style={{
-      ...draggableStyle,
-      width: '320px',
-      zIndex: 1000,
-      padding: '16px',
-    }}>
+        ...draggableStyle,
+        width: '320px',
+        zIndex: 1000,
+        padding: '16px',
+      }}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <Truck className="w-5 h-5 text-blue-400" />
@@ -70,8 +71,14 @@ export const VehicleInfoCard: React.FC<VehicleInfoCardProps> = ({ vehicle, onClo
           <div>
             <div className="text-xs text-gray-500 mb-1">Status</div>
             <div className="flex items-center gap-2">
-              <span className={`status-dot ${vehicle.status}`}></span>
-              <span className="text-sm text-white capitalize">{vehicle.status}</span>
+              {loading ? (
+                <span className="text-sm text-gray-400">Loading...</span>
+              ) : (
+                <>
+                  <span className={`status-dot ${vehicle.status}`}></span>
+                  <span className="text-sm text-white capitalize">{vehicle.status}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -112,17 +119,17 @@ export const VehicleInfoCard: React.FC<VehicleInfoCardProps> = ({ vehicle, onClo
 
 export const FlightInfoCard: React.FC<FlightInfoCardProps> = ({ flight, onClose }) => {
   const { handleMouseDown, style: draggableStyle } = useDraggable(20, window.innerHeight - 300);
-  
+
   return (
-    <div 
-      className="info-card glass-panel" 
+    <div
+      className="info-card glass-panel"
       onMouseDown={handleMouseDown}
       style={{
-      ...draggableStyle,
-      width: '320px',
-      zIndex: 1000,
-      padding: '16px',
-    }}>
+        ...draggableStyle,
+        width: '320px',
+        zIndex: 1000,
+        padding: '16px',
+      }}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <Plane className="w-5 h-5 text-blue-400" />

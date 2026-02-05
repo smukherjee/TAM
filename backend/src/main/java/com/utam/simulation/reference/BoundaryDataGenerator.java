@@ -15,7 +15,8 @@ import java.io.InputStream;
 
 /**
  * Generates airport boundary data from seed files.
- * Boundaries are GeoJSON polygons defining airport perimeters for FR-028/FR-029.
+ * Boundaries are GeoJSON polygons defining airport perimeters for
+ * FR-028/FR-029.
  */
 @Component
 public class BoundaryDataGenerator extends BaseDataGenerator {
@@ -24,7 +25,7 @@ public class BoundaryDataGenerator extends BaseDataGenerator {
     private final ObjectMapper objectMapper;
 
     public BoundaryDataGenerator(SimulationConfig config, MeterRegistry meterRegistry,
-                                 AirportBoundaryRepository boundaryRepository, ObjectMapper objectMapper) {
+            AirportBoundaryRepository boundaryRepository, ObjectMapper objectMapper) {
         super(config, meterRegistry);
         this.boundaryRepository = boundaryRepository;
         this.objectMapper = objectMapper;
@@ -65,14 +66,14 @@ public class BoundaryDataGenerator extends BaseDataGenerator {
                 return 0;
             }
 
-            String airportName = rootNode.has("airportName") 
-                    ? rootNode.get("airportName").asText() 
+            String airportName = rootNode.has("airportName")
+                    ? rootNode.get("airportName").asText()
                     : tenantCode + " Airport Boundary";
 
             AirportBoundary boundary = new AirportBoundary();
             boundary.setTenantCode(tenantCode);
             boundary.setName(airportName);
-            boundary.setBoundaryGeoJson(objectMapper.writeValueAsString(boundaryNode));
+            boundary.setBoundaryPolygon(objectMapper.writeValueAsString(boundaryNode));
 
             // Extract bounding box from coordinates
             JsonNode coordinates = boundaryNode.get("coordinates");

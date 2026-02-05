@@ -265,17 +265,23 @@ services:
 
   # Sidecar to automatically provision Superset and seed demo data after start
   superset-bootstrap:
-    image: alpine:3.19
+    image: apache/superset:3.0.0
+    environment:
+      SUPERSET_SECRET_KEY: tam-dev-secret-key-change-in-prod
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/utam
     depends_on:
       superset:
         condition: service_started
       timescaledb:
         condition: service_healthy
     volumes:
-      - ./infrastructure/superset/create-all-reports.sh:/scripts/create-all-reports.sh:ro
       - ./infrastructure/superset/sidecar-bootstrap.sh:/scripts/sidecar-bootstrap.sh:ro
+      - ./infrastructure/superset/provision_superset.py:/app/provision_superset.py:ro
+      - ./infrastructure/superset/superset_config.py:/app/pythonpath/superset_config.py
       - ./infrastructure/db/init/11-demo-seed.sql:/seeds/11-demo-seed.sql:ro
-    entrypoint: ["/bin/sh","/scripts/sidecar-bootstrap.sh"]
+    entrypoint: ["/bin/sh", "/scripts/sidecar-bootstrap.sh"]
+    user: root
 
   # One-shot bootstrap removed (duplicate)
   # superset-bootstrap: ... (merged above)

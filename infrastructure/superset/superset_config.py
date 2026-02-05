@@ -4,6 +4,10 @@
 ROW_LIMIT = 5000
 SECRET_KEY = 'tam-dev-secret-key-change-in-prod'
 
+# Database Connection (Metadata)
+import os
+SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "postgresql://postgres:password@timescaledb:5432/utam")
+
 # Feature Flags
 FEATURE_FLAGS = {
     "EMBEDDED_SUPERSET": True,
@@ -28,9 +32,14 @@ OVERRIDE_HTTP_HEADERS = {'X-Frame-Options': 'ALLOWALL'}
 # Disable CSRF for easier dev integration
 WTF_CSRF_ENABLED = False
 
-# Session
-SESSION_COOKIE_SAMESITE = None
+# Disable public/guest access for now to avoid AnonymousUser confusion during provisioning
+# PUBLIC_ROLE_LIKE = "Gamma"
+# AUTH_ROLE_PUBLIC = "Public"
 
-# Enable public/guest access for embedded charts (DEV ONLY)
-PUBLIC_ROLE_LIKE = "Gamma"
-AUTH_ROLE_PUBLIC = "Public"
+# Ensure JWT authentication is correctly handled
+FAB_API_SWAGGER_UI = True
+
+# Session settings for dev
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = 'Lax'

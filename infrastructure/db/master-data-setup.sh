@@ -47,23 +47,27 @@ run_sql() {
 }
 
 # Step 1: Schema fixes and stands
-echo "Step 1/5: Checking schema and stands..."
+echo "Step 1/6: Checking core schema and stands..."
 run_sql "infrastructure/db/fix_schema_and_add_stands.sql" "Fixing schema and adding stands"
 
-# Step 2: Populate report data
-echo "Step 2/5: Populating report data..."
+# Step 2: Initialize simulation infrastructure
+echo "Step 2/6: Initializing simulation infrastructure..."
+run_sql "infrastructure/db/fix_simulation_tables.sql" "Creating simulation tables"
+
+# Step 3: Populate report data
+echo "Step 3/6: Populating report data..."
 run_sql "infrastructure/db/populate_report_data.sql" "Adding violations, movement trail, discrepancies"
 
-# Step 3: Update asset statuses
-echo "Step 3/5: Updating asset statuses..."
+# Step 4: Update asset statuses
+echo "Step 4/6: Updating asset statuses..."
 run_sql "infrastructure/db/update_asset_statuses.sql" "Setting asset statuses and locations"
 
-# Step 4: Fix turnaround data
-echo "Step 4/5: Fixing turnaround data..."
+# Step 5: Fix turnaround data
+echo "Step 5/6: Fixing turnaround data..."
 run_sql "infrastructure/db/fix_turnaround_data.sql" "Fixing turnaround sessions"
 
-# Step 5: Refresh materialized views
-echo "Step 5/5: Refreshing materialized views..."
+# Step 6: Refresh materialized views
+echo "Step 6/6: Refreshing materialized views..."
 docker exec -i ${CONTAINER} psql -U ${USER} -d ${DB} << 'EOF'
 DO $$
 BEGIN
@@ -104,9 +108,9 @@ EOF
 
 echo ""
 echo "Heatmap Views Status:"
-docker exec -i ${CONTAINER} psql -U ${USER} -d ${DB} << 'EOF'
+docker exec -i ${CONTAINER} psql -U ${USER} -d ${DB} <<'EOF'
 SELECT matviewname, 
-       pg_size_pretty(pg_relation_size(oid)) as size
+       pg_size_pretty(pg_total_relation_size(schemaname||'.'||matviewname)) as size
 FROM pg_matviews 
 WHERE schemaname = 'public' 
 AND matviewname LIKE '%heatmap%'

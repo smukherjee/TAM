@@ -47,6 +47,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
 };
 
 const AppRoutes = () => {
+    const TelematicsIntegrationMasterPage = React.lazy(() => import('./pages/admin/TelematicsIntegrationMasterPage'));
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -187,6 +188,15 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       {/* Admin - Zone Editor (requires ADMIN role) */}
+      <Route path="/admin/telematics-integrations" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Suspense fallback={<div className="h-full flex items-center justify-center">Loading...</div>}>
+              <TelematicsIntegrationMasterPage />
+            </Suspense>
+          </MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/admin/zones" element={
         <ProtectedRoute>
           <MainLayout>

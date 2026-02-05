@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 
 /**
  * Stores airport perimeter polygons for boundary validation.
- * Used to ensure all ground vehicle and asset positions stay within airport boundaries.
+ * Used to ensure all ground vehicle and asset positions stay within airport
+ * boundaries.
  */
 @Entity
 @Table(name = "airport_boundaries", indexes = {
@@ -24,11 +25,11 @@ public class AirportBoundary {
     private String name;
 
     /**
-     * GeoJSON representation of the boundary polygon.
-     * Stored as JSON string for simplicity; can be parsed to geometry for spatial queries.
+     * PostGIS geometry representation of the boundary polygon.
+     * Maps to the actual database column 'boundary_polygon'.
      */
-    @Column(name = "boundary_geojson", columnDefinition = "TEXT", nullable = false)
-    private String boundaryGeoJson;
+    @Column(name = "boundary_polygon", columnDefinition = "geometry(Polygon,4326)")
+    private String boundaryPolygon;
 
     /**
      * Bounding box for quick containment checks.
@@ -60,10 +61,10 @@ public class AirportBoundary {
     public AirportBoundary() {
     }
 
-    public AirportBoundary(String tenantCode, String name, String boundaryGeoJson) {
+    public AirportBoundary(String tenantCode, String name, String boundaryPolygon) {
         this.tenantCode = tenantCode;
         this.name = name;
-        this.boundaryGeoJson = boundaryGeoJson;
+        this.boundaryPolygon = boundaryPolygon;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -79,38 +80,93 @@ public class AirportBoundary {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getTenantCode() { return tenantCode; }
-    public void setTenantCode(String tenantCode) { this.tenantCode = tenantCode; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getTenantCode() {
+        return tenantCode;
+    }
 
-    public String getBoundaryGeoJson() { return boundaryGeoJson; }
-    public void setBoundaryGeoJson(String boundaryGeoJson) { this.boundaryGeoJson = boundaryGeoJson; }
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
+    }
 
-    public Double getMinLatitude() { return minLatitude; }
-    public void setMinLatitude(Double minLatitude) { this.minLatitude = minLatitude; }
+    public String getName() {
+        return name;
+    }
 
-    public Double getMaxLatitude() { return maxLatitude; }
-    public void setMaxLatitude(Double maxLatitude) { this.maxLatitude = maxLatitude; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Double getMinLongitude() { return minLongitude; }
-    public void setMinLongitude(Double minLongitude) { this.minLongitude = minLongitude; }
+    public String getBoundaryPolygon() {
+        return boundaryPolygon;
+    }
 
-    public Double getMaxLongitude() { return maxLongitude; }
-    public void setMaxLongitude(Double maxLongitude) { this.maxLongitude = maxLongitude; }
+    public void setBoundaryPolygon(String boundaryPolygon) {
+        this.boundaryPolygon = boundaryPolygon;
+    }
 
-    public String getProperties() { return properties; }
-    public void setProperties(String properties) { this.properties = properties; }
+    public Double getMinLatitude() {
+        return minLatitude;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setMinLatitude(Double minLatitude) {
+        this.minLatitude = minLatitude;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public Double getMaxLatitude() {
+        return maxLatitude;
+    }
+
+    public void setMaxLatitude(Double maxLatitude) {
+        this.maxLatitude = maxLatitude;
+    }
+
+    public Double getMinLongitude() {
+        return minLongitude;
+    }
+
+    public void setMinLongitude(Double minLongitude) {
+        this.minLongitude = minLongitude;
+    }
+
+    public Double getMaxLongitude() {
+        return maxLongitude;
+    }
+
+    public void setMaxLongitude(Double maxLongitude) {
+        this.maxLongitude = maxLongitude;
+    }
+
+    public String getProperties() {
+        return properties;
+    }
+
+    public void setProperties(String properties) {
+        this.properties = properties;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     /**
      * Quick bounding box check if a point is potentially within the boundary.

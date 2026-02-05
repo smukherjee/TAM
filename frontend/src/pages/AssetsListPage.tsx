@@ -15,6 +15,7 @@ interface Asset {
     location?: string;
     createdAt: string;
     updatedAt: string;
+    telematicsSourceName?: string;
 }
 
 const AssetsListPage: React.FC = () => {
@@ -115,6 +116,7 @@ const AssetsListPage: React.FC = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Location</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Telematics Source Name</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
@@ -136,6 +138,7 @@ const AssetsListPage: React.FC = () => {
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.description || '-'}</td>
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.category || '-'}</td>
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.location || '-'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-300">{asset.telematicsSourceName || '-'}</td>
                                             <td className="px-6 py-4 text-sm">
                                                 <button
                                                     onClick={() => handleViewMovementTrail(asset.assetId)}

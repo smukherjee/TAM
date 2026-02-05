@@ -18,6 +18,91 @@ BEGIN
 END $$;
 
 -- =====================================================================
+-- 0. FLIGHTS & VEHICLES (Core Data)
+-- =====================================================================
+INSERT INTO flights (
+    tenant_code, flight_number, callsign, icao24, origin, destination,
+    latitude, longitude, altitude, speed, heading, status, timestamp
+)
+SELECT
+    CASE (gs % 3)
+        WHEN 0 THEN 'VIDP'
+        WHEN 1 THEN 'LIRN'
+        ELSE 'YBBN'
+    END,
+    CASE (gs % 3)
+        WHEN 0 THEN 'AI' || (100 + gs)::TEXT
+        WHEN 1 THEN 'BA' || (200 + gs)::TEXT
+        ELSE 'QF' || (300 + gs)::TEXT
+    END,
+    CASE (gs % 3)
+        WHEN 0 THEN 'AIC' || (100 + gs)::TEXT
+        WHEN 1 THEN 'BAW' || (200 + gs)::TEXT
+        ELSE 'QFA' || (300 + gs)::TEXT
+    END,
+    to_hex(10000 + gs),
+    CASE (gs % 3) WHEN 0 THEN 'VABB' WHEN 1 THEN 'EGLL' ELSE 'YSSY' END,
+    CASE (gs % 3) WHEN 0 THEN 'VIDP' WHEN 1 THEN 'LIRN' ELSE 'YBBN' END,
+    CASE (gs % 3)
+        WHEN 0 THEN 28.5562 + (random() - 0.5) * 0.1
+        WHEN 1 THEN 40.8844 + (random() - 0.5) * 0.1
+        ELSE -27.3842 + (random() - 0.5) * 0.1
+    END,
+    CASE (gs % 3)
+        WHEN 0 THEN 77.1000 + (random() - 0.5) * 0.1
+        WHEN 1 THEN 14.2908 + (random() - 0.5) * 0.1
+        ELSE 153.1175 + (random() - 0.5) * 0.1
+    END,
+    random() * 3000,
+    150 + random() * 100,
+    random() * 360,
+    CASE (gs % 4)
+        WHEN 0 THEN 'SCHEDULED'
+        WHEN 1 THEN 'LANDED'
+        WHEN 2 THEN 'IN_AIR'
+        ELSE 'ON_BLOCK'
+    END,
+    NOW() - (gs || ' minutes')::INTERVAL
+FROM generate_series(1, 50) gs
+ON CONFLICT DO NOTHING;
+
+INSERT INTO vehicles (
+    tenant_code, vehicle_id, vehicle_type, vehicle_name,
+    latitude, longitude, speed, heading, zone, status, timestamp
+)
+SELECT
+    CASE (gs % 3)
+        WHEN 0 THEN 'VIDP'
+        WHEN 1 THEN 'LIRN'
+        ELSE 'YBBN'
+    END,
+    'VEH-' || (1000 + gs)::TEXT,
+    CASE (gs % 4)
+        WHEN 0 THEN 'FUEL_TRUCK'
+        WHEN 1 THEN 'BAGGAGE_TUG'
+        WHEN 2 THEN 'CATERING_TRUCK'
+        ELSE 'MAINTENANCE_VAN'
+    END,
+    'Vehicle ' || gs,
+    CASE (gs % 3)
+        WHEN 0 THEN 28.5562 + (random() - 0.5) * 0.01
+        WHEN 1 THEN 40.8844 + (random() - 0.5) * 0.01
+        ELSE -27.3842 + (random() - 0.5) * 0.01
+    END,
+    CASE (gs % 3)
+        WHEN 0 THEN 77.1000 + (random() - 0.5) * 0.01
+        WHEN 1 THEN 14.2908 + (random() - 0.5) * 0.01
+        ELSE 153.1175 + (random() - 0.5) * 0.01
+    END,
+    random() * 30,
+    random() * 360,
+    'Apron',
+    'ACTIVE',
+    NOW() - (gs || ' minutes')::INTERVAL
+FROM generate_series(1, 50) gs
+ON CONFLICT DO NOTHING;
+
+-- =====================================================================
 -- 1. ZONE VIOLATIONS (for Safety & Security reports)
 -- =====================================================================
 INSERT INTO zone_violations (

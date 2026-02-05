@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-@Component
+//@Component
 public class MockTelitGenerator_YBBN {
 
     private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator_YBBN.class);
@@ -40,7 +40,7 @@ public class MockTelitGenerator_YBBN {
             this.name = name;
             this.type = type;
         }
-        
+
         String getName() {
             return name;
         }
@@ -52,39 +52,54 @@ public class MockTelitGenerator_YBBN {
     {
         List<VehicleConfig> list = new java.util.ArrayList<>();
         // Fuel Trucks (10)
-        for (int i = 1; i <= 10; i++) list.add(new VehicleConfig("BNE-FT-" + String.format("%02d", i), "Fuel Truck " + i, "Fuel Truck"));
+        for (int i = 1; i <= 10; i++)
+            list.add(new VehicleConfig("BNE-FT-" + String.format("%02d", i), "Fuel Truck " + i, "Fuel Truck"));
         // Catering Trucks (8)
-        for (int i = 1; i <= 8; i++) list.add(new VehicleConfig("BNE-CT-" + String.format("%02d", i), "Catering Truck " + i, "Catering Truck"));
+        for (int i = 1; i <= 8; i++)
+            list.add(new VehicleConfig("BNE-CT-" + String.format("%02d", i), "Catering Truck " + i, "Catering Truck"));
         // Baggage Tugs (12)
-        for (int i = 1; i <= 12; i++) list.add(new VehicleConfig("BNE-BT-" + String.format("%02d", i), "Baggage Tug " + i, "Baggage Tug"));
+        for (int i = 1; i <= 12; i++)
+            list.add(new VehicleConfig("BNE-BT-" + String.format("%02d", i), "Baggage Tug " + i, "Baggage Tug"));
         // Baggage Carts (15)
-        for (int i = 1; i <= 15; i++) list.add(new VehicleConfig("BNE-BC-" + String.format("%02d", i), "Baggage Cart " + i, "Baggage Cart"));
+        for (int i = 1; i <= 15; i++)
+            list.add(new VehicleConfig("BNE-BC-" + String.format("%02d", i), "Baggage Cart " + i, "Baggage Cart"));
         // Belt Loaders (8)
-        for (int i = 1; i <= 8; i++) list.add(new VehicleConfig("BNE-BL-" + String.format("%02d", i), "Belt Loader " + i, "Belt Loader"));
+        for (int i = 1; i <= 8; i++)
+            list.add(new VehicleConfig("BNE-BL-" + String.format("%02d", i), "Belt Loader " + i, "Belt Loader"));
         // GPUs (6)
-        for (int i = 1; i <= 6; i++) list.add(new VehicleConfig("BNE-GP-" + String.format("%02d", i), "GPU " + i, "GPU"));
+        for (int i = 1; i <= 6; i++)
+            list.add(new VehicleConfig("BNE-GP-" + String.format("%02d", i), "GPU " + i, "GPU"));
         // Pushback Tractors (8)
-        for (int i = 1; i <= 8; i++) list.add(new VehicleConfig("BNE-PB-" + String.format("%02d", i), "Pushback " + i, "Pushback"));
+        for (int i = 1; i <= 8; i++)
+            list.add(new VehicleConfig("BNE-PB-" + String.format("%02d", i), "Pushback " + i, "Pushback"));
         // Stairs (6)
-        for (int i = 1; i <= 6; i++) list.add(new VehicleConfig("BNE-ST-" + String.format("%02d", i), "Stairs " + i, "Stairs"));
+        for (int i = 1; i <= 6; i++)
+            list.add(new VehicleConfig("BNE-ST-" + String.format("%02d", i), "Stairs " + i, "Stairs"));
         // Water Trucks (4)
-        for (int i = 1; i <= 4; i++) list.add(new VehicleConfig("BNE-WT-" + String.format("%02d", i), "Water Truck " + i, "Water Truck"));
+        for (int i = 1; i <= 4; i++)
+            list.add(new VehicleConfig("BNE-WT-" + String.format("%02d", i), "Water Truck " + i, "Water Truck"));
         // Lavatory Trucks (4)
-        for (int i = 1; i <= 4; i++) list.add(new VehicleConfig("BNE-LV-" + String.format("%02d", i), "Lavatory Truck " + i, "Lavatory Truck"));
+        for (int i = 1; i <= 4; i++)
+            list.add(new VehicleConfig("BNE-LV-" + String.format("%02d", i), "Lavatory Truck " + i, "Lavatory Truck"));
         // De-icing Trucks (3)
-        for (int i = 1; i <= 3; i++) list.add(new VehicleConfig("BNE-DI-" + String.format("%02d", i), "De-icing Truck " + i, "De-icing Truck"));
+        for (int i = 1; i <= 3; i++)
+            list.add(new VehicleConfig("BNE-DI-" + String.format("%02d", i), "De-icing Truck " + i, "De-icing Truck"));
         // ASUs (4)
-        for (int i = 1; i <= 4; i++) list.add(new VehicleConfig("BNE-AS-" + String.format("%02d", i), "ASU " + i, "ASU"));
+        for (int i = 1; i <= 4; i++)
+            list.add(new VehicleConfig("BNE-AS-" + String.format("%02d", i), "ASU " + i, "ASU"));
         // Buses (8)
-        for (int i = 1; i <= 8; i++) list.add(new VehicleConfig("BNE-BU-" + String.format("%02d", i), "Bus " + i, "Bus"));
+        for (int i = 1; i <= 8; i++)
+            list.add(new VehicleConfig("BNE-BU-" + String.format("%02d", i), "Bus " + i, "Bus"));
         // Cargo Loaders (3)
-        for (int i = 1; i <= 3; i++) list.add(new VehicleConfig("BNE-CG-" + String.format("%02d", i), "Cargo Loader " + i, "Cargo Loader"));
+        for (int i = 1; i <= 3; i++)
+            list.add(new VehicleConfig("BNE-CG-" + String.format("%02d", i), "Cargo Loader " + i, "Cargo Loader"));
         // Ambulifts (1)
         list.add(new VehicleConfig("BNE-AM-01", "Ambulift 1", "Ambulift"));
         configs = list;
     }
 
-    public MockTelitGenerator_YBBN(io.micrometer.core.instrument.MeterRegistry registry, SimulationConfig simulationConfig) {
+    public MockTelitGenerator_YBBN(io.micrometer.core.instrument.MeterRegistry registry,
+            SimulationConfig simulationConfig) {
         this.restTemplate = new RestTemplate();
         this.simulationConfig = simulationConfig;
         this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulation.vehicles.generated")

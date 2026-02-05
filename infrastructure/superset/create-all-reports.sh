@@ -12,14 +12,18 @@ echo "📊 Provisioning Superset reports at $SUPERSET_URL"
 req() { curl -s "$@"; }
 
 # 1) Login
-TOKEN=$(req -X POST "$SUPERSET_URL/api/v1/security/login" \
+echo "🔑 Logging in to Superset..."
+RESP=$(req -X POST "$SUPERSET_URL/api/v1/security/login" \
   -H "Content-Type: application/json" \
-  -d "{\"username\": \"$ADMIN_USER\", \"password\": \"$ADMIN_PASS\", \"provider\": \"db\"}" | jq -r '.access_token')
+  -d "{\"username\": \"$ADMIN_USER\", \"password\": \"$ADMIN_PASS\", \"provider\": \"db\"}")
+
+TOKEN=$(echo "$RESP" | jq -r '.access_token' 2>/dev/null || echo "null")
 
 if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
-  echo "❌ Superset login failed"
+  echo "❌ Superset login failed. Response: $RESP"
   exit 1
 fi
+echo "✅ Logged in successfully"
 AUTH_HEADER="Authorization: Bearer $TOKEN"
 
 # 2) Ensure TimescaleDB connection exists
@@ -100,12 +104,19 @@ create_table_raw_chart() {
 create_dashboard() {
   local TITLE=$1; local SLUG=$2
   local EXIST_ID
-  EXIST_ID=$(req -X GET "$SUPERSET_URL/api/v1/dashboard/?q=(filters:!((col:dashboard_title,opr:eq,value:$TITLE)))" -H "$AUTH_HEADER" | jq -r '.result[0].id')
+  EXIST_ID=$(req -X GET "$SUPERSET_URL/api/v1/dashboard/?q=(filters:!((col:dashboard_title,opr:eq,value:$TITLE)))" -H "$AUTH_HEADER" | jq -r '.result[0].id' 2>/dev/null || echo "")
   if [ -n "$EXIST_ID" ] && [ "$EXIST_ID" != "null" ]; then echo "$EXIST_ID"; return; fi
+  
   local payload
-  payload=$(jq -n --arg title "$TITLE" --arg slug "$SLUG" '{dashboard_title:$title, slug:$slug}')
+  payload=$(jq -n --arg title "$TITLE" --arg slug "$SLUG" '{dashboard_title:$title, slug:$slug, owners:[1]}')
+  
   RESP=$(req -X POST "$SUPERSET_URL/api/v1/dashboard/" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$payload")
-  echo "$RESP" | jq -r '.id'
+  DASH_ID=$(echo "$RESP" | jq -r '.id' 2>/dev/null || echo "null")
+  
+  if [ "$DASH_ID" == "null" ]; then
+    echo "❌ Failed to create dashboard '$TITLE'. Response: $RESP" >&2
+  fi
+  echo "$DASH_ID"
 }
 
 add_chart_to_dashboard() {
@@ -183,7 +194,7 @@ CH_FORE_VIOL=$(create_table_raw_chart "Violations Forecast (Hourly)" "$DS_FORE_V
 
 echo "✅ Charts created. Building dashboards..."
 
-DASH_OPS=$(create_dashboard "TAM Ops Overview" "tam_ops_full")
+DASH_OPS=$(create_dashboard "TAM Ops Overview" "tam_ops")
 DASH_SAFE=$(create_dashboard "TAM Safety & Security" "tam_safety")
 DASH_TA=$(create_dashboard "TAM Turnaround" "tam_turnaround")
 DASH_ASSET=$(create_dashboard "TAM Assets" "tam_assets")

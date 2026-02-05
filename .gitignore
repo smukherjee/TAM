@@ -4,6 +4,7 @@ target/
 *.jar
 *.war
 *.ear
+*.log
 .gradle/
 build/
 .settings/

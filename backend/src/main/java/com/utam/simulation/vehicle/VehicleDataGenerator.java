@@ -26,7 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Generates realistic GSE vehicle data for 15 vehicle types.
  * Implements FR-040 to FR-055: GSE fleet generation with all 15 types.
  * 
- * Data Flow: Generator -> NiFi (vehicle-ingest) -> Kafka (vehicle-raw-json) -> VehicleService -> WebSocket -> Frontend
+ * Data Flow: Generator -> NiFi (vehicle-ingest) -> Kafka (vehicle-raw-json) ->
+ * VehicleService -> WebSocket -> Frontend
  */
 @Component
 public class VehicleDataGenerator extends BaseDataGenerator {
@@ -38,7 +39,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
     private final DepotRepository depotRepository;
     private final RestTemplate restTemplate;
     private final VehicleAssetMapService vehicleAssetMapService;
-    
+
     @SuppressWarnings("unused") // Reserved for JSON serialization of complex vehicle data
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
@@ -62,40 +63,40 @@ public class VehicleDataGenerator extends BaseDataGenerator {
     // GSE vehicle naming prefixes - matches database vehicle_types.code
     private static final Map<String, String> VEHICLE_PREFIXES = Map.ofEntries(
             // Standard database codes
-            Map.entry("BAG", "BT"),           // Baggage Tractor
-            Map.entry("BAGGAGE", "BC"),       // Baggage Cart
-            Map.entry("BELT", "BL"),          // Belt Loader
-            Map.entry("FUEL", "FT"),          // Fuel Truck
-            Map.entry("HYDR", "HD"),          // Hydrant Dispenser
-            Map.entry("CAT", "CT"),           // Catering Truck
-            Map.entry("CATERING", "CT"),      // Catering (alternate code)
-            Map.entry("GPU", "GP"),           // Ground Power Unit
-            Map.entry("ASU", "AS"),           // Air Start Unit
-            Map.entry("PB", "PB"),            // Pushback Tug
-            Map.entry("PUSHBACK", "PB"),      // Pushback (alternate code)
-            Map.entry("TWB", "TB"),           // Towbar
-            Map.entry("PAX", "BU"),           // Passenger Bus
-            Map.entry("BUS", "BU"),           // Bus (alternate code)
-            Map.entry("STRS", "ST"),          // Stairs
-            Map.entry("WATER", "WT"),         // Water Truck
-            Map.entry("LAV", "LV"),           // Lavatory Service
-            Map.entry("LAVATORY", "LV"),      // Lavatory (alternate code)
-            Map.entry("CARGO", "CG"),         // Cargo Loader
-            Map.entry("DEICE", "DI"),         // De-icing Truck
-            Map.entry("DEICING", "DI"),       // De-icing (alternate code)
-            Map.entry("EMERGENCY", "EM"),     // Emergency Vehicle
-            Map.entry("AMBULIFT", "AM")       // Ambulift
+            Map.entry("BAG", "BT"), // Baggage Tractor
+            Map.entry("BAGGAGE", "BC"), // Baggage Cart
+            Map.entry("BELT", "BL"), // Belt Loader
+            Map.entry("FUEL", "FT"), // Fuel Truck
+            Map.entry("HYDR", "HD"), // Hydrant Dispenser
+            Map.entry("CAT", "CT"), // Catering Truck
+            Map.entry("CATERING", "CT"), // Catering (alternate code)
+            Map.entry("GPU", "GP"), // Ground Power Unit
+            Map.entry("ASU", "AS"), // Air Start Unit
+            Map.entry("PB", "PB"), // Pushback Tug
+            Map.entry("PUSHBACK", "PB"), // Pushback (alternate code)
+            Map.entry("TWB", "TB"), // Towbar
+            Map.entry("PAX", "BU"), // Passenger Bus
+            Map.entry("BUS", "BU"), // Bus (alternate code)
+            Map.entry("STRS", "ST"), // Stairs
+            Map.entry("WATER", "WT"), // Water Truck
+            Map.entry("LAV", "LV"), // Lavatory Service
+            Map.entry("LAVATORY", "LV"), // Lavatory (alternate code)
+            Map.entry("CARGO", "CG"), // Cargo Loader
+            Map.entry("DEICE", "DI"), // De-icing Truck
+            Map.entry("DEICING", "DI"), // De-icing (alternate code)
+            Map.entry("EMERGENCY", "EM"), // Emergency Vehicle
+            Map.entry("AMBULIFT", "AM") // Ambulift
     );
 
     public VehicleDataGenerator(SimulationConfig config, MeterRegistry meterRegistry,
-                                SimVehicleRepository vehicleRepository,
-                                VehiclePositionRepository vehiclePositionRepository,
-                                VehicleTypeRepository vehicleTypeRepository,
-                                StandRepository standRepository,
-                                DepotRepository depotRepository,
-                                ObjectMapper objectMapper,
-                                RestTemplate restTemplate,
-                                VehicleAssetMapService vehicleAssetMapService) {
+            SimVehicleRepository vehicleRepository,
+            VehiclePositionRepository vehiclePositionRepository,
+            VehicleTypeRepository vehicleTypeRepository,
+            StandRepository standRepository,
+            DepotRepository depotRepository,
+            ObjectMapper objectMapper,
+            RestTemplate restTemplate,
+            VehicleAssetMapService vehicleAssetMapService) {
         super(config, meterRegistry);
         this.vehicleRepository = vehicleRepository;
         this.vehiclePositionRepository = vehiclePositionRepository;
@@ -121,9 +122,23 @@ public class VehicleDataGenerator extends BaseDataGenerator {
     public void init() {
         try {
             loadReferenceData();
-            log.info("VehicleDataGenerator initialized with {} tenant configurations", vehicleTypes.size());
+            loadActiveVehicles();
+            log.info("VehicleDataGenerator initialized with {} tenant configurations and {} active vehicles",
+                    vehicleTypes.size(), activeVehicles.size());
         } catch (Exception e) {
-            log.warn("VehicleDataGenerator failed to load reference data: {}. Generator will use defaults.", e.getMessage());
+            log.warn("VehicleDataGenerator failed to initialize: {}. Generator will use defaults.", e.getMessage());
+        }
+    }
+
+    private void loadActiveVehicles() {
+        try {
+            List<Vehicle> existing = vehicleRepository.findAll();
+            for (Vehicle v : existing) {
+                registerActiveVehicle(v);
+            }
+            log.info("Loaded {} existing vehicles into simulation engine", existing.size());
+        } catch (Exception e) {
+            log.error("Failed to load existing vehicles: {}", e.getMessage());
         }
     }
 
@@ -135,7 +150,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
         } catch (Exception e) {
             log.warn("Failed to load vehicle types: {}", e.getMessage());
         }
-        
+
         for (String tenantCode : config.getTenants().keySet()) {
             vehicleTypes.put(tenantCode, allVehicleTypes);
             try {
@@ -184,7 +199,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
 
         for (VehicleType type : types) {
             int count = getFleetSizeForType(fleetConfig, type.getCode(), vehiclesPerType);
-            
+
             for (int i = 0; i < count && generated < batchSize; i++) {
                 Vehicle vehicle = createVehicle(tenantCode, tenantConfig, type, i + 1);
                 if (vehicle != null) {
@@ -194,18 +209,17 @@ public class VehicleDataGenerator extends BaseDataGenerator {
                         continue;
                     }
                     vehicleRepository.save(vehicle);
-                    
+
                     // Create corresponding asset entry and mapping
                     var assetInfo = vehicleAssetMapService.createOrUpdateAssetForVehicle(
                             vehicle.getVehicleId(),
                             vehicle.getVehicleName(),
                             type.getName(),
-                            tenantCode
-                    );
+                            tenantCode);
                     if (assetInfo.isPresent()) {
                         assetsMapped++;
                     }
-                    
+
                     registerActiveVehicle(vehicle);
                     generated++;
                 }
@@ -215,21 +229,22 @@ public class VehicleDataGenerator extends BaseDataGenerator {
         if (skipped > 0) {
             log.info("Skipped {} existing vehicles for tenant {}", skipped, tenantCode);
         }
-        log.info("Generated {} vehicles for tenant {} across {} types (assets mapped: {})", 
+        log.info("Generated {} vehicles for tenant {} across {} types (assets mapped: {})",
                 generated, tenantCode, types.size(), assetsMapped);
-        
+
         // Update asset statuses after generation:
         // - Vehicle-linked assets → "In Use"
-        // - Standalone assets → Random "Available" or "Maintenance" with random locations
+        // - Standalone assets → Random "Available" or "Maintenance" with random
+        // locations
         if (generated > 0 || assetsMapped > 0) {
             vehicleAssetMapService.updateAssetStatuses(tenantCode);
         }
-        
+
         return generated;
     }
 
-    private int getFleetSizeForType(SimulationConfig.FleetConfig fleetConfig, 
-                                    String typeCode, int defaultCount) {
+    private int getFleetSizeForType(SimulationConfig.FleetConfig fleetConfig,
+            String typeCode, int defaultCount) {
         return switch (typeCode) {
             case "FUEL", "HYDR" -> fleetConfig.getFuelTrucks();
             case "CAT", "CATERING" -> fleetConfig.getCateringTrucks();
@@ -304,9 +319,10 @@ public class VehicleDataGenerator extends BaseDataGenerator {
 
         return true;
     }
+
     private void updateVehiclePosition(ActiveVehicle vehicle) {
         switch (vehicle.status) {
-            case "IDLE" -> {
+            case "IDLE", "ACTIVE" -> {
                 // Occasionally dispatch to a stand
                 if (random.nextDouble() < 0.05) { // 5% chance per tick
                     vehicle.status = "DISPATCHED";
@@ -350,20 +366,21 @@ public class VehicleDataGenerator extends BaseDataGenerator {
 
         if (distance > 0.0001) { // Still needs to move
             vehicle.heading = Math.toDegrees(Math.atan2(dx, dy));
-            if (vehicle.heading < 0) vehicle.heading += 360;
+            if (vehicle.heading < 0)
+                vehicle.heading += 360;
 
             // Move at configured speed (converted from km/h to degrees/tick)
             double speedDegrees = vehicle.maxSpeed / 111000.0 / 3600.0; // Very rough conversion
             double newLat = vehicle.latitude + Math.cos(Math.toRadians(vehicle.heading)) * speedDegrees;
             double newLon = vehicle.longitude + Math.sin(Math.toRadians(vehicle.heading)) * speedDegrees;
-            
+
             // T077: Boundary validation - clamp position if outside boundary
             if (boundaryValidator != null) {
                 BoundaryValidator.ClampedPosition clamped = boundaryValidator.clampToBoundary(
-                    vehicle.tenantCode, newLat, newLon);
+                        vehicle.tenantCode, newLat, newLon);
                 vehicle.latitude = clamped.latitude();
                 vehicle.longitude = clamped.longitude();
-                
+
                 if (clamped.wasClamped()) {
                     // Position was clamped - adjust heading to stay within bounds
                     log.trace("Vehicle {} position clamped to boundary", vehicle.vehicleId);
@@ -372,7 +389,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
                 vehicle.latitude = newLat;
                 vehicle.longitude = newLon;
             }
-            
+
             vehicle.speed = vehicle.maxSpeed;
         }
     }
@@ -400,7 +417,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
     }
 
     private Vehicle createVehicle(String tenantCode, SimulationConfig.TenantConfig tenantConfig,
-                                  VehicleType type, int index) {
+            VehicleType type, int index) {
         Vehicle vehicle = new Vehicle();
         vehicle.setId(UUID.randomUUID());
         vehicle.setTenantCode(tenantCode);
@@ -462,36 +479,36 @@ public class VehicleDataGenerator extends BaseDataGenerator {
 
         // Process only vehicles for the specified tenant
         activeVehicles.values().stream()
-            .filter(v -> v.tenantCode.equals(tenantCode))
-            .filter(v -> !v.status.equals("IDLE")) // Only update moving vehicles
-            .forEach(vehicle -> {
-                // Update vehicle position based on status
-                updateVehicleMovement(vehicle);
+                .filter(v -> v.tenantCode.equals(tenantCode))
+                .filter(v -> !v.status.equals("IDLE")) // Only update moving vehicles
+                .forEach(vehicle -> {
+                    // Update vehicle position based on status
+                    updateVehicleMovement(vehicle);
 
-                // Create position record for persistence
-                VehiclePosition position = new VehiclePosition();
-                position.setId(UUID.randomUUID());
-                position.setVehicleId(vehicle.vehicleId);
-                position.setTenantCode(vehicle.tenantCode);
-                position.setLatitude(vehicle.latitude);
-                position.setLongitude(vehicle.longitude);
-                position.setSpeed(vehicle.speed);
-                position.setHeading(vehicle.heading);
-                position.setStatus(vehicle.status);
-                position.setRecordedAt(now);
+                    // Create position record for persistence
+                    VehiclePosition position = new VehiclePosition();
+                    position.setId(UUID.randomUUID());
+                    position.setVehicleId(vehicle.vehicleId);
+                    position.setTenantCode(vehicle.tenantCode);
+                    position.setLatitude(vehicle.latitude);
+                    position.setLongitude(vehicle.longitude);
+                    position.setSpeed(vehicle.speed);
+                    position.setHeading(vehicle.heading);
+                    position.setStatus(vehicle.status);
+                    position.setRecordedAt(now);
 
-                positionUpdates.add(position);
-            });
+                    positionUpdates.add(position);
+                });
 
         // Batch persist positions if we have any
         if (!positionUpdates.isEmpty()) {
             try {
                 vehiclePositionRepository.saveAll(positionUpdates);
-                log.trace("Updated {} vehicle positions for tenant {}", 
-                         positionUpdates.size(), tenantCode);
+                log.trace("Updated {} vehicle positions for tenant {}",
+                        positionUpdates.size(), tenantCode);
             } catch (Exception e) {
-                log.error("Failed to persist vehicle positions for tenant {}: {}", 
-                         tenantCode, e.getMessage());
+                log.error("Failed to persist vehicle positions for tenant {}: {}",
+                        tenantCode, e.getMessage());
             }
 
             // Also send to NiFi for WebSocket broadcast to frontend
@@ -501,19 +518,21 @@ public class VehicleDataGenerator extends BaseDataGenerator {
 
     /**
      * Send vehicle position updates to NiFi for WebSocket broadcast.
-     * Converts VehiclePosition to model.Vehicle format expected by VehicleService consumer.
+     * Converts VehiclePosition to model.Vehicle format expected by VehicleService
+     * consumer.
      */
     private void sendToNifi(String tenantCode, List<VehiclePosition> positions) {
         List<com.utam.model.Vehicle> nifiVehicles = new ArrayList<>();
-        
+
         for (VehiclePosition pos : positions) {
             // Look up the vehicle entity for additional data
             Vehicle vehicleEntity = vehicleRepository.findById(pos.getVehicleId()).orElse(null);
-            
+
             com.utam.model.Vehicle nifiVehicle = new com.utam.model.Vehicle();
             nifiVehicle.setId(pos.getId());
             nifiVehicle.setTenantCode(tenantCode);
-            nifiVehicle.setVehicleId(vehicleEntity != null ? vehicleEntity.getVehicleId() : pos.getVehicleId().toString());
+            nifiVehicle
+                    .setVehicleId(vehicleEntity != null ? vehicleEntity.getVehicleId() : pos.getVehicleId().toString());
             nifiVehicle.setVehicleName(vehicleEntity != null ? vehicleEntity.getVehicleName() : null);
             nifiVehicle.setLatitude(pos.getLatitude());
             nifiVehicle.setLongitude(pos.getLongitude());
@@ -549,7 +568,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
             case "SERVICING" -> {
                 // Service in progress - check if complete
                 long serviceMinutes = java.time.Duration.between(
-                    vehicle.serviceStartTime, Instant.now()).toMinutes();
+                        vehicle.serviceStartTime, Instant.now()).toMinutes();
                 if (serviceMinutes >= vehicle.serviceDuration) {
                     vehicle.status = "RETURNING";
                     Depot depot = selectRandomDepot(vehicle.tenantCode);
@@ -575,9 +594,9 @@ public class VehicleDataGenerator extends BaseDataGenerator {
      */
     public long getActiveVehicleCount(String tenantCode) {
         return activeVehicles.values().stream()
-            .filter(v -> v.tenantCode.equals(tenantCode))
-            .filter(v -> !v.status.equals("IDLE"))
-            .count();
+                .filter(v -> v.tenantCode.equals(tenantCode))
+                .filter(v -> !v.status.equals("IDLE"))
+                .count();
     }
 
     /**
@@ -586,20 +605,20 @@ public class VehicleDataGenerator extends BaseDataGenerator {
      */
     public List<VehiclePositionDTO> getActiveVehiclePositions(String tenantCode) {
         return activeVehicles.values().stream()
-            .filter(v -> v.tenantCode.equals(tenantCode))
-            .map(this::toPositionDTO)
-            .toList();
+                .filter(v -> v.tenantCode.equals(tenantCode))
+                .map(this::toPositionDTO)
+                .toList();
     }
 
     private VehiclePositionDTO toPositionDTO(ActiveVehicle vehicle) {
         return VehiclePositionDTO.builder()
-            .vehicleId(vehicle.vehicleId.toString())
-            .latitude(vehicle.latitude)
-            .longitude(vehicle.longitude)
-            .speed(vehicle.speed)
-            .heading(vehicle.heading)
-            .status(vehicle.status)
-            .build();
+                .vehicleId(vehicle.vehicleId.toString())
+                .latitude(vehicle.latitude)
+                .longitude(vehicle.longitude)
+                .speed(vehicle.speed)
+                .heading(vehicle.heading)
+                .status(vehicle.status)
+                .build();
     }
 
     private static class ActiveVehicle {

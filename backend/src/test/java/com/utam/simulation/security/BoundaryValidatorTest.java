@@ -37,7 +37,7 @@ class BoundaryValidatorTest {
     @DisplayName("Should validate point inside polygon")
     void shouldValidatePointInsidePolygon() {
         String geoJson = "{\"type\":\"Polygon\",\"coordinates\":[[[0.0,0.0],[10.0,0.0],[10.0,10.0],[0.0,10.0],[0.0,0.0]]]}";
-        
+
         AirportBoundary boundary = createBoundary("TEST", geoJson, 0.0, 10.0, 0.0, 10.0);
         when(boundaryRepository.findByTenantCode("TEST")).thenReturn(Optional.of(boundary));
 
@@ -50,7 +50,7 @@ class BoundaryValidatorTest {
     @DisplayName("Should validate point outside polygon")
     void shouldValidatePointOutsidePolygon() {
         String geoJson = "{\"type\":\"Polygon\",\"coordinates\":[[[0.0,0.0],[10.0,0.0],[10.0,10.0],[0.0,10.0],[0.0,0.0]]]}";
-        
+
         AirportBoundary boundary = createBoundary("TEST", geoJson, 0.0, 10.0, 0.0, 10.0);
         when(boundaryRepository.findByTenantCode("TEST")).thenReturn(Optional.of(boundary));
 
@@ -73,7 +73,7 @@ class BoundaryValidatorTest {
     @DisplayName("Should handle real airport coordinates")
     void shouldHandleRealAirportCoordinates() {
         String geoJson = "{\"type\":\"Polygon\",\"coordinates\":[[[77.080,28.550],[77.130,28.550],[77.130,28.585],[77.080,28.585],[77.080,28.550]]]}";
-        
+
         AirportBoundary boundary = createBoundary("VIDP", geoJson, 28.550, 28.585, 77.080, 77.130);
         when(boundaryRepository.findByTenantCode("VIDP")).thenReturn(Optional.of(boundary));
 
@@ -85,7 +85,7 @@ class BoundaryValidatorTest {
     @DisplayName("Should clamp position to boundary")
     void shouldClampPositionToBoundary() {
         String geoJson = "{\"type\":\"Polygon\",\"coordinates\":[[[0.0,0.0],[10.0,0.0],[10.0,10.0],[0.0,10.0],[0.0,0.0]]]}";
-        
+
         AirportBoundary boundary = createBoundary("TEST", geoJson, 0.0, 10.0, 0.0, 10.0);
         when(boundaryRepository.findByTenantCode("TEST")).thenReturn(Optional.of(boundary));
 
@@ -115,7 +115,7 @@ class BoundaryValidatorTest {
     @DisplayName("Should get boundary center")
     void shouldGetBoundaryCenter() {
         String geoJson = "{\"type\":\"Polygon\",\"coordinates\":[[[0.0,0.0],[10.0,0.0],[10.0,10.0],[0.0,10.0],[0.0,0.0]]]}";
-        
+
         AirportBoundary boundary = createBoundary("TEST", geoJson, 0.0, 10.0, 0.0, 10.0);
         when(boundaryRepository.findByTenantCode("TEST")).thenReturn(Optional.of(boundary));
 
@@ -134,12 +134,12 @@ class BoundaryValidatorTest {
         assertTrue(center.isEmpty());
     }
 
-    private AirportBoundary createBoundary(String tenantCode, String geoJson, 
-                                           Double minLat, Double maxLat, 
-                                           Double minLon, Double maxLon) {
+    private AirportBoundary createBoundary(String tenantCode, String geoJson,
+            Double minLat, Double maxLat,
+            Double minLon, Double maxLon) {
         AirportBoundary boundary = new AirportBoundary();
         boundary.setTenantCode(tenantCode);
-        boundary.setBoundaryGeoJson(geoJson);
+        boundary.setBoundaryPolygon(geoJson);
         boundary.setMinLatitude(minLat);
         boundary.setMaxLatitude(maxLat);
         boundary.setMinLongitude(minLon);

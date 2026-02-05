@@ -45,9 +45,9 @@ spring:
       type: single
   cache:
     type: caffeine
-    cache-names: liveAssets,liveAsset,activityHeatmap,violationHeatmap
+    cache-names: liveAssets,liveAsset,activityHeatmap,violationHeatmap,vehicleAssetStatus
     caffeine:
-      spec: maximumSize=1000,expireAfterWrite=5s
+      spec: maximumSize=1000,expireAfterWrite=300s
   data:
     redis:
       host: localhost
@@ -127,9 +127,9 @@ spring:
       type: single
   cache:
     type: caffeine
-    cache-names: liveAssets,liveAsset,activityHeatmap,violationHeatmap
+    cache-names: liveAssets,liveAsset,activityHeatmap,violationHeatmap,vehicleAssetStatus
     caffeine:
-      spec: maximumSize=1000,expireAfterWrite=5s
+      spec: maximumSize=1000,expireAfterWrite=300s
   data:
     redis:
       host: ${REDIS_HOST:redis}
@@ -175,5 +175,5 @@ monitoring:
 
 logging:
   level:
-    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.orm.jdbc.bind: INFO
     com.utam: DEBUG

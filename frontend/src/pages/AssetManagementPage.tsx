@@ -51,6 +51,7 @@ const AssetManagementPage: React.FC = () => {
         { icon: Layers, label: 'Categories', path: '/assets/categories', color: 'orange' },
         { icon: Tag, label: 'Tags', path: '/assets/tags', color: 'pink' },
         { icon: MapPin, label: 'Locations', path: '/assets/locations', color: 'cyan' },
+        { icon: BarChart, label: 'Telematics Integrations', path: '/admin/telematics-integrations', color: 'indigo' },
     ];
 
     return (

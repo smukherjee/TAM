@@ -108,7 +108,7 @@ CREATE INDEX IF NOT EXISTS idx_vehicle_types_tenant ON vehicle_types (tenant_cod
 COMMENT ON TABLE vehicle_types IS 'Reference table for vehicle type definitions';
 
 -- 4. SEED DEFAULT VEHICLE TYPES
-INSERT INTO vehicle_types (tenant_code, code, name, category, max_speed_kmh) VALUES
+INSERT INTO vehicle_types (tenant_code, code, name, category, max_speed) VALUES
 ('VIDP', 'PUSHBACK', 'Pushback Tractor', 'Ground Support', 25),
 ('VIDP', 'FUEL', 'Fuel Truck', 'Fueling', 30),
 ('VIDP', 'CARGO', 'Cargo Loader', 'Cargo', 20),
