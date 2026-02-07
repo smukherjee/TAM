@@ -45,50 +45,148 @@ public class TurnaroundSession {
     @JsonIgnoreProperties("session")
     private List<Alert> alerts;
 
-    public TurnaroundSession() {}
+    public TurnaroundSession() {
+    }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public UUID getId() {
+        return id;
+    }
 
-    public String getTenantCode() { return tenantCode; }
-    public void setTenantCode(String tenantCode) { this.tenantCode = tenantCode; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public String getFlightId() { return flightId; }
-    public void setFlightId(String flightId) { this.flightId = flightId; }
+    public String getTenantCode() {
+        return tenantCode;
+    }
 
-    public String getStandId() { return standId; }
-    public void setStandId(String standId) { this.standId = standId; }
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
+    }
 
-    public ZonedDateTime getSirt() { return sirt; }
-    public void setSirt(ZonedDateTime sirt) { this.sirt = sirt; }
+    public String getFlightId() {
+        return flightId;
+    }
 
-    public ZonedDateTime getEibt() { return eibt; }
-    public void setEibt(ZonedDateTime eibt) { this.eibt = eibt; }
+    public void setFlightId(String flightId) {
+        this.flightId = flightId;
+    }
 
-    public ZonedDateTime getAibt() { return aibt; }
-    public void setAibt(ZonedDateTime aibt) { this.aibt = aibt; }
+    public String getStandId() {
+        return standId;
+    }
 
-    public ZonedDateTime getTobt() { return tobt; }
-    public void setTobt(ZonedDateTime tobt) { this.tobt = tobt; }
+    public void setStandId(String standId) {
+        this.standId = standId;
+    }
 
-    public ZonedDateTime getTsat() { return tsat; }
-    public void setTsat(ZonedDateTime tsat) { this.tsat = tsat; }
+    public ZonedDateTime getSirt() {
+        return sirt;
+    }
 
-    public ZonedDateTime getAobt() { return aobt; }
-    public void setAobt(ZonedDateTime aobt) { this.aobt = aobt; }
+    public void setSirt(ZonedDateTime sirt) {
+        this.sirt = sirt;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public ZonedDateTime getEibt() {
+        return eibt;
+    }
 
-    public ZonedDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(ZonedDateTime createdAt) { this.createdAt = createdAt; }
+    public void setEibt(ZonedDateTime eibt) {
+        this.eibt = eibt;
+    }
 
-    public ZonedDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(ZonedDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public ZonedDateTime getAibt() {
+        return aibt;
+    }
 
-    public List<TurnaroundTask> getTasks() { return tasks; }
-    public void setTasks(List<TurnaroundTask> tasks) { this.tasks = tasks; }
+    public void setAibt(ZonedDateTime aibt) {
+        this.aibt = aibt;
+    }
 
-    public List<Alert> getAlerts() { return alerts; }
-    public void setAlerts(List<Alert> alerts) { this.alerts = alerts; }
+    public ZonedDateTime getTobt() {
+        return tobt;
+    }
+
+    public void setTobt(ZonedDateTime tobt) {
+        this.tobt = tobt;
+    }
+
+    public ZonedDateTime getTsat() {
+        return tsat;
+    }
+
+    public void setTsat(ZonedDateTime tsat) {
+        this.tsat = tsat;
+    }
+
+    public ZonedDateTime getAobt() {
+        return aobt;
+    }
+
+    public void setAobt(ZonedDateTime aobt) {
+        this.aobt = aobt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public ZonedDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(ZonedDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public ZonedDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(ZonedDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public List<TurnaroundTask> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<TurnaroundTask> tasks) {
+        this.tasks = tasks;
+    }
+
+    @Column(name = "delay_minutes")
+    private Integer delayMinutes;
+
+    @Column(name = "delay_reason")
+    private String delayReason;
+
+    public Integer getDelayMinutes() {
+        return delayMinutes;
+    }
+
+    public void setDelayMinutes(Integer delayMinutes) {
+        this.delayMinutes = delayMinutes;
+    }
+
+    public String getDelayReason() {
+        return delayReason;
+    }
+
+    public void setDelayReason(String delayReason) {
+        this.delayReason = delayReason;
+    }
+
+    public List<Alert> getAlerts() {
+        return alerts;
+    }
+
+    public void setAlerts(List<Alert> alerts) {
+        this.alerts = alerts;
+    }
 }

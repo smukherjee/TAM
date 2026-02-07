@@ -17,19 +17,37 @@ public class TurnaroundRuleEngine {
     }
 
     public void evaluate(TurnaroundSession session) {
-        // Simple rule: If status is ON_BLOCK, generate a mock alert for demonstration
-        if ("ON_BLOCK".equals(session.getStatus())) {
-            Alert alert = new Alert();
-            alert.setId(UUID.randomUUID());
-            alert.setTenantCode(session.getTenantCode());
-            alert.setSession(session);
-            alert.setSeverity("MEDIUM");
-            alert.setType("PROCESS_DELAY");
-            alert.setMessage("Turnaround started but no tasks active.");
-            alert.setTimestamp(ZonedDateTime.now());
-            alert.setIsActive(true);
-            
-            alertRepository.save(alert);
+        // specific rule for delay
+        if (session.getDelayMinutes() != null && session.getDelayMinutes() > 0) {
+            // Check if active alert already exists for this session and type DELAY
+            boolean alertExists = alertRepository.findBySessionIdAndTypeAndIsActiveTrue(session.getId(), "DELAY")
+                    .isPresent();
+
+            if (!alertExists) {
+                Alert alert = new Alert();
+                alert.setId(UUID.randomUUID());
+                alert.setTenantCode(session.getTenantCode());
+                alert.setSession(session);
+                alert.setSeverity(getSeverity(session.getDelayMinutes()));
+                alert.setType("DELAY");
+                alert.setMessage("Turnaround delayed by " + session.getDelayMinutes() + " minutes. Reason: "
+                        + (session.getDelayReason() != null ? session.getDelayReason() : "Unknown"));
+                alert.setTimestamp(ZonedDateTime.now());
+                alert.setIsActive(true);
+
+                alertRepository.save(alert);
+                System.out.println("⚠️ Generated Alert for Session " + session.getId());
+            }
         }
+    }
+
+    private String getSeverity(int delayMinutes) {
+        if (delayMinutes >= 30)
+            return "CRITICAL";
+        if (delayMinutes >= 20)
+            return "HIGH";
+        if (delayMinutes >= 10)
+            return "MEDIUM";
+        return "LOW";
     }
 }

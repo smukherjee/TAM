@@ -24,20 +24,20 @@ public class TurnaroundSessionService {
     private final Random random = new Random();
     private final ConcurrentHashMap<String, List<Stand>> standCache = new ConcurrentHashMap<>();
 
-    public TurnaroundSessionService(TurnaroundSessionRepository sessionRepository, 
-                                    StandRepository standRepository) {
+    public TurnaroundSessionService(TurnaroundSessionRepository sessionRepository,
+            StandRepository standRepository) {
         this.sessionRepository = sessionRepository;
         this.standRepository = standRepository;
     }
-    
+
     /**
      * Get a random stand for the given tenant code.
      * Uses caching to avoid repeated database queries.
      */
     private String getRandomStandId(String tenantCode) {
-        List<Stand> stands = standCache.computeIfAbsent(tenantCode, 
-            tc -> standRepository.findByTenantCodeAndActive(tc, true));
-        
+        List<Stand> stands = standCache.computeIfAbsent(tenantCode,
+                tc -> standRepository.findByTenantCodeAndActive(tc, true));
+
         if (stands == null || stands.isEmpty()) {
             // Fallback: try to get any stand for tenant
             stands = standRepository.findByTenantCode(tenantCode);
@@ -45,11 +45,11 @@ public class TurnaroundSessionService {
                 standCache.put(tenantCode, stands);
             }
         }
-        
+
         if (stands != null && !stands.isEmpty()) {
             return stands.get(random.nextInt(stands.size())).getStandId();
         }
-        
+
         // Ultimate fallback if no stands found
         return "1";
     }
@@ -71,11 +71,13 @@ public class TurnaroundSessionService {
     public void processFlightUpdate(com.utam.model.Flight flight) {
         String tenantCode = flight.getTenantCode() != null ? flight.getTenantCode() : "VIDP";
         String flightId = flight.getCallsign();
-        
-        if (flightId == null) return;
 
-        java.util.Optional<TurnaroundSession> existingSession = sessionRepository.findByFlightIdAndTenantCode(flightId, tenantCode);
-        
+        if (flightId == null)
+            return;
+
+        java.util.Optional<TurnaroundSession> existingSession = sessionRepository.findByFlightIdAndTenantCode(flightId,
+                tenantCode);
+
         if (existingSession.isEmpty()) {
             TurnaroundSession session = new TurnaroundSession();
             session.setId(UUID.randomUUID());
@@ -85,13 +87,13 @@ public class TurnaroundSessionService {
             session.setCreatedAt(java.time.ZonedDateTime.now());
             session.setUpdatedAt(java.time.ZonedDateTime.now());
             session.setStandId(getRandomStandId(tenantCode)); // Random stand from database
-            
+
             // Set scheduled timestamps for new sessions
             java.time.ZonedDateTime now = java.time.ZonedDateTime.now();
             session.setEibt(now.plusMinutes(30)); // Expected to arrive in 30 min
             session.setTsat(now.plusMinutes(75)); // Expected startup in 75 min (30 + 45 turnaround)
             session.setTobt(now.plusMinutes(80)); // Expected off-block in 80 min
-            
+
             sessionRepository.save(session);
         }
     }
@@ -102,13 +104,13 @@ public class TurnaroundSessionService {
         dto.setFlightId(session.getFlightId());
         dto.setStandId(session.getStandId());
         dto.setStatus(session.getStatus());
-        
+
         if (session.getTasks() != null) {
             dto.setTasks(session.getTasks().stream()
                     .map(this::convertToTaskSummaryDTO)
                     .collect(Collectors.toList()));
         }
-        
+
         return dto;
     }
 
@@ -133,8 +135,9 @@ public class TurnaroundSessionService {
                 session.getTobt(),
                 session.getTsat(),
                 session.getAobt(),
-                taskDTOs
-        );
+                session.getDelayMinutes(),
+                session.getDelayReason(),
+                taskDTOs);
     }
 
     private TaskDetailDTO convertToTaskDetailDTO(TurnaroundTask task) {
@@ -145,7 +148,6 @@ public class TurnaroundSessionService {
                 task.getPlannedStart(),
                 task.getPlannedEnd(),
                 task.getActualStart(),
-                task.getActualEnd()
-        );
+                task.getActualEnd());
     }
 }

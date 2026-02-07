@@ -29,8 +29,9 @@ public class TurnaroundController {
     @GetMapping("/sessions/{id}")
     public TurnaroundSessionDetailDTO getSessionDetails(
             @PathVariable UUID id,
-            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
-        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
+            @RequestParam(required = false) String icaoCode,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoHeader) {
+        String tenantCode = icaoCode != null ? icaoCode : (icaoHeader != null ? icaoHeader : "VIDP");
         return turnaroundService.getSessionDetails(id, tenantCode);
     }
 }

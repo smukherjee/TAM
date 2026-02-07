@@ -26,7 +26,8 @@ public class MonitoringController {
 
     private final ObjectMapper objectMapper;
     private final KafkaLagMonitor kafkaLagMonitor;
-    private final String prometheusUrl = "http://tam-prometheus:9090";
+    @org.springframework.beans.factory.annotation.Value("${monitoring.prometheus.url}")
+    private String prometheusUrl;
     private final HttpClient httpClient;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
     private final com.utam.config.AlertConfiguration alertConfiguration;
@@ -207,7 +208,8 @@ public class MonitoringController {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error querying Prometheus for " + query + ": " + e.getMessage());
+            System.err.println("Error querying Prometheus for " + query + ": " + e.getClass().getSimpleName() + " - "
+                    + e.getMessage());
         }
         return 0.0;
     }

@@ -172,6 +172,8 @@ monitoring:
   metrics:
     enable-latency: true
     enable-error-tracking: true
+  prometheus:
+    url: ${PROMETHEUS_URL:http://prometheus:9090}
 
 logging:
   level:

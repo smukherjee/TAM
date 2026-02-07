@@ -16,14 +16,18 @@ public class TurnaroundSessionDetailDTO {
     private ZonedDateTime tobt;
     private ZonedDateTime tsat;
     private ZonedDateTime aobt;
+    private Integer delayMinutes;
+    private String delayReason;
     private List<TaskDetailDTO> tasks;
 
-    public TurnaroundSessionDetailDTO() {}
+    public TurnaroundSessionDetailDTO() {
+    }
 
     public TurnaroundSessionDetailDTO(UUID id, String flightId, String icaoCode, String standId, String status,
-                                      ZonedDateTime sirt, ZonedDateTime eibt, ZonedDateTime aibt,
-                                      ZonedDateTime tobt, ZonedDateTime tsat, ZonedDateTime aobt,
-                                      List<TaskDetailDTO> tasks) {
+            ZonedDateTime sirt, ZonedDateTime eibt, ZonedDateTime aibt,
+            ZonedDateTime tobt, ZonedDateTime tsat, ZonedDateTime aobt,
+            Integer delayMinutes, String delayReason,
+            List<TaskDetailDTO> tasks) {
         this.id = id;
         this.flightId = flightId;
         this.icaoCode = icaoCode;
@@ -35,42 +39,120 @@ public class TurnaroundSessionDetailDTO {
         this.tobt = tobt;
         this.tsat = tsat;
         this.aobt = aobt;
+        this.delayMinutes = delayMinutes;
+        this.delayReason = delayReason;
         this.tasks = tasks;
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public UUID getId() {
+        return id;
+    }
 
-    public String getFlightId() { return flightId; }
-    public void setFlightId(String flightId) { this.flightId = flightId; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public String getIcaoCode() { return icaoCode; }
-    public void setIcaoCode(String icaoCode) { this.icaoCode = icaoCode; }
+    public String getFlightId() {
+        return flightId;
+    }
 
-    public String getStandId() { return standId; }
-    public void setStandId(String standId) { this.standId = standId; }
+    public void setFlightId(String flightId) {
+        this.flightId = flightId;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getIcaoCode() {
+        return icaoCode;
+    }
 
-    public ZonedDateTime getSirt() { return sirt; }
-    public void setSirt(ZonedDateTime sirt) { this.sirt = sirt; }
+    public void setIcaoCode(String icaoCode) {
+        this.icaoCode = icaoCode;
+    }
 
-    public ZonedDateTime getEibt() { return eibt; }
-    public void setEibt(ZonedDateTime eibt) { this.eibt = eibt; }
+    public String getStandId() {
+        return standId;
+    }
 
-    public ZonedDateTime getAibt() { return aibt; }
-    public void setAibt(ZonedDateTime aibt) { this.aibt = aibt; }
+    public void setStandId(String standId) {
+        this.standId = standId;
+    }
 
-    public ZonedDateTime getTobt() { return tobt; }
-    public void setTobt(ZonedDateTime tobt) { this.tobt = tobt; }
+    public String getStatus() {
+        return status;
+    }
 
-    public ZonedDateTime getTsat() { return tsat; }
-    public void setTsat(ZonedDateTime tsat) { this.tsat = tsat; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-    public ZonedDateTime getAobt() { return aobt; }
-    public void setAobt(ZonedDateTime aobt) { this.aobt = aobt; }
+    public ZonedDateTime getSirt() {
+        return sirt;
+    }
 
-    public List<TaskDetailDTO> getTasks() { return tasks; }
-    public void setTasks(List<TaskDetailDTO> tasks) { this.tasks = tasks; }
+    public void setSirt(ZonedDateTime sirt) {
+        this.sirt = sirt;
+    }
+
+    public ZonedDateTime getEibt() {
+        return eibt;
+    }
+
+    public void setEibt(ZonedDateTime eibt) {
+        this.eibt = eibt;
+    }
+
+    public ZonedDateTime getAibt() {
+        return aibt;
+    }
+
+    public void setAibt(ZonedDateTime aibt) {
+        this.aibt = aibt;
+    }
+
+    public ZonedDateTime getTobt() {
+        return tobt;
+    }
+
+    public void setTobt(ZonedDateTime tobt) {
+        this.tobt = tobt;
+    }
+
+    public ZonedDateTime getTsat() {
+        return tsat;
+    }
+
+    public void setTsat(ZonedDateTime tsat) {
+        this.tsat = tsat;
+    }
+
+    public ZonedDateTime getAobt() {
+        return aobt;
+    }
+
+    public void setAobt(ZonedDateTime aobt) {
+        this.aobt = aobt;
+    }
+
+    public Integer getDelayMinutes() {
+        return delayMinutes;
+    }
+
+    public void setDelayMinutes(Integer delayMinutes) {
+        this.delayMinutes = delayMinutes;
+    }
+
+    public String getDelayReason() {
+        return delayReason;
+    }
+
+    public void setDelayReason(String delayReason) {
+        this.delayReason = delayReason;
+    }
+
+    public List<TaskDetailDTO> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<TaskDetailDTO> tasks) {
+        this.tasks = tasks;
+    }
 }
