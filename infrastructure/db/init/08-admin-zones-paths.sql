@@ -88,15 +88,22 @@ COMMENT ON COLUMN vehicle_paths.waypoints IS 'JSON array of {lat, lng, timestamp
 
 -- 3. VEHICLE TYPES REFERENCE TABLE
 CREATE TABLE IF NOT EXISTS vehicle_types (
-    id SERIAL PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     tenant_code VARCHAR(10) NOT NULL REFERENCES tenants(code),
     code VARCHAR(20) NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
     category VARCHAR(50), -- Ground Support, Emergency, Cargo, Fueling, etc.
-    icon VARCHAR(100),
-    color VARCHAR(20),
-    max_speed_kmh DOUBLE PRECISION,
+    
+    -- Simulation/Metadata (JPA expects these)
+    icon_name VARCHAR(100),
+    icon_color VARCHAR(20),
+    max_speed INTEGER DEFAULT 40,
+    min_speed INTEGER DEFAULT 5,
+    default_quantity INTEGER DEFAULT 10,
+    default_depot_type VARCHAR(30),
+    is_motorized BOOLEAN DEFAULT true,
+    
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     

@@ -16,7 +16,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service for movement trail ingestion with zone detection and violation tracking.
+ * Service for movement trail ingestion with zone detection and violation
+ * tracking.
  * Core logic for Phase 4 implementation.
  * 
  * Feature: 005-asset-tracking-security
@@ -82,7 +83,8 @@ public class MovementTrailIngestionService {
 
         // Step 3: Update location register
         updateLocationRegister(
-                assetId, assetIdentifier, location, speed, heading,
+                assetId, assetIdentifier, location, latitude, longitude,
+                speed, heading,
                 status, timestamp, tenantCode, zoneResult);
 
         // Step 4: Check for zone violations
@@ -102,7 +104,8 @@ public class MovementTrailIngestionService {
     }
 
     /**
-     * Detect if asset is in any restricted zones using PostGIS ST_Contains or ST_DWithin
+     * Detect if asset is in any restricted zones using PostGIS ST_Contains or
+     * ST_DWithin
      */
     public ZoneDetectionResult detectZones(Point location, String tenantCode) {
         // First check exact containment
@@ -134,8 +137,8 @@ public class MovementTrailIngestionService {
      * Check if asset category is authorized for the zone
      */
     private boolean isAssetAuthorizedForZone(RestrictedZone zone, String assetCategory) {
-        if (zone.getAuthorizedAssetCategories() == null || 
-            zone.getAuthorizedAssetCategories().length == 0) {
+        if (zone.getAuthorizedAssetCategories() == null ||
+                zone.getAuthorizedAssetCategories().length == 0) {
             return true; // No restrictions
         }
 
@@ -185,6 +188,7 @@ public class MovementTrailIngestionService {
      */
     private void updateLocationRegister(
             UUID assetId, String assetIdentifier, Point location,
+            Double latitude, Double longitude,
             Double speed, Double heading, String status, ZonedDateTime timestamp,
             String tenantCode, ZoneDetectionResult zoneResult) {
 
@@ -194,6 +198,8 @@ public class MovementTrailIngestionService {
         register.setAssetId(assetId);
         register.setAssetIdentifier(assetIdentifier);
         register.setCurrentLocation(location);
+        register.setCurrentLatitude(latitude);
+        register.setCurrentLongitude(longitude);
         register.setSpeed(speed);
         register.setHeading(heading);
         register.setStatus(status);
@@ -346,7 +352,7 @@ public class MovementTrailIngestionService {
         private final boolean authorized;
 
         public ZoneDetectionResult(boolean inRestrictedZone, String zoneId, String zoneName,
-                                   String zoneType, UUID zoneUuid, boolean authorized) {
+                String zoneType, UUID zoneUuid, boolean authorized) {
             this.inRestrictedZone = inRestrictedZone;
             this.zoneId = zoneId;
             this.zoneName = zoneName;
@@ -355,11 +361,28 @@ public class MovementTrailIngestionService {
             this.authorized = authorized;
         }
 
-        public boolean isInRestrictedZone() { return inRestrictedZone; }
-        public String getZoneId() { return zoneId; }
-        public String getZoneName() { return zoneName; }
-        public String getZoneType() { return zoneType; }
-        public UUID getZoneUuid() { return zoneUuid; }
-        public boolean isAuthorized() { return authorized; }
+        public boolean isInRestrictedZone() {
+            return inRestrictedZone;
+        }
+
+        public String getZoneId() {
+            return zoneId;
+        }
+
+        public String getZoneName() {
+            return zoneName;
+        }
+
+        public String getZoneType() {
+            return zoneType;
+        }
+
+        public UUID getZoneUuid() {
+            return zoneUuid;
+        }
+
+        public boolean isAuthorized() {
+            return authorized;
+        }
     }
 }

@@ -46,8 +46,8 @@ const UniversalAssetMap: React.FC<UniversalAssetMapProps> = ({
         >
             {/* OpenStreetMap Tile Layer */}
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
 
             {/* Clustered Asset Markers */}
@@ -60,7 +60,7 @@ const UniversalAssetMap: React.FC<UniversalAssetMapProps> = ({
                 iconCreateFunction={(cluster) => {
                     const count = cluster.getChildCount();
                     const size = count < 10 ? 'small' : count < 50 ? 'medium' : 'large';
-                    
+
                     return L.divIcon({
                         html: `<div class="cluster-icon cluster-${size}"><span>${count}</span></div>`,
                         className: 'custom-marker-cluster',

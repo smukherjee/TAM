@@ -25,10 +25,10 @@ CREATE TABLE IF NOT EXISTS restricted_zones (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_restricted_zones_tenant ON restricted_zones (tenant_code);
-CREATE INDEX idx_restricted_zones_type ON restricted_zones (zone_type);
-CREATE INDEX idx_restricted_zones_active ON restricted_zones (is_active) WHERE is_active = TRUE;
-CREATE INDEX idx_restricted_zones_geom ON restricted_zones USING GIST (geometry);
+CREATE INDEX IF NOT EXISTS idx_restricted_zones_tenant ON restricted_zones (tenant_code);
+CREATE INDEX IF NOT EXISTS idx_restricted_zones_type ON restricted_zones (zone_type);
+CREATE INDEX IF NOT EXISTS idx_restricted_zones_active ON restricted_zones (is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_restricted_zones_geom ON restricted_zones USING GIST (geometry);
 
 COMMENT ON TABLE restricted_zones IS 'Defines restricted/prohibited zones with authorization rules for asset movement';
 COMMENT ON COLUMN restricted_zones.zone_type IS 'PROHIBITED=no access, RESTRICTED=authorized only, CONTROLLED=logged access, MAINTENANCE=maintenance vehicles';
@@ -59,10 +59,10 @@ CREATE TABLE IF NOT EXISTS asset_movement_trail (
 -- Convert to TimescaleDB hypertable
 SELECT create_hypertable('asset_movement_trail', 'timestamp', if_not_exists => TRUE);
 
-CREATE INDEX idx_movement_trail_asset ON asset_movement_trail (asset_identifier, timestamp DESC);
-CREATE INDEX idx_movement_trail_tenant ON asset_movement_trail (tenant_code, timestamp DESC);
-CREATE INDEX idx_movement_trail_zone ON asset_movement_trail (restricted_zone_id, timestamp DESC) WHERE restricted_zone_id IS NOT NULL;
-CREATE INDEX idx_movement_trail_location ON asset_movement_trail USING GIST (location);
+CREATE INDEX IF NOT EXISTS idx_movement_trail_asset ON asset_movement_trail (asset_identifier, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_movement_trail_tenant ON asset_movement_trail (tenant_code, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_movement_trail_zone ON asset_movement_trail (restricted_zone_id, timestamp DESC) WHERE restricted_zone_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_movement_trail_location ON asset_movement_trail USING GIST (location);
 
 COMMENT ON TABLE asset_movement_trail IS 'Time-series record of all asset positions and movements';
 COMMENT ON COLUMN asset_movement_trail.asset_identifier IS 'vehicle_id from vehicles table or qr_id from assets table';
@@ -98,12 +98,12 @@ CREATE TABLE IF NOT EXISTS zone_violations (
 -- Convert to TimescaleDB hypertable
 SELECT create_hypertable('zone_violations', 'timestamp', if_not_exists => TRUE);
 
-CREATE INDEX idx_zone_violations_asset ON zone_violations (asset_identifier, timestamp DESC);
-CREATE INDEX idx_zone_violations_tenant ON zone_violations (tenant_code, timestamp DESC);
-CREATE INDEX idx_zone_violations_zone ON zone_violations (restricted_zone_id, timestamp DESC);
-CREATE INDEX idx_zone_violations_severity ON zone_violations (severity, timestamp DESC);
-CREATE INDEX idx_zone_violations_ack ON zone_violations (acknowledged, timestamp DESC) WHERE acknowledged = FALSE;
-CREATE INDEX idx_zone_violations_type ON zone_violations (violation_type, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_zone_violations_asset ON zone_violations (asset_identifier, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_zone_violations_tenant ON zone_violations (tenant_code, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_zone_violations_zone ON zone_violations (restricted_zone_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_zone_violations_severity ON zone_violations (severity, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_zone_violations_ack ON zone_violations (acknowledged, timestamp DESC) WHERE acknowledged = FALSE;
+CREATE INDEX IF NOT EXISTS idx_zone_violations_type ON zone_violations (violation_type, timestamp DESC);
 
 COMMENT ON TABLE zone_violations IS 'Records of unauthorized asset entries into restricted zones';
 COMMENT ON COLUMN zone_violations.severity IS 'AUTO-ASSIGNED: CRITICAL=prohibited zone, HIGH=restricted unauthorized, MEDIUM=controlled unauthorized, LOW=maintenance after hours';
@@ -142,11 +142,11 @@ CREATE TABLE IF NOT EXISTS movement_discrepancies (
 -- Convert to TimescaleDB hypertable
 SELECT create_hypertable('movement_discrepancies', 'timestamp', if_not_exists => TRUE);
 
-CREATE INDEX idx_movement_discrepancies_asset ON movement_discrepancies (asset_identifier, timestamp DESC);
-CREATE INDEX idx_movement_discrepancies_tenant ON movement_discrepancies (tenant_code, timestamp DESC);
-CREATE INDEX idx_movement_discrepancies_type ON movement_discrepancies (discrepancy_type, timestamp DESC);
-CREATE INDEX idx_movement_discrepancies_severity ON movement_discrepancies (severity, timestamp DESC);
-CREATE INDEX idx_movement_discrepancies_ack ON movement_discrepancies (acknowledged, timestamp DESC) WHERE acknowledged = FALSE;
+CREATE INDEX IF NOT EXISTS idx_movement_discrepancies_asset ON movement_discrepancies (asset_identifier, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_movement_discrepancies_tenant ON movement_discrepancies (tenant_code, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_movement_discrepancies_type ON movement_discrepancies (discrepancy_type, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_movement_discrepancies_severity ON movement_discrepancies (severity, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_movement_discrepancies_ack ON movement_discrepancies (acknowledged, timestamp DESC) WHERE acknowledged = FALSE;
 
 COMMENT ON TABLE movement_discrepancies IS 'Detects and records anomalies in asset movement, location, and status';
 COMMENT ON COLUMN movement_discrepancies.discrepancy_type IS 'UNEXPECTED_MOVEMENT=asset moved while out of service, LOCATION_MISMATCH=register vs GPS, SPEED_ANOMALY=exceeded limits, MISSING_TRACKING=no signal, DUPLICATE_SIGNAL=same asset multiple locations';
@@ -168,10 +168,10 @@ CREATE TABLE IF NOT EXISTS asset_location_register (
     last_updated TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_asset_location_tenant ON asset_location_register (tenant_code);
-CREATE INDEX idx_asset_location_zone ON asset_location_register (current_restricted_zone_id) WHERE current_restricted_zone_id IS NOT NULL;
-CREATE INDEX idx_asset_location_in_restricted ON asset_location_register (is_in_restricted_zone) WHERE is_in_restricted_zone = TRUE;
-CREATE INDEX idx_asset_location_geom ON asset_location_register USING GIST (current_location);
+CREATE INDEX IF NOT EXISTS idx_asset_location_tenant ON asset_location_register (tenant_code);
+CREATE INDEX IF NOT EXISTS idx_asset_location_zone ON asset_location_register (current_restricted_zone_id) WHERE current_restricted_zone_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_asset_location_in_restricted ON asset_location_register (is_in_restricted_zone) WHERE is_in_restricted_zone = TRUE;
+CREATE INDEX IF NOT EXISTS idx_asset_location_geom ON asset_location_register USING GIST (current_location);
 
 COMMENT ON TABLE asset_location_register IS 'Real-time snapshot of current asset locations and zone status';
 

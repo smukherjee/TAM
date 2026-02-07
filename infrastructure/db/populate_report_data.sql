@@ -267,6 +267,28 @@ FROM generate_series(1, 2000) gs
 ON CONFLICT DO NOTHING;
 
 -- =====================================================================
+-- 3.5 TURNAROUND SESSIONS (Required for tasks)
+-- =====================================================================
+INSERT INTO turnaround_sessions (
+    id, tenant_code, flight_id, stand_id, sirt, aobt, status, created_at
+)
+SELECT
+    uuid_generate_v4(),
+    CASE (gs % 3)
+        WHEN 0 THEN 'VIDP'
+        WHEN 1 THEN 'LIRN'
+        ELSE 'YBBN'
+    END,
+    'FLT-' || (500 + gs)::TEXT,
+    'Stand-' || ((gs % 20) + 1)::TEXT,
+    NOW() - (gs || ' hours')::INTERVAL,
+    NOW() - (gs || ' hours')::INTERVAL + interval '45 minutes',
+    'COMPLETED',
+    NOW() - (gs || ' hours')::INTERVAL
+FROM generate_series(1, 40) gs
+ON CONFLICT DO NOTHING;
+
+-- =====================================================================
 -- 4. TURNAROUND TASKS (for SLA Compliance and Delay reports)
 -- =====================================================================
 INSERT INTO turnaround_tasks (tenant_code, session_id, task_type, status, planned_start, planned_end, actual_start, actual_end)

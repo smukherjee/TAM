@@ -50,7 +50,7 @@ services:
   # INGESTION LAYER - Apache NiFi
   # ============================================
   nifi:
-    image: apache/nifi:1.25.0
+    image: apache/nifi:1.27.0
     ports:
       - "8091:8080"       # NiFi Web UI
       - "8092:8092"       # ListenHTTP for ADSB data

@@ -50,14 +50,15 @@ public class MovementTrailService {
             throw new IllegalArgumentException("Date range cannot exceed " + MAX_TRAIL_DAYS + " days");
         }
 
-        // Validate tenant code
+        // Validate tenant code - if null, we search without it
+        List<AssetMovementTrail> trailPoints;
         if (tenantCode == null || tenantCode.isEmpty()) {
-            throw new IllegalArgumentException("Tenant code is required for movement trail queries");
+            trailPoints = trailRepository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
+                    assetId, startDate, endDate);
+        } else {
+            trailPoints = trailRepository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                    assetId, tenantCode, startDate, endDate);
         }
-
-        List<AssetMovementTrail> trailPoints = trailRepository
-                .findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(assetId, tenantCode, startDate,
-                        endDate);
 
         if (trailPoints.isEmpty()) {
             return MovementTrailDTO.builder()
@@ -268,8 +269,8 @@ public class MovementTrailService {
                 .id(entity.getId())
                 .latitude(entity.getLatitude())
                 .longitude(entity.getLongitude())
-                .speed(entity.getSpeed())
-                .heading(entity.getHeading())
+                .speed(entity.getSpeed() != null ? entity.getSpeed() : 0.0)
+                .heading(entity.getHeading() != null ? entity.getHeading() : 0.0)
                 .status(entity.getStatus())
                 .timestamp(entity.getTimestamp())
                 .zoneName(entity.getZone())

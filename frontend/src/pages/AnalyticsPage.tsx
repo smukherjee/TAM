@@ -8,14 +8,6 @@ const AnalyticsPage = () => {
 
     // Determine Superset Dashboard Slug based on User Context
     const getDashboardSlug = () => {
-        if (!user) return 'tam_ops';
-        
-        // If user has an ICAO code, show that tenant's dashboard
-        if (user.icaoCode) {
-            return `tam_ops_${user.icaoCode.trim().toLowerCase()}`;
-        }
-        
-        // Fallback to generic dashboard
         return 'tam_ops';
     };
 

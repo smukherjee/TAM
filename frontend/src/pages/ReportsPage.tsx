@@ -3,14 +3,10 @@ import { ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const ReportsPage: React.FC = () => {
-    const { user } = useAuth();
+    const { } = useAuth();
 
     // Determine Dashboard Slug based on User Context
     const getDashboardSlug = () => {
-        if (!user || user.role === 'ADMIN') return 'tam_ops';
-        // For Tenants, look for specific dashboard
-        const icao = user.icaoCode ? user.icaoCode.toLowerCase() : '';
-        if (icao) return `tam_ops_${icao}`;
         return 'tam_ops';
     };
 

@@ -28,12 +28,12 @@ interface TrailMapProps {
 }
 
 // Component to update map view on current point change
-const MapUpdater: React.FC<{ 
-    point: MovementTrailPoint | null; 
+const MapUpdater: React.FC<{
+    point: MovementTrailPoint | null;
     followAsset: boolean;
 }> = ({ point, followAsset }) => {
     const map = useMap();
-    
+
     useEffect(() => {
         if (point && followAsset) {
             map.panTo([point.latitude, point.longitude], { animate: true });
@@ -178,8 +178,8 @@ const TrailMap: React.FC<TrailMapProps> = ({
             scrollWheelZoom={true}
         >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
 
             <BoundsFitter points={points} />
@@ -290,8 +290,8 @@ const TrailMap: React.FC<TrailMapProps> = ({
                                 {entry.zoneName}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                                <span className="inline-block px-1.5 py-0.5 rounded text-xs" 
-                                    style={{ 
+                                <span className="inline-block px-1.5 py-0.5 rounded text-xs"
+                                    style={{
                                         backgroundColor: ZONE_COLORS[entry.zoneType]?.fill,
                                         color: ZONE_COLORS[entry.zoneType]?.stroke
                                     }}>

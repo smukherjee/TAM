@@ -22,6 +22,15 @@ import java.util.UUID;
 public interface AssetMovementTrailRepository extends JpaRepository<AssetMovementTrail, UUID> {
 
         /**
+         * Find movement trail for a specific asset within a time range (Tenant
+         * agnostic)
+         */
+        List<AssetMovementTrail> findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
+                        UUID assetId,
+                        ZonedDateTime startTime,
+                        ZonedDateTime endTime);
+
+        /**
          * Find movement trail for a specific asset within a time range
          */
         List<AssetMovementTrail> findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(

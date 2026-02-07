@@ -175,8 +175,32 @@ repair_superset() {
 }
 
 # -----------------------------------------------------------------------------
+# Database Repairs
+# -----------------------------------------------------------------------------
+
+repair_database() {
+    echo "🔧 [Database] Checking health..."
+    if ! docker exec tam-timescaledb-1 pg_isready -U postgres &> /dev/null; then
+        echo "   ❌ Database container is NOT ready."
+        return
+    fi
+    
+    local TABLE_COUNT=$(docker exec -i tam-timescaledb-1 psql -U postgres -d utam -t -c "SELECT count(*) FROM pg_tables WHERE schemaname = 'public';")
+    if [ "$TABLE_COUNT" -lt 10 ]; then
+        echo "   ⚠️ Schema seems incomplete ($TABLE_COUNT tables). Re-running init-database.sh..."
+        bash "$(dirname "$0")/init-database.sh"
+    else
+        echo "   ✅ Database schema looks healthy ($TABLE_COUNT tables)."
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
+
+if [ "$TARGET" == "db" ] || [ "$TARGET" == "all" ]; then
+    repair_database
+fi
 
 if [ "$TARGET" == "nifi" ] || [ "$TARGET" == "all" ]; then
     repair_nifi

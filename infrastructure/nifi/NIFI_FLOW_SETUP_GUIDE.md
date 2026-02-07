@@ -43,7 +43,7 @@ The NiFi REST API v1 has limitations that prevent full automation of processor c
 2. Click "Controller Services" tab → Click "+" button
 3. Search for "DBCPConnectionPool" → Add
 4. Click "⚙️" icon to configure:
-   - **Database Connection URL**: `jdbc:postgresql://timescaledb:5432/tam`
+   - **Database Connection URL**: `jdbc:postgresql://timescaledb:5432/utam`
    - **Database Driver Class Name**: `org.postgresql.Driver`
    - **Database Driver Location(s)**: `/opt/nifi/nifi-current/lib/postgresql-42.7.1.jar`
    - **Database User**: `postgres`

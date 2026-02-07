@@ -35,7 +35,7 @@ public class VehicleAssetMapController {
         AssetStatusDTO status = vehicleAssetMapService.getAssetStatusByVehicleId(vehicleId, tenantCode);
 
         if (status == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build(); // Return 204 instead of 404 to avoid console errors
         }
 
         return ResponseEntity.ok(status);

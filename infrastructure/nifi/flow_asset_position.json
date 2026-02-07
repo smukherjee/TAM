@@ -45,7 +45,9 @@
         "Log Level": "info",
         "Attributes to Log": "fragment.count,record.count"
       },
-      "autoTerminateRelationships": ["success"],
+      "autoTerminateRelationships": [
+        "success"
+      ],
       "comments": "Log successful processing metrics"
     },
     {
@@ -55,7 +57,9 @@
         "Log Level": "error",
         "Log Payload": "true"
       },
-      "autoTerminateRelationships": ["success"],
+      "autoTerminateRelationships": [
+        "success"
+      ],
       "comments": "Log failures for troubleshooting"
     },
     {
@@ -74,7 +78,7 @@
       "name": "DBCPConnectionPool",
       "type": "org.apache.nifi.dbcp.DBCPConnectionPool",
       "properties": {
-        "Database Connection URL": "jdbc:postgresql://timescaledb:5432/tam",
+        "Database Connection URL": "jdbc:postgresql://timescaledb:5432/utam",
         "Database Driver Class Name": "org.postgresql.Driver",
         "Database Driver Location(s)": "/opt/nifi/nifi-current/lib/postgresql-42.7.1.jar",
         "Database User": "postgres",

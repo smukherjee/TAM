@@ -89,6 +89,7 @@ const AssetsListPage: React.FC = () => {
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-label="Filter by status"
                         >
                             <option>All Status</option>
                             <option>Available</option>
@@ -127,11 +128,10 @@ const AssetsListPage: React.FC = () => {
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.assetId}</td>
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.qrId || '-'}</td>
                                             <td className="px-6 py-4 text-sm">
-                                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                                    asset.status === 'Available' ? 'bg-green-900 text-green-300' :
-                                                    asset.status === 'In Use' ? 'bg-blue-900 text-blue-300' :
-                                                    'bg-yellow-900 text-yellow-300'
-                                                }`}>
+                                                <span className={`px-2 py-1 rounded-full text-xs ${asset.status === 'Available' ? 'bg-green-900 text-green-300' :
+                                                        asset.status === 'In Use' ? 'bg-blue-900 text-blue-300' :
+                                                            'bg-yellow-900 text-yellow-300'
+                                                    }`}>
                                                     {asset.status}
                                                 </span>
                                             </td>
@@ -141,7 +141,7 @@ const AssetsListPage: React.FC = () => {
                                             <td className="px-6 py-4 text-sm text-gray-300">{asset.telematicsSourceName || '-'}</td>
                                             <td className="px-6 py-4 text-sm">
                                                 <button
-                                                    onClick={() => handleViewMovementTrail(asset.assetId)}
+                                                    onClick={() => handleViewMovementTrail(asset.id)}
                                                     className="flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors"
                                                     title="View Movement Trail"
                                                 >

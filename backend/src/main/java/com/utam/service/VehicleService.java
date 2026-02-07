@@ -7,13 +7,10 @@ import com.utam.model.Vehicle;
 import com.utam.repository.VehicleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,92 +21,60 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final ObjectMapper objectMapper;
     private final io.micrometer.core.instrument.Timer latencyTimer;
-    private final io.micrometer.core.instrument.Counter errorCounter;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
     private final RedisService redisService;
-    private final MinioService minioService;
 
     public VehicleService(VehicleRepository vehicleRepository, ObjectMapper objectMapper,
             io.micrometer.core.instrument.MeterRegistry registry,
             org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate,
-            RedisService redisService,
-            MinioService minioService) {
+            RedisService redisService) {
         this.vehicleRepository = vehicleRepository;
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.registerModule(new JavaTimeModule());
         this.messagingTemplate = messagingTemplate;
         this.redisService = redisService;
-        this.minioService = minioService;
 
         this.latencyTimer = io.micrometer.core.instrument.Timer.builder("pipeline.latency.seconds")
                 .tag("type", "vehicle")
                 .description("End-to-end latency for vehicle events")
                 .register(registry);
-
-        this.errorCounter = io.micrometer.core.instrument.Counter.builder("pipeline.events.failed")
-                .tag("type", "vehicle")
-                .description("Number of failed vehicle events")
-                .register(registry);
     }
 
-    @KafkaListener(topics = "vehicle-raw-json", groupId = "utam-group")
-    public void consumeVehicleEvent(String message) {
-        try {
-            List<Vehicle> vehicles;
-            if (message.trim().startsWith("[")) {
-                vehicles = Arrays.asList(objectMapper.readValue(message, Vehicle[].class));
-            } else {
-                vehicles = Collections.singletonList(objectMapper.readValue(message, Vehicle.class));
+    public void processVehicles(List<Vehicle> vehicles) {
+        for (Vehicle vehicle : vehicles) {
+            // Ensure ID is generated if missing
+            if (vehicle.getId() == null) {
+                vehicle.setId(UUID.randomUUID());
             }
 
-            for (Vehicle vehicle : vehicles) {
-                // Ensure ID is generated if missing
-                if (vehicle.getId() == null) {
-                    vehicle.setId(UUID.randomUUID());
-                }
-
-                // Ensure timestamp is set if missing
-                if (vehicle.getTimestamp() == null) {
-                    vehicle.setTimestamp(Instant.now());
-                }
-
-                // Set default tenant if missing
-                if (vehicle.getTenantCode() == null) {
-                    vehicle.setTenantCode("VIDP");
-                }
-
-                // Latency calculation
-                long latency = System.currentTimeMillis() - vehicle.getTimestamp().toEpochMilli();
-                latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
-
-                // WebSocket Push - Defaulting ICAO to VIDP
-                String tenant = vehicle.getTenantCode() != null ? vehicle.getTenantCode() : "VIDP"; 
-                messagingTemplate.convertAndSend("/topic/vehicles/" + tenant, vehicle);
-
-                // Redis Cache
-                if (vehicle.getVehicleId() != null) {
-                    String redisKey = "vehicle:" + tenant + ":" + vehicle.getVehicleId();
-                    redisService.set(redisKey, vehicle, 300, java.util.concurrent.TimeUnit.SECONDS);
-                    redisService.addToSet("active_vehicles:" + tenant, vehicle.getVehicleId());
-                }
-
-                logger.info("Consumed vehicle from Kafka: {}", vehicle.getVehicleId());
-                vehicleRepository.save(vehicle);
+            // Ensure timestamp is set if missing
+            if (vehicle.getTimestamp() == null) {
+                vehicle.setTimestamp(Instant.now());
             }
 
-            // Archive to MinIO
-            String tenant = "VIDP";
-            if (!vehicles.isEmpty() && vehicles.get(0).getTenantCode() != null) {
-                tenant = vehicles.get(0).getTenantCode();
+            // Set default tenant if missing
+            if (vehicle.getTenantCode() == null) {
+                vehicle.setTenantCode("VIDP");
             }
-            String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
-            String filename = "archives/raw/" + tenant + "/" + timestamp + "/vehicle_" + UUID.randomUUID() + ".json";
-            minioService.uploadJson(filename, message);
 
-        } catch (Exception e) {
-            logger.error("Error processing vehicle message: {}", message, e);
-            errorCounter.increment();
+            // Latency calculation
+            long latency = System.currentTimeMillis() - vehicle.getTimestamp().toEpochMilli();
+            latencyTimer.record(java.time.Duration.ofMillis(Math.max(0, latency)));
+
+            // WebSocket Push - Defaulting ICAO to VIDP
+            String tenant = vehicle.getTenantCode() != null ? vehicle.getTenantCode() : "VIDP";
+            messagingTemplate.convertAndSend("/topic/vehicles/" + tenant, vehicle);
+
+            // Redis Cache
+            if (vehicle.getVehicleId() != null) {
+                String redisKey = "vehicle:" + tenant + ":" + vehicle.getVehicleId();
+                redisService.set(redisKey, vehicle, 300, java.util.concurrent.TimeUnit.SECONDS);
+                redisService.addToSet("active_vehicles:" + tenant, vehicle.getVehicleId());
+            }
+
+            logger.info("Processed vehicle: {}", vehicle.getVehicleId());
+            vehicleRepository.save(vehicle);
         }
     }
 

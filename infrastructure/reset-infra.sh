@@ -97,11 +97,43 @@ reset_nifi() {
 }
 
 # -----------------------------------------------------------------------------
+# Database Reset Logic
+# -----------------------------------------------------------------------------
+
+reset_database() {
+    echo "🧨 [Database] Clearing all simulation data..."
+    # Call seed-demo-data.sh with --clear flag for all tenants
+    bash "$(dirname "$0")/seed-demo-data.sh" --tenant all --clear
+    success "Database cleared."
+}
+
+# -----------------------------------------------------------------------------
+# Superset Reset Logic
+# -----------------------------------------------------------------------------
+
+reset_superset() {
+    echo "🧨 [Superset] Purging all dashboards and reports..."
+    # If purge-all-reports.sh exists, use it
+    if [ -f "$(dirname "$0")/superset/purge-all-reports.sh" ]; then
+        bash "$(dirname "$0")/superset/purge-all-reports.sh"
+    fi
+    success "Superset purged."
+}
+
+# -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
 
+if [ "$TARGET" == "db" ] || [ "$TARGET" == "all" ]; then
+    reset_database
+fi
+
 if [ "$TARGET" == "nifi" ] || [ "$TARGET" == "all" ]; then
     reset_nifi
+fi
+
+if [ "$TARGET" == "superset" ] || [ "$TARGET" == "all" ]; then
+    reset_superset
 fi
 
 echo "🎉 Reset Complete."

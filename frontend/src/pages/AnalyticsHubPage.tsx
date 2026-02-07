@@ -34,13 +34,13 @@ const chartCategories: Record<string, ChartCategory> = {
     icon: <Activity className="w-4 h-4" />,
     description: 'Daily operations, flights, and throughput metrics',
     color: 'blue',
-    supersetDashboard: 'tam_ops_full',
+    supersetDashboard: 'tam_ops',
     charts: [
       { id: 'ops_overview_daily', sliceId: 1, name: 'Ops Overview Daily', type: 'table', description: 'Daily flight and vehicle counts' },
       { id: 'flight_movements_hourly', sliceId: 2, name: 'Flight Movements Hourly', type: 'table', description: 'Hourly flight position data' },
-      { id: 'flight_movements_line', sliceId: 22, name: 'Flight Movements (Trend)', type: 'line', description: 'Flight activity over time' },
+      { id: 'flight_movements_line', sliceId: 4, name: 'Flight Movements (Trend)', type: 'line', description: 'Flight activity over time' },
       { id: 'vehicle_activity_daily', sliceId: 3, name: 'Vehicle Activity Daily', type: 'table', description: 'Ground vehicle telemetry summary' },
-      { id: 'throughput_today', sliceId: 15, name: 'Throughput Today', type: 'kpi', description: 'Today\'s operational volume' },
+      { id: 'throughput_today', sliceId: 5, name: 'Throughput Today', type: 'kpi', description: 'Today\'s operational volume' },
     ]
   },
   safety: {
@@ -50,12 +50,12 @@ const chartCategories: Record<string, ChartCategory> = {
     color: 'red',
     supersetDashboard: 'tam_safety',
     charts: [
-      { id: 'violations_by_zone', sliceId: 7, name: 'Violations by Zone', type: 'table', description: 'Speed and zone violations' },
-      { id: 'breach_dwell_stats', sliceId: 8, name: 'Breach Dwell Stats', type: 'table', description: 'Time spent in restricted zones' },
-      { id: 'discrepancy_trends', sliceId: 9, name: 'Discrepancy Trends Daily', type: 'table', description: 'Movement discrepancy patterns' },
-      { id: 'repeat_offenders', sliceId: 14, name: 'Repeat Offenders', type: 'table', description: 'Assets with frequent violations' },
-      { id: 'alerts_by_type_line', sliceId: 23, name: 'Alerts by Type (Trend)', type: 'line', description: 'Alert frequency over time' },
-      { id: 'violation_heatmap', sliceId: 21, name: 'Violation Heatmap', type: 'map', description: 'Geographic violation density' },
+      { id: 'violations_by_zone', sliceId: 6, name: 'Violations by Zone', type: 'table', description: 'Speed and zone violations' },
+      { id: 'breach_dwell_stats', sliceId: 7, name: 'Breach Dwell Stats', type: 'table', description: 'Time spent in restricted zones' },
+      { id: 'discrepancy_trends', sliceId: 8, name: 'Discrepancy Trends Daily', type: 'table', description: 'Movement discrepancy patterns' },
+      { id: 'repeat_offenders', sliceId: 9, name: 'Repeat Offenders', type: 'table', description: 'Assets with frequent violations' },
+      { id: 'alerts_by_type_line', sliceId: 11, name: 'Alerts by Type (Trend)', type: 'line', description: 'Alert frequency over time' },
+      { id: 'violation_heatmap', sliceId: 10, name: 'Violation Heatmap', type: 'map', description: 'Geographic violation density' },
     ]
   },
   turnaround: {
@@ -65,10 +65,10 @@ const chartCategories: Record<string, ChartCategory> = {
     color: 'green',
     supersetDashboard: 'tam_turnaround',
     charts: [
-      { id: 'stand_occupancy', sliceId: 4, name: 'Stand Occupancy', type: 'table', description: 'Gate/stand utilization metrics' },
-      { id: 'sla_compliance', sliceId: 5, name: 'SLA Compliance by Task', type: 'table', description: 'On-time task completion rates' },
-      { id: 'delay_root_causes', sliceId: 6, name: 'Delay Root Causes', type: 'bar', description: 'Primary causes of turnaround delays' },
-      { id: 'stand_conflicts', sliceId: 19, name: 'Stand Conflicts', type: 'table', description: 'Overlapping stand assignments' },
+      { id: 'stand_occupancy', sliceId: 12, name: 'Stand Occupancy', type: 'table', description: 'Gate/stand utilization metrics' },
+      { id: 'sla_compliance', sliceId: 13, name: 'SLA Compliance by Task', type: 'table', description: 'On-time task completion rates' },
+      { id: 'delay_root_causes', sliceId: 14, name: 'Delay Root Causes', type: 'bar', description: 'Primary causes of turnaround delays' },
+      { id: 'stand_conflicts', sliceId: 15, name: 'Stand Conflicts', type: 'table', description: 'Overlapping stand assignments' },
     ]
   },
   assets: {
@@ -78,10 +78,10 @@ const chartCategories: Record<string, ChartCategory> = {
     color: 'purple',
     supersetDashboard: 'tam_assets',
     charts: [
-      { id: 'asset_utilization', sliceId: 10, name: 'Asset Utilization Status', type: 'table', description: 'Current asset status counts' },
-      { id: 'maintenance_downtime', sliceId: 11, name: 'Maintenance Downtime', type: 'table', description: 'Assets under maintenance' },
-      { id: 'dwell_proxy_hourly', sliceId: 12, name: 'Dwell by Zone Hourly', type: 'table', description: 'Asset dwell time patterns' },
-      { id: 'activity_heatmap', sliceId: 20, name: 'Activity Heatmap', type: 'map', description: 'Geographic activity density' },
+      { id: 'asset_utilization', sliceId: 16, name: 'Asset Utilization Status', type: 'table', description: 'Current asset status counts' },
+      { id: 'maintenance_downtime', sliceId: 17, name: 'Maintenance Downtime', type: 'table', description: 'Assets under maintenance' },
+      { id: 'dwell_proxy_hourly', sliceId: 18, name: 'Dwell by Zone Hourly', type: 'table', description: 'Asset dwell time patterns' },
+      { id: 'activity_heatmap', sliceId: 19, name: 'Activity Heatmap', type: 'map', description: 'Geographic activity density' },
     ]
   },
   predictive: {
@@ -91,11 +91,11 @@ const chartCategories: Record<string, ChartCategory> = {
     color: 'amber',
     supersetDashboard: 'tam_predictive',
     charts: [
-      { id: 'turnaround_risk', sliceId: 24, name: 'Turnaround Risk', type: 'table', description: 'Predicted delay risk scores' },
-      { id: 'congestion_forecast', sliceId: 25, name: 'Congestion Forecast', type: 'table', description: 'Expected zone congestion' },
-      { id: 'zone_breach_probability', sliceId: 26, name: 'Zone Breach Probability', type: 'table', description: 'Likelihood of zone violations' },
-      { id: 'asset_violation_risk', sliceId: 27, name: 'Asset Violation Risk', type: 'table', description: 'Per-asset risk assessment' },
-      { id: 'violations_forecast', sliceId: 28, name: 'Violations Forecast (Hourly)', type: 'line', description: 'Predicted violation counts' },
+      { id: 'turnaround_risk', sliceId: 21, name: 'Turnaround Risk', type: 'table', description: 'Predicted delay risk scores' },
+      { id: 'congestion_forecast', sliceId: 22, name: 'Congestion Forecast', type: 'table', description: 'Expected zone congestion' },
+      { id: 'zone_breach_probability', sliceId: 23, name: 'Zone Breach Probability', type: 'table', description: 'Likelihood of zone violations' },
+      { id: 'asset_violation_risk', sliceId: 24, name: 'Asset Violation Risk', type: 'table', description: 'Per-asset risk assessment' },
+      { id: 'violations_forecast', sliceId: 25, name: 'Violations Forecast (Hourly)', type: 'line', description: 'Predicted violation counts' },
     ]
   },
   pipeline: {
@@ -105,7 +105,7 @@ const chartCategories: Record<string, ChartCategory> = {
     color: 'cyan',
     supersetDashboard: 'tam_pipeline',
     charts: [
-      { id: 'pipeline_events', sliceId: 16, name: 'Pipeline Events/min', type: 'line', description: 'Data ingestion rate' },
+      { id: 'pipeline_events', sliceId: 20, name: 'Pipeline Events/min', type: 'line', description: 'Data ingestion rate' },
     ]
   },
   heatmaps: {
@@ -113,10 +113,10 @@ const chartCategories: Record<string, ChartCategory> = {
     icon: <Map className="w-4 h-4" />,
     description: 'Geographic heatmaps and spatial patterns',
     color: 'orange',
-    supersetDashboard: 'tam_ops_full',
+    supersetDashboard: 'tam_ops',
     charts: [
-      { id: 'activity_heatmap_table', sliceId: 17, name: 'Activity Heatmap (Data)', type: 'table', description: 'Raw heatmap grid data' },
-      { id: 'violation_heatmap_table', sliceId: 18, name: 'Violation Heatmap (Data)', type: 'table', description: 'Violation location data' },
+      { id: 'activity_heatmap_table', sliceId: 19, name: 'Activity Heatmap (Data)', type: 'table', description: 'Raw heatmap grid data' },
+      { id: 'violation_heatmap_table', sliceId: 10, name: 'Violation Heatmap (Data)', type: 'table', description: 'Violation location data' },
     ]
   }
 };
@@ -192,9 +192,8 @@ const AnalyticsHubPage = () => {
 
   // Get Superset dashboard URL with tenant suffix
   const getSupersetDashboardUrl = (dashboardSlug: string) => {
-    const tenantSuffix = user?.icaoCode ? `_${user.icaoCode.toLowerCase()}` : '';
-    // Try tenant-specific first, fallback handled by Superset
-    return `http://localhost:8089/superset/dashboard/${dashboardSlug}${tenantSuffix}/?standalone=2&show_filters=0`;
+    // Standardize to provisioned slugs (no tenant suffix for now as they aren't provisioned)
+    return `http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`;
   };
 
   // Get individual chart URL (embedded explore view) using actual Superset slice ID
@@ -295,34 +294,32 @@ const AnalyticsHubPage = () => {
             Unified analytics • {source === 'grafana' ? 'Real-time Grafana dashboards' : `${totalCharts} Superset BI charts across ${Object.keys(chartCategories).length} categories`}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           {/* Source Toggle */}
           <div className="flex bg-gray-700 rounded-lg p-1">
             <button
               onClick={() => setSource('grafana')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                source === 'grafana' 
-                  ? 'bg-blue-600 shadow-sm text-white' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${source === 'grafana'
+                ? 'bg-blue-600 shadow-sm text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                }`}
             >
               <Gauge className="w-4 h-4" />
               Real-time
             </button>
             <button
               onClick={() => setSource('superset')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                source === 'superset' 
-                  ? 'bg-blue-600 shadow-sm text-white' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${source === 'superset'
+                ? 'bg-blue-600 shadow-sm text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-600'
+                }`}
             >
               <BarChart3 className="w-4 h-4" />
               BI Reports
             </button>
           </div>
-          
+
           {/* Open External */}
           <a
             href={getCurrentUrl()}
@@ -358,11 +355,10 @@ const AnalyticsHubPage = () => {
                     <div key={key}>
                       <button
                         onClick={() => toggleCategory(key)}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
-                          isActive 
-                            ? `${colors.bg} ${colors.border} border ${colors.text}` 
-                            : 'hover:bg-gray-700 text-gray-300'
-                        }`}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${isActive
+                          ? `${colors.bg} ${colors.border} border ${colors.text}`
+                          : 'hover:bg-gray-700 text-gray-300'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5">
                           <span className={isActive ? colors.text : 'text-gray-400'}>{cat.icon}</span>
@@ -386,11 +382,10 @@ const AnalyticsHubPage = () => {
                             <button
                               key={chart.id}
                               onClick={() => selectChart(chart.id)}
-                              className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all group ${
-                                selectedChart === chart.id
-                                  ? 'bg-blue-600/30 text-blue-300'
-                                  : 'hover:bg-gray-700 text-gray-400'
-                              }`}
+                              className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all group ${selectedChart === chart.id
+                                ? 'bg-blue-600/30 text-blue-300'
+                                : 'hover:bg-gray-700 text-gray-400'
+                                }`}
                               title={chart.description}
                             >
                               <div className="flex items-center justify-between">
@@ -420,11 +415,10 @@ const AnalyticsHubPage = () => {
                     <button
                       key={key}
                       onClick={() => setActiveGrafana(key)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                        isActive 
-                          ? 'bg-blue-600/30 border border-blue-500/50 text-blue-400' 
-                          : 'hover:bg-gray-700 text-gray-300'
-                      }`}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${isActive
+                        ? 'bg-blue-600/30 border border-blue-500/50 text-blue-400'
+                        : 'hover:bg-gray-700 text-gray-300'
+                        }`}
                     >
                       <span className={isActive ? 'text-blue-400' : 'text-gray-400'}>{dash.icon}</span>
                       <div className="text-left flex-1">
@@ -450,7 +444,7 @@ const AnalyticsHubPage = () => {
                 <div className="text-[10px] text-gray-500 uppercase">Grafana</div>
               </div>
             </div>
-            
+
             {source === 'grafana' && (
               <div className="mt-3 bg-green-900/30 border border-green-500/30 rounded-lg p-2.5">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-green-400">

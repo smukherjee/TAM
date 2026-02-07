@@ -20,15 +20,16 @@ UTAM is a real-time tracking system for flights and ground vehicles, featuring s
 
 ## Setup & Run
 
-For detailed instructions, please refer to the [SETUP_GUIDE.md](SETUP_GUIDE.md).
+For comprehensive deployment instructions, maintenance procedures, and troubleshooting, please refer to:
+👉 **[DEPLOYMENT.md](DEPLOYMENT.md)**
 
-### Quick Start
+### Quick Start (Internal Orchestrator)
 
-1. **Start Infrastructure**:
+The platform includes a unified orchestrator that sets up everything from database to dashboards:
 
-   ```bash
-   make dev-up
-   ```
+```bash
+./infrastructure/setup-infrastructure.sh
+```
 
 2. **Configure NiFi** (Wait ~60s for NiFi to start first):
 

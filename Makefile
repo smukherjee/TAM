@@ -39,7 +39,7 @@ help:
 # ============================================
 
 dev-up:
-	@bash infrastructure/dev-up-all.sh
+	@bash infrastructure/setup-infrastructure.sh
 
 dev-up-only:
 	docker-compose -f docker-compose.dev.yml up -d
@@ -52,7 +52,7 @@ dev-up-build:
 
 setup-nifi:
 	@echo "Configuring NiFi flows..."
-	@bash infrastructure/nifi/setup-nifi.sh
+	@bash infrastructure/nifi/configure-nifi.sh
 
 dev-down:
 	docker-compose -f docker-compose.dev.yml down
@@ -71,10 +71,10 @@ dev-ps:
 
 # Superset provisioning
 superset-provision:
-	bash infrastructure/superset/create-all-reports.sh
+	bash infrastructure/superset/configure-superset.sh
 
 superset-bootstrap:
-	bash infrastructure/superset/bootstrap-superset.sh
+	bash infrastructure/superset/configure-superset.sh
 
 superset-purge:
 	bash infrastructure/superset/purge-all-reports.sh
@@ -97,7 +97,7 @@ backend-build:
 	cd backend && mvn clean package -DskipTests
 
 frontend-build:
-	cd frontend && npm install && npm run build
+	cd frontend && npm install --legacy-peer-deps && npm run build --legacy-peer-deps
 
 build-all: backend-build frontend-build
 	@echo "Build complete!"

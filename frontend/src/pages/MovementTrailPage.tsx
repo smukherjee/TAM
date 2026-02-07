@@ -9,11 +9,12 @@ import TrailPlaybackControls from '../components/Tracking/TrailPlaybackControls'
 import TrailInfoPanel from '../components/Tracking/TrailInfoPanel';
 import TrailDateRangePicker from '../components/Tracking/TrailDateRangePicker';
 import { format, subHours, subDays } from 'date-fns';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { 
-    Route, 
-    Download, 
-    Loader2, 
+import {
+    Route,
+    Download,
+    Loader2,
     AlertCircle,
     MapPin,
     Clock
@@ -26,7 +27,17 @@ import {
  */
 const MovementTrailPage: React.FC = () => {
     // State
-    const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+    const [searchParams] = useSearchParams();
+    const [selectedAssetId, setSelectedAssetId] = useState<string | null>(searchParams.get('assetId'));
+
+    // Sync URL param if it changes
+    useEffect(() => {
+        const urlAssetId = searchParams.get('assetId');
+        if (urlAssetId && urlAssetId !== selectedAssetId) {
+            setSelectedAssetId(urlAssetId);
+        }
+    }, [searchParams]);
+
     const [startDate, setStartDate] = useState<Date>(subHours(new Date(), 24));
     const [endDate, setEndDate] = useState<Date>(new Date());
     const [currentPointIndex, setCurrentPointIndex] = useState<number>(0);
@@ -35,9 +46,9 @@ const MovementTrailPage: React.FC = () => {
     const [isExporting, setIsExporting] = useState<boolean>(false);
 
     // Fetch movement trail
-    const { 
-        data: trailData, 
-        isLoading: isLoadingTrail, 
+    const {
+        data: trailData,
+        isLoading: isLoadingTrail,
         error: trailError,
         refetch: refetchTrail
     } = useQuery<MovementTrail>({
@@ -78,7 +89,7 @@ const MovementTrailPage: React.FC = () => {
 
         const animate = (currentTime: number) => {
             const delta = currentTime - lastTime;
-            
+
             if (delta >= intervalMs) {
                 lastTime = currentTime;
                 setCurrentPointIndex(prev => {
@@ -90,7 +101,7 @@ const MovementTrailPage: React.FC = () => {
                     return next;
                 });
             }
-            
+
             animationId = requestAnimationFrame(animate);
         };
 
@@ -128,7 +139,7 @@ const MovementTrailPage: React.FC = () => {
     const handleQuickDateSelect = useCallback((preset: string) => {
         const now = new Date();
         let start: Date;
-        
+
         switch (preset) {
             case '1h':
                 start = subHours(now, 1);
@@ -148,7 +159,7 @@ const MovementTrailPage: React.FC = () => {
             default:
                 start = subHours(now, 24);
         }
-        
+
         setStartDate(start);
         setEndDate(now);
         setCurrentPointIndex(0);
@@ -164,12 +175,12 @@ const MovementTrailPage: React.FC = () => {
     // Handle playback toggle
     const handlePlayPause = useCallback(() => {
         if (!trailData?.points?.length) return;
-        
+
         // If at end, restart from beginning
         if (currentPointIndex >= trailData.points.length - 1) {
             setCurrentPointIndex(0);
         }
-        
+
         setIsPlaying(prev => !prev);
     }, [trailData?.points?.length, currentPointIndex]);
 
@@ -190,7 +201,7 @@ const MovementTrailPage: React.FC = () => {
                 endDate.toISOString(),
                 'csv'
             );
-            
+
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -199,7 +210,7 @@ const MovementTrailPage: React.FC = () => {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            
+
             toast.success('Trail data exported successfully');
         } catch (error) {
             toast.error('Failed to export trail data');
@@ -220,7 +231,7 @@ const MovementTrailPage: React.FC = () => {
                             Movement Trail
                         </h1>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4">
                         {/* Export Button */}
                         <button
@@ -365,7 +376,7 @@ const MovementTrailPage: React.FC = () => {
                         currentIndex={currentPointIndex}
                         onScrub={handleTimelineScrub}
                     />
-                    
+
                     {/* Playback Controls */}
                     <TrailPlaybackControls
                         isPlaying={isPlaying}

@@ -24,7 +24,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/tracking/trail")
 @Tag(name = "Movement Trail", description = "Movement trail endpoints")
-@PreAuthorize("hasAnyRole('ADMIN', 'GH', 'AIRPORT_USER')")
 public class MovementTrailController {
 
     private final MovementTrailService trailService;

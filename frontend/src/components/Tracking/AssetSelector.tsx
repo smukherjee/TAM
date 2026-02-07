@@ -69,8 +69,14 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
                 throw new Error('Failed to search assets');
             }
             const json: AssetSearchResponse = await response.json();
+
+            // Deduplicate by ID
+            const uniqueAssets = Array.from(
+                new Map((json.data || []).map(item => [item.id, item])).values()
+            );
+
             // Map assetId to identifier for compatibility
-            return (json.data || []).map(a => ({ ...a, identifier: a.assetId || a.identifier }));
+            return uniqueAssets.map(a => ({ ...a, identifier: a.assetId || a.identifier }));
         },
         enabled: debouncedQuery.length >= 2 || debouncedQuery === '',
         staleTime: 30000,
@@ -131,8 +137,8 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
     const recentSearches = getRecentSearches();
 
     return (
-        <Combobox 
-            value={selectedAsset || null} 
+        <Combobox
+            value={selectedAsset || null}
             onChange={(asset: Asset | null) => {
                 if (asset) {
                     saveRecentSearch(asset);
@@ -150,7 +156,7 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
                             bg-gray-700 text-white
                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                             text-sm placeholder-gray-400"
-                        displayValue={(asset: Asset | null) => 
+                        displayValue={(asset: Asset | null) =>
                             asset ? `${asset.identifier} - ${asset.name}` : ''
                         }
                         onChange={(event) => setQuery(event.target.value)}
@@ -187,8 +193,7 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
                                     key={`recent-${asset.id}`}
                                     value={asset}
                                     className={({ active }) =>
-                                        `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
-                                            active ? 'bg-blue-900/50 text-blue-200' : 'text-gray-300'
+                                        `relative cursor-pointer select-none py-2 pl-10 pr-4 ${active ? 'bg-blue-900/50 text-blue-200' : 'text-gray-300'
                                         }`
                                     }
                                 >
@@ -200,16 +205,14 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
                                                     <span className="font-medium">{asset.identifier}</span>
                                                     <span className="text-gray-400 ml-1">- {asset.name}</span>
                                                 </span>
-                                                <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                                    CATEGORY_COLORS[asset.category] || 'bg-gray-700 text-gray-300'
-                                                }`}>
+                                                <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CATEGORY_COLORS[asset.category] || 'bg-gray-700 text-gray-300'
+                                                    }`}>
                                                     {asset.category}
                                                 </span>
                                             </div>
                                             {selected && (
-                                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                                    active ? 'text-blue-400' : 'text-blue-400'
-                                                }`}>
+                                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-blue-400' : 'text-blue-400'
+                                                    }`}>
                                                     <Check className="h-5 w-5" />
                                                 </span>
                                             )}
@@ -234,8 +237,7 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
                                     key={asset.id}
                                     value={asset}
                                     className={({ active }) =>
-                                        `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
-                                            active ? 'bg-blue-900/50 text-blue-200' : 'text-gray-300'
+                                        `relative cursor-pointer select-none py-2 pl-10 pr-4 ${active ? 'bg-blue-900/50 text-blue-200' : 'text-gray-300'
                                         }`
                                     }
                                 >
@@ -247,16 +249,14 @@ const AssetSelector: React.FC<AssetSelectorProps> = ({
                                                     <span className="font-medium">{asset.identifier}</span>
                                                     <span className="text-gray-400 ml-1">- {asset.name}</span>
                                                 </span>
-                                                <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                                    CATEGORY_COLORS[asset.category] || 'bg-gray-700 text-gray-300'
-                                                }`}>
+                                                <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CATEGORY_COLORS[asset.category] || 'bg-gray-700 text-gray-300'
+                                                    }`}>
                                                     {asset.category}
                                                 </span>
                                             </div>
                                             {selected && (
-                                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                                    active ? 'text-blue-400' : 'text-blue-400'
-                                                }`}>
+                                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-blue-400' : 'text-blue-400'
+                                                    }`}>
                                                     <Check className="h-5 w-5" />
                                                 </span>
                                             )}

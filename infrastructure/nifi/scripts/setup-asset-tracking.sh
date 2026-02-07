@@ -100,7 +100,7 @@ configure_nifi_flow() {
     echo "      - UpdateAttribute (set last_poll_time = \${now()})"
     echo "      - PublishKafkaRecord_2_6 (topic: asset-positions-json, brokers: redpanda:29092)"
     echo "   5. Configure controller services:"
-    echo "      - DBCPConnectionPool (URL: jdbc:postgresql://timescaledb:5432/tam)"
+    echo "      - DBCPConnectionPool (URL: jdbc:postgresql://timescaledb:5432/utam)"
     echo "      - JsonRecordSetWriter"
     echo "   6. Connect processors: ExecuteSQL -> UpdateAttribute -> PublishKafka"
     echo "   7. Start all processors"
@@ -130,7 +130,7 @@ verify_setup() {
     fi
     
     # Check if vehicles table has data
-    VEHICLE_COUNT=$(docker exec tam-timescaledb-1 psql -U postgres -d tam -tAc "SELECT COUNT(*) FROM vehicles LIMIT 1;")
+    VEHICLE_COUNT=$(docker exec tam-timescaledb-1 psql -U postgres -d utam -tAc "SELECT COUNT(*) FROM vehicles LIMIT 1;")
     echo "   📊 Vehicles table record count: $VEHICLE_COUNT"
     
     if [ "$VEHICLE_COUNT" -eq 0 ]; then

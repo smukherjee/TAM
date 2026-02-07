@@ -34,7 +34,7 @@ const TelematicsIntegrationMasterPage: React.FC = () => {
       <form className="space-y-4">
         <input type="text" name="assetUid" value={integration.assetUid || ''} onChange={handleChange} placeholder="Asset UID" className="w-full p-2 rounded bg-gray-800 text-white" />
         <input type="text" name="name" value={integration.name || ''} onChange={handleChange} placeholder="Integration Name" className="w-full p-2 rounded bg-gray-800 text-white" />
-        <select name="method" value={integration.method || ''} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 text-white">
+        <select name="method" value={integration.method || ''} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 text-white" aria-label="HTTP Method">
           <option value="">HTTP Method</option>
           <option value="GET">GET</option>
           <option value="POST">POST</option>
@@ -45,7 +45,7 @@ const TelematicsIntegrationMasterPage: React.FC = () => {
         <input type="text" name="endpoint" value={integration.endpoint || ''} onChange={handleChange} placeholder="Endpoint URL" className="w-full p-2 rounded bg-gray-800 text-white" />
         <textarea name="queryParams" value={integration.queryParams || ''} onChange={handleChange} placeholder="Query Params (JSON or key=value)" className="w-full p-2 rounded bg-gray-800 text-white" />
         <textarea name="headers" value={integration.headers || ''} onChange={handleChange} placeholder="Headers (JSON or key=value)" className="w-full p-2 rounded bg-gray-800 text-white" />
-        <select name="authorizationType" value={integration.authorizationType || ''} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 text-white">
+        <select name="authorizationType" value={integration.authorizationType || ''} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 text-white" aria-label="Authorization Type">
           <option value="">Authorization Type</option>
           <option value="No Auth">No Auth</option>
           <option value="Basic Auth">Basic Auth</option>

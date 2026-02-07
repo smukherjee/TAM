@@ -72,7 +72,9 @@ def provision():
                 
                 # Ensure params is valid JSON string
                 if isinstance(params, dict):
-                    params = json.dumps(params)
+                    params_json = json.dumps(params)
+                else:
+                    params_json = params
                     
                 if not chart:
                     log(f"Creating chart: {slice_name}")
@@ -81,11 +83,18 @@ def provision():
                         datasource_type='table',
                         datasource_id=dataset.id,
                         viz_type=viz_type,
-                        params=params,
+                        params=params_json,
                         owners=[get_admin()]
                     )
                     db.session.add(chart)
-                    db.session.commit()
+                else:
+                    log(f"Updating chart: {slice_name}")
+                    chart.params = params_json
+                    chart.viz_type = viz_type
+                    chart.datasource_id = dataset.id
+                    # Update other fields if necessary
+                
+                db.session.commit()
                 return chart
 
             def add_row(layout, row_idx, charts):
@@ -193,8 +202,12 @@ def provision():
             
             def create_table_chart(name, ds_name, cols, time_range="No filter"):
                 params = {
-                    "all_columns": cols,
+                    "columns": cols,
+                    "all_columns": cols,  # Redundant but required for some Superset backend validation
                     "query_mode": "raw",
+                    "metrics": [],        # Explicitly empty
+                    "groupby": [],        # Explicitly empty
+                    "adhoc_filters": [],
                     "row_limit": 500,
                     "time_range": time_range,
                     "include_search": True,
@@ -212,7 +225,8 @@ def provision():
                 "metrics": [{"expressionType": "SQL", "sqlExpression": "sum(positions)", "label": "Positions"}],
                 "granularity_sqla": "hour", 
                 "time_grain_sqla": "PT1H", 
-                "time_range": "last 24 hours"
+                "time_range": "last 24 hours",
+                "adhoc_filters": []
             }
             charts["CH_LINE_FLT"] = get_or_create_chart(datasets["v_flight_movements_hourly"], "Flight Movements (Line)", "line", p_line_flt)
             
@@ -226,14 +240,24 @@ def provision():
             
             # DeckGL
             p_deck_viol = {
+                "columns": ["tenant_code", "time_bucket", "grid_location", "grid_latitude", "grid_longitude", "violation_count", "critical_count", "high_count", "medium_count", "low_count", "unique_violating_assets", "unique_zones_violated", "most_common_zone_type", "first_violation", "last_violation", "violating_assets"],
                 "spatial": {"type": "latlon", "latCol": "grid_latitude", "lonCol": "grid_longitude"},
                 "mapbox_style": "mapbox://styles/mapbox/dark-v10",
                 "point_radius_fixed": 20,
                 "row_limit": 5000,
                 "time_grain_sqla": "PT1H",
                 "granularity_sqla": "time_bucket",
-                "weight": "violation_count",
-                "metric": {"expressionType": "SQL", "sqlExpression": "sum(violation_count)", "label": "Violations"}
+                "weight": {
+                    "expressionType": "SQL", 
+                    "sqlExpression": "SUM(violation_count)", 
+                    "label": "Violations"
+                },
+                "time_range": "No filter",
+                "adhoc_filters": [],
+                "filter_nulls": False,
+                "autozoom": True,
+                "linear_color_scheme": "blue_white_yellow",
+                "opacity": 0.8
             }
             charts["CH_DECK_VIOL"] = get_or_create_chart(datasets["v_violation_heatmap_latest"], "Violation Heatmap (deck.gl)", "deck_heatmap", p_deck_viol)
             
@@ -242,7 +266,8 @@ def provision():
                 "granularity_sqla": "hour",
                 "time_grain_sqla": "PT1H",
                 "time_range": "last 24 hours",
-                "groupby": ["type"]
+                "groupby": ["type"],
+                "adhoc_filters": []
             }
             charts["CH_LINE_ALERTS"] = get_or_create_chart(datasets["v_alerts_summary_type_hour"], "Alerts by Type (Line)", "line", p_line_alerts)
 
@@ -258,14 +283,24 @@ def provision():
             charts["CH_DWELL"] = create_table_chart("Dwell Proxy by Zone Hourly", "v_dwell_proxy_by_zone_hourly", ["tenant_code", "zone", "hour", "movement_points"])
             
             p_deck_act = {
+                "columns": ["tenant_code", "time_bucket", "grid_location", "grid_latitude", "grid_longitude", "activity_count", "unique_assets", "avg_speed", "max_speed", "median_speed", "first_activity", "last_activity"],
                 "spatial": {"type": "latlon", "latCol": "grid_latitude", "lonCol": "grid_longitude"},
                 "mapbox_style": "mapbox://styles/mapbox/dark-v10",
                 "point_radius_fixed": 20,
                 "row_limit": 5000,
                 "time_grain_sqla": "PT1H",
                 "granularity_sqla": "time_bucket",
-                "weight": "activity_count",
-                "metric": {"expressionType": "SQL", "sqlExpression": "sum(activity_count)", "label": "Activity"}
+                "weight": {
+                    "expressionType": "SQL", 
+                    "sqlExpression": "SUM(activity_count)", 
+                    "label": "Activity"
+                },
+                "time_range": "No filter",
+                "adhoc_filters": [],
+                "filter_nulls": False,
+                "autozoom": True,
+                "linear_color_scheme": "blue_white_yellow",
+                "opacity": 0.8
             }
             charts["CH_DECK_ACT"] = get_or_create_chart(datasets["v_activity_heatmap_latest"], "Activity Heatmap (deck.gl)", "deck_heatmap", p_deck_act)
 
@@ -321,7 +356,7 @@ def provision():
             # --- Dashboards ---
             
             get_or_create_dashboard(
-                "TAM Ops Overview", "tam_ops_full", 
+                "TAM Ops Overview", "tam_ops", 
                 [charts["CH_OPS_F"], charts["CH_FLT_HR"], charts["CH_VEH_SUM"], charts["CH_THRPT"], charts["CH_LINE_FLT"]]
             )
             
@@ -350,8 +385,7 @@ def provision():
                 [charts["CH_FORE_VIOL"], charts["CH_PRED_TA"], charts["CH_PRED_CONG"], charts["CH_PRED_ZONE"], charts["CH_PRED_ASSET"]]
             )
             
-            # --- Seeding & Refresh ---
-            execute_sql_file("/seeds/11-demo-seed.sql")
+            # --- Refresh ---
             refresh_mat_views()
             
             log("Provisioning completed successfully!")

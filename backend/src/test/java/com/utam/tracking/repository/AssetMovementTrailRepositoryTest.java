@@ -93,17 +93,17 @@ class AssetMovementTrailRepositoryTest {
     }
 
     @Test
-    @DisplayName("findByAssetIdAndTimestampBetweenOrderByTimestampAsc returns ordered trail")
-    void findByAssetIdAndTimestampBetween_ReturnsOrderedTrail() {
+    @DisplayName("findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc returns ordered trail")
+    void findByAssetIdAndTenantCodeAndTimestampBetween_ReturnsOrderedTrail() {
         ZonedDateTime startTime = ZonedDateTime.now().minusHours(1);
         ZonedDateTime endTime = ZonedDateTime.now();
         
-        when(repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                eq(assetId), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                eq(assetId), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Arrays.asList(trail1, trail2, trail3));
         
-        List<AssetMovementTrail> result = repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                assetId, startTime, endTime);
+        List<AssetMovementTrail> result = repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                assetId, tenantCode, startTime, endTime);
         
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getTimestamp()).isBefore(result.get(1).getTimestamp());
@@ -111,17 +111,17 @@ class AssetMovementTrailRepositoryTest {
     }
 
     @Test
-    @DisplayName("findByAssetIdentifierAndTimestampBetweenOrderByTimestampAsc returns trail by identifier")
-    void findByAssetIdentifierAndTimestampBetween_ReturnsTrailByIdentifier() {
+    @DisplayName("findByAssetIdentifierAndTenantCodeAndTimestampBetweenOrderByTimestampAsc returns trail by identifier")
+    void findByAssetIdentifierAndTenantCodeAndTimestampBetween_ReturnsTrailByIdentifier() {
         ZonedDateTime startTime = ZonedDateTime.now().minusHours(1);
         ZonedDateTime endTime = ZonedDateTime.now();
         
-        when(repository.findByAssetIdentifierAndTimestampBetweenOrderByTimestampAsc(
-                eq(assetIdentifier), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByAssetIdentifierAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                eq(assetIdentifier), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Arrays.asList(trail1, trail2, trail3));
         
-        List<AssetMovementTrail> result = repository.findByAssetIdentifierAndTimestampBetweenOrderByTimestampAsc(
-                assetIdentifier, startTime, endTime);
+        List<AssetMovementTrail> result = repository.findByAssetIdentifierAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                assetIdentifier, tenantCode, startTime, endTime);
         
         assertThat(result).hasSize(3);
         assertThat(result).allMatch(t -> t.getAssetIdentifier().equals(assetIdentifier));
@@ -154,11 +154,11 @@ class AssetMovementTrailRepositoryTest {
         ZonedDateTime startTime = ZonedDateTime.now().minusHours(1);
         ZonedDateTime endTime = ZonedDateTime.now();
         
-        when(repository.findByZoneAndTimeRange(eq(zoneId), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByZoneAndTimeRange(eq(zoneId), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Arrays.asList(trail1, trail2));
         
         List<AssetMovementTrail> result = repository.findByZoneAndTimeRange(
-                zoneId, startTime, endTime);
+                zoneId, tenantCode, startTime, endTime);
         
         assertThat(result).hasSize(2);
         assertThat(result).allMatch(t -> t.getRestrictedZoneId() != null);
@@ -182,33 +182,33 @@ class AssetMovementTrailRepositoryTest {
 
     @Test
     @DisplayName("Empty result for non-existent asset")
-    void findByAssetIdAndTimestampBetween_ReturnsEmptyForNonExistentAsset() {
+    void findByAssetIdAndTenantCodeAndTimestampBetween_ReturnsEmptyForNonExistentAsset() {
         UUID unknownAssetId = UUID.randomUUID();
         ZonedDateTime startTime = ZonedDateTime.now().minusHours(1);
         ZonedDateTime endTime = ZonedDateTime.now();
         
-        when(repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                eq(unknownAssetId), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                eq(unknownAssetId), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Collections.emptyList());
         
-        List<AssetMovementTrail> result = repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                unknownAssetId, startTime, endTime);
+        List<AssetMovementTrail> result = repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                unknownAssetId, tenantCode, startTime, endTime);
         
         assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("Empty result for time range with no data")
-    void findByAssetIdAndTimestampBetween_ReturnsEmptyForEmptyTimeRange() {
+    void findByAssetIdAndTenantCodeAndTimestampBetween_ReturnsEmptyForEmptyTimeRange() {
         ZonedDateTime startTime = ZonedDateTime.now().minusYears(10);
         ZonedDateTime endTime = ZonedDateTime.now().minusYears(9);
         
-        when(repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                eq(assetId), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                eq(assetId), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Collections.emptyList());
         
-        List<AssetMovementTrail> result = repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                assetId, startTime, endTime);
+        List<AssetMovementTrail> result = repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                assetId, tenantCode, startTime, endTime);
         
         assertThat(result).isEmpty();
     }
@@ -219,12 +219,12 @@ class AssetMovementTrailRepositoryTest {
         ZonedDateTime startTime = ZonedDateTime.now().minusHours(1);
         ZonedDateTime endTime = ZonedDateTime.now();
         
-        when(repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                eq(assetId), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                eq(assetId), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Arrays.asList(trail1, trail2, trail3));
         
-        List<AssetMovementTrail> result = repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                assetId, startTime, endTime);
+        List<AssetMovementTrail> result = repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                assetId, tenantCode, startTime, endTime);
         
         assertThat(result).allMatch(t -> t.getSpeed() != null && t.getSpeed() >= 0);
         assertThat(result).allMatch(t -> t.getHeading() != null && t.getHeading() >= 0);
@@ -258,12 +258,12 @@ class AssetMovementTrailRepositoryTest {
         ZonedDateTime startTime = ZonedDateTime.now().minusHours(1);
         ZonedDateTime endTime = ZonedDateTime.now();
         
-        when(repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                eq(assetId), any(ZonedDateTime.class), any(ZonedDateTime.class)))
+        when(repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                eq(assetId), eq(tenantCode), any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(Arrays.asList(trail1, trail2, trail3));
         
-        List<AssetMovementTrail> result = repository.findByAssetIdAndTimestampBetweenOrderByTimestampAsc(
-                assetId, startTime, endTime);
+        List<AssetMovementTrail> result = repository.findByAssetIdAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                assetId, tenantCode, startTime, endTime);
         
         // First two points in restricted zone
         assertThat(result.get(0).getRestrictedZoneId()).isNotNull();
