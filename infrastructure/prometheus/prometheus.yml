@@ -11,7 +11,7 @@ scrape_configs:
 
   # Spring Boot Backend
   - job_name: 'tam-backend'
-    metrics_path: '/actuator/prometheus'
+    metrics_path: '/api/actuator/prometheus'
     static_configs:
       - targets: ['backend:8080']
 

@@ -100,7 +100,7 @@
                     "editorMode": "code",
                     "format": "time_series",
                     "rawQuery": true,
-                    "rawSql": "SELECT\n  aibt AS time,\n  flight_id,\n  EXTRACT(EPOCH FROM (aobt - aibt)) / 60 as turnaround_minutes\nFROM turnaround_sessions\nWHERE aibt >= NOW() - INTERVAL '24 hours'\n  AND status = 'COMPLETED'\n  AND EXTRACT(EPOCH FROM (aobt - aibt)) / 60 > 70\nORDER BY time;",
+                    "rawSql": "SELECT\n  COALESCE(aibt, created_at) AS time,\n  flight_id,\n  EXTRACT(EPOCH FROM (COALESCE(aobt, tobt) - COALESCE(aibt, created_at))) / 60 as turnaround_minutes\nFROM turnaround_sessions\nWHERE created_at >= NOW() - INTERVAL '24 hours'\n  AND status = 'COMPLETED'\n  AND EXTRACT(EPOCH FROM (COALESCE(aobt, tobt) - COALESCE(aibt, created_at))) / 60 > 70\nORDER BY time;",
                     "refId": "A"
                 }
             ],
@@ -198,7 +198,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  flight_id,\n  stand_id,\n  ROUND(EXTRACT(EPOCH FROM (aobt - tobt)) / 60, 1) as delay_minutes,\n  aibt\nFROM turnaround_sessions\nWHERE aobt > tobt + INTERVAL '15 minutes'\n  AND aibt >= NOW() - INTERVAL '24 hours'\nORDER BY delay_minutes DESC\nLIMIT 15;",
+                    "rawSql": "SELECT \n  flight_id,\n  stand_id,\n  ROUND(EXTRACT(EPOCH FROM (COALESCE(aobt, tobt) - tobt)) / 60, 1) as delay_minutes,\n  COALESCE(aibt, created_at) as aibt\nFROM turnaround_sessions\nWHERE COALESCE(aobt, tobt) > tobt + INTERVAL '15 minutes'\n  AND created_at >= NOW() - INTERVAL '24 hours'\nORDER BY delay_minutes DESC\nLIMIT 15;",
                     "refId": "A"
                 }
             ],
@@ -364,7 +364,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(*) as sla_violations\nFROM turnaround_sessions\nWHERE aobt > tobt + INTERVAL '30 minutes'\n  AND aibt >= NOW() - INTERVAL '24 hours'\n  AND status = 'COMPLETED';",
+                    "rawSql": "SELECT COUNT(*) as sla_violations\nFROM turnaround_sessions\nWHERE COALESCE(aobt, tobt) > tobt + INTERVAL '30 minutes'\n  AND created_at >= NOW() - INTERVAL '24 hours'\n  AND status = 'COMPLETED';",
                     "refId": "A"
                 }
             ],

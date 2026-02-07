@@ -9,13 +9,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-//@Component
+@Component
 public class MockTelitGenerator_YBBN {
 
     private static final Logger log = LoggerFactory.getLogger(MockTelitGenerator_YBBN.class);
@@ -102,7 +101,8 @@ public class MockTelitGenerator_YBBN {
             SimulationConfig simulationConfig) {
         this.restTemplate = new RestTemplate();
         this.simulationConfig = simulationConfig;
-        this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulation.vehicles.generated")
+        this.vehicleCounter = io.micrometer.core.instrument.Counter.builder("simulator.events.generated")
+                .tag("type", "vehicle")
                 .tag("icao", "YBBN")
                 .description("Number of simulated vehicle events for YBBN")
                 .register(registry);
