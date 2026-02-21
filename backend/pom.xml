@@ -20,7 +20,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
+				</dependency>
+				<!-- Add OkHttp for MinIO 8.6.0+ -->
+				<dependency>
+					<groupId>com.squareup.okhttp3</groupId>
+					<artifactId>okhttp</artifactId>
+					<version>4.12.0</version>
+				</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
@@ -79,9 +85,9 @@
 		</dependency>
 		<!-- MinIO S3 Client -->
 		<dependency>
-			<groupId>io.minio</groupId>
-			<artifactId>minio</artifactId>
-			<version>8.5.7</version>
+			   <groupId>io.minio</groupId>
+			   <artifactId>minio</artifactId>
+			   <version>8.6.0</version>
 		</dependency>
 		<!-- Actuator for health checks -->
 		<dependency>
@@ -118,9 +124,9 @@
 	</dependency>
 	<!-- Apache POI for Excel export -->
 	<dependency>
-		<groupId>org.apache.poi</groupId>
-		<artifactId>poi-ooxml</artifactId>
-		<version>5.2.5</version>
+			   <groupId>org.apache.poi</groupId>
+			   <artifactId>poi-ooxml</artifactId>
+			   <version>5.4.0</version>
 	</dependency>
 	<!-- OpenPDF for PDF export (LGPL, iText fork) -->
 	<dependency>
