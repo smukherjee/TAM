@@ -273,6 +273,9 @@ const AnalyticsHubPage = () => {
   // Get current iframe URL based on source and selection
   const getCurrentUrl = () => {
     if (source === 'grafana') {
+      if (activeGrafana === 'infrastructure') {
+        return grafanaDashboards[activeGrafana].url;
+      }
       return withTenantScope(grafanaDashboards[activeGrafana].url, 'grafana');
     }
     // If a specific chart is selected, show that chart

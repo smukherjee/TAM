@@ -1,425 +1,425 @@
 {
-    "annotations": {
-        "list": []
-    },
-    "editable": true,
-    "fiscalYear StartMonth": 0,
-    "graphTooltip": 0,
-    "id": null,
-    "links": [],
-    "liveNow": false,
-    "panels": [
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "short"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 6,
-                "x": 0,
-                "y": 0
-            },
-            "id": 1,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT stand) as \"Active Stands\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring});",
-                    "refId": "A"
-                }
-            ],
-            "title": "Active Stands (1h)",
-            "type": "stat"
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYear StartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
         },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "short"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 6,
-                "x": 6,
-                "y": 0
-            },
-            "id": 2,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT COUNT(*) as \"Total Events (24h)\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '24 hours'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring});",
-                    "refId": "A"
-                }
-            ],
-            "title": "Turnaround Events (24h)",
-            "type": "stat"
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
         {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 20,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        },
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": true,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 0
-            },
-            "id": 3,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean"
-                    ],
-                    "displayMode": "table",
-                    "placement": "right",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "Prometheus"
-                    },
-                    "editorMode": "code",
-                    "expr": "rate(simulator_events_generated_total{icao=~\"${icao:regex}\"}[5m]) * 60",
-                    "legendFormat": "{{type}} - {{icao}}",
-                    "range": true,
-                    "refId": "A"
-                }
-            ],
-            "title": "Event Generation Rate (events/min)",
-            "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 20,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        },
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "auto",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 9,
-                "w": 12,
-                "x": 0,
-                "y": 8
-            },
-            "id": 4,
-            "options": {
-                "legend": {
-                    "calcs": [],
-                    "displayMode": "list",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "none"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "time_series",
-                    "rawQuery": true,
-                    "rawSql": "SELECT\n  time_bucket('5 minutes', event_time_stamp) AS time,\n  tenant_code,\n  COUNT(*) as events\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '6 hours'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring})\nGROUP BY time, tenant_code\nORDER BY time;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Events by Airport (6h)",
-            "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "field Config": {
-                "defaults": {
-                    "custom": {
-                        "align": "auto",
-                        "cellOptions": {
-                            "type": "auto"
-                        },
-                        "inspect": false
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 9,
-                "w": 12,
-                "x": 12,
-                "y": 8
-            },
-            "id": 5,
-            "options": {
-                "cellHeight": "sm",
-                "footer": {
-                    "countRows": false,
-                    "fields": "",
-                    "reducer": [
-                        "sum"
-                    ],
-                    "show": false
-                },
-                "showHeader": true
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT \n  stand,\n  activity_type,\n  COUNT(*) as event_count,\n  MAX(event_time_stamp) as last_event\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring})\nGROUP BY stand, activity_type\nORDER BY last_event DESC\nLIMIT 20;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Recent Turnaround Activities",
-            "type": "table"
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT stand) as \"Active Stands\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\n  AND tenant_code = ${icao:sqlstring};",
+          "refId": "A"
         }
-    ],
-    "refresh": "30s",
-    "schemaVersion": 38,
-    "style": "dark",
-    "tags": [
-        "TAM",
-        "Executive",
-        "Operations"
-    ],
-    "templating": {
-        "list": [
-            {
-                "allValue": ".*",
-                "current": {
-                    "selected": true,
-                    "text": "All",
-                    "value": ".*"
-                },
-                "datasource": {
-                    "type": "postgres",
-                    "uid": "TimescaleDB"
-                },
-                "definition": "SELECT DISTINCT tenant_code FROM turnaround_events ORDER BY 1",
-                "hide": 0,
-                "includeAll": true,
-                "label": "ICAO",
-                "multi": false,
-                "name": "icao",
-                "options": [],
-                "query": "SELECT DISTINCT tenant_code FROM turnaround_events ORDER BY 1",
-                "refresh": 1,
-                "regex": "",
-                "skipUrlSync": false,
-                "sort": 1,
-                "type": "query"
+      ],
+      "title": "Active Stands (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as \"Total Events (24h)\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '24 hours'\n  AND tenant_code = ${icao:sqlstring};",
+          "refId": "A"
+        }
+      ],
+      "title": "Turnaround Events (24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
-        ]
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(simulator_events_generated_total{icao=~\"${icao:regex}\"}[5m]) * 60",
+          "legendFormat": "{{type}} - {{icao}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Event Generation Rate (events/min)",
+      "type": "timeseries"
     },
-    "time": {
-        "from": "now-24h",
-        "to": "now"
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  time_bucket('5 minutes', event_time_stamp) AS time,\n  tenant_code,\n  COUNT(*) as events\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '6 hours'\n  AND tenant_code = ${icao:sqlstring}\nGROUP BY time, tenant_code\nORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Events by Airport (6h)",
+      "type": "timeseries"
     },
-    "timepicker": {},
-    "timezone": "",
-    "title": "Executive Operations Dashboard",
-    "uid": "tam-exec-ops",
-    "version": 0,
-    "weekStart": ""
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "field Config": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  stand,\n  activity_type,\n  COUNT(*) as event_count,\n  MAX(event_time_stamp) as last_event\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\n  AND tenant_code = ${icao:sqlstring}\nGROUP BY stand, activity_type\nORDER BY last_event DESC\nLIMIT 20;",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Turnaround Activities",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "TAM",
+    "Executive",
+    "Operations"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "VIDP",
+          "value": "VIDP"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT DISTINCT tenant_code FROM turnaround_events ORDER BY 1",
+        "hide": 2,
+        "includeAll": false,
+        "label": "ICAO",
+        "multi": false,
+        "name": "icao",
+        "options": [],
+        "query": "SELECT DISTINCT tenant_code FROM turnaround_events ORDER BY 1",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Executive Operations Dashboard",
+  "uid": "tam-exec-ops",
+  "version": 0,
+  "weekStart": ""
 }

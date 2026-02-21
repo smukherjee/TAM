@@ -1,315 +1,340 @@
 {
-    "annotations": {
-        "list": []
-    },
-    "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 0,
-    "id": null,
-    "links": [],
-    "liveNow": false,
-    "panels": [
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Events/sec",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "Events/sec",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 20,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        },
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": true,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
             },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 0
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
             },
-            "id": 1,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean"
-                    ],
-                    "displayMode": "table",
-                    "placement": "right",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "Prometheus"
-                    },
-                    "editorMode": "code",
-                    "expr": "rate(simulator_events_generated_total{type=\"vehicle\"}[5m])",
-                    "legendFormat": "Vehicle Events: {{icao}}",
-                    "range": true,
-                    "refId": "A"
-                }
-            ],
-            "title": "Vehicle Event Rate",
-            "type": "timeseries"
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "short"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 6,
-                "x": 12,
-                "y": 0
-            },
-            "id": 2,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT vehicle_id) as count FROM vehicles WHERE timestamp >= NOW() - INTERVAL '5 minutes';",
-                    "refId": "A"
-                }
-            ],
-            "title": "Active Vehicles (5min)",
-            "type": "stat"
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
         },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        }
-                    },
-                    "mappings": []
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 6,
-                "x": 18,
-                "y": 0
-            },
-            "id": 3,
-            "options": {
-                "displayLabels": [
-                    "value"
-                ],
-                "legend": {
-                    "displayMode": "list",
-                    "placement": "right",
-                    "showLegend": true
-                },
-                "pieType": "pie",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "tooltip": {
-                    "mode": "single",
-                    "sort": "none"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT \n  vehicle_type,\n  COUNT(DISTINCT vehicle_id) as count\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '5 minutes'\nGROUP BY vehicle_type;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Vehicles by Type (5min)",
-            "type": "piechart"
-        },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "custom": {
-                        "align": "auto",
-                        "cellOptions": {
-                            "type": "auto"
-                        },
-                        "inspect": false
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 9,
-                "w": 24,
-                "x": 0,
-                "y": 8
-            },
-            "id": 4,
-            "options": {
-                "cellHeight": "sm",
-                "footer": {
-                    "countRows": false,
-                    "fields": "",
-                    "reducer": [
-                        "sum"
-                    ],
-                    "show": false
-                },
-                "showHeader": true
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT \n  vehicle_id,\n  vehicle_type,\n  status,\n  zone,\n  speed,\n  timestamp as last_update\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '30 minutes'\nORDER BY timestamp DESC\nLIMIT 20;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Recent Vehicle Activity",
-            "type": "table"
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-    ],
-    "refresh": "10s",
-    "schemaVersion": 38,
-    "style": "dark",
-    "tags": [
-        "TAM",
-        "Vehicles",
-        "Ground Support"
-    ],
-    "templating": {
-        "list": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(simulator_events_generated_total{type=\"vehicle\",icao=~\"${icao:regex}\"}[5m])",
+          "legendFormat": "Vehicle Events: {{icao}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Vehicle Event Rate",
+      "type": "timeseries"
     },
-    "time": {
-        "from": "now-1h",
-        "to": "now"
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT vehicle_id) as count FROM vehicles WHERE timestamp >= NOW() - INTERVAL '5 minutes'\n  AND tenant_code = ${icao:sqlstring};",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Vehicles (5min)",
+      "type": "stat"
     },
-    "timepicker": {},
-    "timezone": "",
-    "title": "Ground Vehicle Tracking",
-    "uid": "tam-vehicle-tracking",
-    "version": 0,
-    "weekStart": ""
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "displayLabels": [
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  vehicle_type,\n  COUNT(DISTINCT vehicle_id) as count\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '5 minutes'\n  AND tenant_code = ${icao:sqlstring}\nGROUP BY vehicle_type;",
+          "refId": "A"
+        }
+      ],
+      "title": "Vehicles by Type (5min)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  vehicle_id,\n  vehicle_type,\n  status,\n  zone,\n  speed,\n  timestamp as last_update\nFROM vehicles\nWHERE timestamp >= NOW() - INTERVAL '30 minutes'\n  AND tenant_code = ${icao:sqlstring}\nORDER BY timestamp DESC\nLIMIT 20;",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Vehicle Activity",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "TAM",
+    "Vehicles",
+    "Ground Support"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "VIDP",
+          "value": "VIDP"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT DISTINCT tenant_code FROM vehicles ORDER BY 1",
+        "hide": 2,
+        "includeAll": false,
+        "label": "ICAO",
+        "multi": false,
+        "name": "icao",
+        "options": [],
+        "query": "SELECT DISTINCT tenant_code FROM vehicles ORDER BY 1",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Ground Vehicle Tracking",
+  "uid": "tam-vehicle-tracking",
+  "version": 0,
+  "weekStart": ""
 }

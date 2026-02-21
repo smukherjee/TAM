@@ -74,6 +74,22 @@ const AnalyticsPage = () => {
         }
     };
 
+    const scopedGrafanaUrl = (key: keyof typeof dashboards) => {
+        if (key === 'infrastructure') {
+            return dashboards[key].url;
+        }
+        if (!user?.icaoCode) {
+            return dashboards[key].url;
+        }
+        const scoped = new URL(dashboards[key].url);
+        const tenant = user.icaoCode.trim().toUpperCase();
+        scoped.searchParams.set('var-tenantCode', tenant);
+        scoped.searchParams.set('var-tenant_code', tenant);
+        scoped.searchParams.set('var-icao', tenant);
+        scoped.searchParams.set('var-airport', tenant);
+        return scoped.toString();
+    };
+
     return (
         <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
             {/* Header */}
@@ -128,7 +144,7 @@ const AnalyticsPage = () => {
                 {/* Main Dashboard View (Iframe) */}
                 <div className="flex-1 bg-white relative">
                     <iframe
-                        src={dashboards[activeTab].url}
+                        src={activeTab === 'superset' ? dashboards[activeTab].url : scopedGrafanaUrl(activeTab)}
                         title={dashboards[activeTab].name}
                         className="w-full h-full border-none"
                         sandbox="allow-same-origin allow-scripts allow-popups allow-forms"

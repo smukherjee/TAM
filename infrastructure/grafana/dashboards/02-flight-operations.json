@@ -1,409 +1,434 @@
 {
-    "annotations": {
-        "list": []
-    },
-    "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 0,
-    "id": null,
-    "links": [],
-    "liveNow": false,
-    "panels": [
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 20,
-                        "gradientMode": "opacity",
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        },
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": true,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
             },
-            "gridPos": {
-                "h": 9,
-                "w": 12,
-                "x": 0,
-                "y": 0
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
             },
-            "id": 1,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "right",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "Prometheus"
-                    },
-                    "editorMode": "code",
-                    "expr": "rate(simulator_events_generated_total{type=\"flight\"}[5m]) * 60",
-                    "legendFormat": "Flight Events/min: {{icao}}",
-                    "range": true,
-                    "refId": "A"
-                }
-            ],
-            "title": "Flight Event Rate",
-            "type": "timeseries"
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "short"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 9,
-                "w": 6,
-                "x": 12,
-                "y": 0
-            },
-            "id": 2,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT callsign) as count FROM flights WHERE timestamp >= NOW() - INTERVAL '5 minutes';",
-                    "refId": "A"
-                }
-            ],
-            "title": "Active Flights (5min)",
-            "type": "stat"
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
         },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "custom": {
-                        "align": "auto",
-                        "cellOptions": {
-                            "type": "auto"
-                        },
-                        "inspect": false
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 9,
-                "w": 6,
-                "x": 18,
-                "y": 0
-            },
-            "id": 3,
-            "options": {
-                "cellHeight": "sm",
-                "footer": {
-                    "countRows": false,
-                    "fields": "",
-                    "reducer": [
-                        "sum"
-                    ],
-                    "show": false
-                },
-                "showHeader": true
-            },
-            "pluginVersion": "10.2.2",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT \n  callsign,\n  status,\n  altitude,\n  speed\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '10 minutes'\nORDER BY timestamp DESC\nLIMIT 10;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Recent Flights",
-            "type": "table"
-        },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        }
-                    },
-                    "mappings": []
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 9
-            },
-            "id": 4,
-            "options": {
-                "displayLabels": [
-                    "value",
-                    "percent"
-                ],
-                "legend": {
-                    "displayMode": "table",
-                    "placement": "right",
-                    "showLegend": true,
-                    "values": [
-                        "value",
-                        "percent"
-                    ]
-                },
-                "pieType": "donut",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "tooltip": {
-                    "mode": "single",
-                    "sort": "none"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": true,
-                    "rawSql": "SELECT \n  status,\n  COUNT(*) as count\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '1 hour'\nGROUP BY status;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Flight Status Breakdown (1h)",
-            "type": "piechart"
-        },
-        {
-            "datasource": {
-                "type": "postgres",
-                "uid": "TimescaleDB"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 20,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "tooltip": false,
-                            "viz": false,
-                            "legend": false
-                        },
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "auto",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 9
-            },
-            "id": 5,
-            "options": {
-                "legend": {
-                    "calcs": [],
-                    "displayMode": "list",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "none"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "postgres",
-                        "uid": "TimescaleDB"
-                    },
-                    "editorMode": "code",
-                    "format": "time_series",
-                    "rawQuery": true,
-                    "rawSql": "SELECT\n  time_bucket('5 minutes', timestamp) AS time,\n  tenant_code,\n  COUNT(*) as updates\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '6 hours'\nGROUP BY time_bucket('5 minutes', timestamp), tenant_code\nORDER BY time;",
-                    "refId": "A"
-                }
-            ],
-            "title": "Flight Updates by Airport (6h)",
-            "type": "timeseries"
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-    ],
-    "refresh": "10s",
-    "schemaVersion": 38,
-    "style": "dark",
-    "tags": [
-        "TAM",
-        "Flights",
-        "ADSB"
-    ],
-    "templating": {
-        "list": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(simulator_events_generated_total{type=\"flight\",icao=~\"${icao:regex}\"}[5m]) * 60",
+          "legendFormat": "Flight Events/min: {{icao}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Flight Event Rate",
+      "type": "timeseries"
     },
-    "time": {
-        "from": "now-6h",
-        "to": "now"
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT callsign) as count FROM flights WHERE timestamp >= NOW() - INTERVAL '5 minutes'\n  AND tenant_code = ${icao:sqlstring};",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Flights (5min)",
+      "type": "stat"
     },
-    "timepicker": {},
-    "timezone": "",
-    "title": "Flight Operations Dashboard",
-    "uid": "tam-flight-ops",
-    "version": 0,
-    "weekStart": ""
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  callsign,\n  status,\n  altitude,\n  speed\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '10 minutes'\n  AND tenant_code = ${icao:sqlstring}\nORDER BY timestamp DESC\nLIMIT 10;",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Flights",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "displayLabels": [
+          "value",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  status,\n  COUNT(*) as count\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '1 hour'\n  AND tenant_code = ${icao:sqlstring}\nGROUP BY status;",
+          "refId": "A"
+        }
+      ],
+      "title": "Flight Status Breakdown (1h)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  time_bucket('5 minutes', timestamp) AS time,\n  tenant_code,\n  COUNT(*) as updates\nFROM flights\nWHERE timestamp >= NOW() - INTERVAL '6 hours'\n  AND tenant_code = ${icao:sqlstring}\nGROUP BY time_bucket('5 minutes', timestamp), tenant_code\nORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Flight Updates by Airport (6h)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "TAM",
+    "Flights",
+    "ADSB"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "VIDP",
+          "value": "VIDP"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT DISTINCT tenant_code FROM flights ORDER BY 1",
+        "hide": 2,
+        "includeAll": false,
+        "label": "ICAO",
+        "multi": false,
+        "name": "icao",
+        "options": [],
+        "query": "SELECT DISTINCT tenant_code FROM flights ORDER BY 1",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Flight Operations Dashboard",
+  "uid": "tam-flight-ops",
+  "version": 0,
+  "weekStart": ""
 }

@@ -22,7 +22,10 @@ public class TurnaroundService {
     private static final Logger logger = LoggerFactory.getLogger(TurnaroundService.class);
     private final TurnaroundEventRepository repository;
     private final ObjectMapper objectMapper;
+    private final io.micrometer.core.instrument.MeterRegistry meterRegistry;
     private final io.micrometer.core.instrument.Counter consumedCounter;
+    private final java.util.Map<String, io.micrometer.core.instrument.Counter> consumedCounterByIcao =
+            new java.util.concurrent.ConcurrentHashMap<>();
     private final io.micrometer.core.instrument.Timer latencyTimer;
     private final io.micrometer.core.instrument.Counter errorCounter;
 
@@ -30,6 +33,7 @@ public class TurnaroundService {
             io.micrometer.core.instrument.MeterRegistry registry) {
         this.repository = repository;
         this.objectMapper = objectMapper;
+        this.meterRegistry = registry;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.registerModule(new JavaTimeModule());
         this.consumedCounter = io.micrometer.core.instrument.Counter.builder("kafka.events.consumed")
@@ -84,6 +88,15 @@ public class TurnaroundService {
 
                 repository.save(event);
                 consumedCounter.increment();
+                consumedCounterByIcao
+                        .computeIfAbsent(
+                                event.getTenantCode().trim().toUpperCase(),
+                                icao -> io.micrometer.core.instrument.Counter.builder("kafka.events.consumed")
+                                        .tag("type", "turnaround")
+                                        .tag("icao", icao)
+                                        .description("Number of turnaround events consumed from Kafka")
+                                        .register(meterRegistry))
+                        .increment();
                 persisted++;
             }
             logger.debug("Consumed {} turnaround events", persisted);
