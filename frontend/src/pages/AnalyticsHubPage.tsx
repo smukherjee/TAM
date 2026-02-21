@@ -218,7 +218,15 @@ const AnalyticsHubPage = () => {
     for (const category of Object.values(chartCategories)) {
       const chart = category.charts.find((c) => c.id === chartId);
       if (chart) {
-        const url = `http://localhost:8089/superset/slice/${chart.sliceId}/?standalone=true`;
+        // Keep tenant in form_data as well; Superset may convert URL params to form_data_key during load.
+        const formData: Record<string, unknown> = { slice_id: Number(chart.sliceId) };
+        if (tenantCode) {
+          formData.tenant_code = tenantCode;
+          formData.icao = tenantCode;
+          formData.url_params = { tenant_code: tenantCode, icao: tenantCode };
+        }
+        const encodedFormData = encodeURIComponent(JSON.stringify(formData));
+        const url = `http://localhost:8089/explore/?form_data=${encodedFormData}&standalone=true`;
         return withTenantScope(url, 'superset');
       }
     }

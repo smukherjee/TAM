@@ -99,7 +99,6 @@ create_dataset() {
     [.result[] | select(.table_name == $name and .database.id == $db) | .id]
     | if length > 0 then min else empty end
   ')
-  if [ -n "$EXISTING" ]; then echo "$EXISTING"; return; fi
 
   local PAYLOAD
   if [ -n "$SQL" ]; then
@@ -108,6 +107,23 @@ create_dataset() {
   else
     PAYLOAD=$(jq -n --argjson db "$DB_ID" --arg schema "$SCHEMA" --arg table "$TABLE" \
       '{database: $db, schema: $schema, table_name: $table}')
+  fi
+
+  if [ -n "$EXISTING" ]; then
+    # Keep existing datasets in sync when virtual SQL changes.
+    if [ -n "$SQL" ]; then
+      local UPDATE_PAYLOAD UPDATE_RESP UPDATE_ID
+      UPDATE_PAYLOAD=$(jq -n --arg name "$NAME" --arg sql "$SQL" --arg schema "$SCHEMA" \
+        '{table_name: $name, schema: $schema, sql: $sql}')
+      UPDATE_RESP=$(req -X PUT "$SUPERSET_URL/api/v1/dataset/$EXISTING" -H "Content-Type: application/json" -d "$UPDATE_PAYLOAD")
+      UPDATE_ID=$(echo "$UPDATE_RESP" | jq -r '.id // .result.id // empty')
+      if [ -z "$UPDATE_ID" ]; then
+        echo "❌ Failed to update virtual dataset $NAME (id=$EXISTING): $UPDATE_RESP" >&2
+        exit 1
+      fi
+    fi
+    echo "$EXISTING"
+    return
   fi
 
   RESP=$(req -X POST "$SUPERSET_URL/api/v1/dataset/" -H "Content-Type: application/json" -d "$PAYLOAD")
@@ -159,6 +175,69 @@ create_table_raw_chart() {
   create_chart "$NAME" "$DS" "table" "$params"
 }
 
+sync_raw_table_query_context() {
+  local CHART_ID=$1; local DS=$2; shift 2
+  local COLS=("$@")
+  [ -z "$CHART_ID" ] || [ -z "$DS" ] && return
+
+  local cols_json chart_meta slice_name viz_type params query_context payload
+  cols_json=$(printf '%s\n' "${COLS[@]}" | jq -R . | jq -s .)
+  chart_meta=$(req -X GET "$SUPERSET_URL/api/v1/chart/$CHART_ID")
+  slice_name=$(echo "$chart_meta" | jq -r '.result.slice_name')
+  viz_type=$(echo "$chart_meta" | jq -r '.result.viz_type // "table"')
+
+  params=$(jq -n --argjson cols "$cols_json" '{all_columns:$cols, query_mode:"raw", row_limit:500, time_range:"No filter"}')
+  query_context=$(jq -n \
+    --argjson ds "$DS" \
+    --argjson cid "$CHART_ID" \
+    --argjson cols "$cols_json" \
+    '{
+      datasource:{id:$ds,type:"table"},
+      force:false,
+      queries:[{
+        time_range:"No filter",
+        filters:[],
+        extras:{having:"",where:""},
+        applied_time_extras:{},
+        columns:$cols,
+        orderby:[],
+        annotation_layers:[],
+        row_limit:500,
+        series_limit:0,
+        order_desc:true,
+        url_params:{},
+        custom_params:{},
+        custom_form_data:{},
+        post_processing:[]
+      }],
+      form_data:{
+        all_columns:$cols,
+        datasource:($ds|tostring + "__table"),
+        query_mode:"raw",
+        row_limit:500,
+        slice_id:$cid,
+        time_range:"No filter",
+        viz_type:"table",
+        force:false,
+        result_format:"json",
+        result_type:"full",
+        include_time:false
+      },
+      result_format:"json",
+      result_type:"full"
+    }')
+
+  payload=$(jq -n \
+    --arg name "$slice_name" \
+    --arg viz "$viz_type" \
+    --argjson ds "$DS" \
+    --arg params "$(echo "$params" | jq -c .)" \
+    --arg qc "$(echo "$query_context" | jq -c .)" \
+    '{slice_name:$name,datasource_id:$ds,datasource_type:"table",viz_type:$viz,params:$params,query_context:$qc}')
+
+  req -X PUT "$SUPERSET_URL/api/v1/chart/$CHART_ID" -H "Content-Type: application/json" -d "$payload" >/dev/null
+}
+
 create_dashboard() {
   local TITLE=$1; local SLUG=$2
   local EXIST_ID
@@ -207,6 +286,7 @@ is_already_provisioned() {
   missing_ds=$(list_datasets | jq -r --argjson db "$DB_ID" '
     [.result[] | select(.database.id == $db) | .table_name] as $have |
     [
+      "v_ops_overview_daily_tenant",
       "v_ops_overview_daily","v_flight_movements_hourly","v_vehicle_activity_summary_daily",
       "v_stand_gate_occupancy","v_turnaround_sla_compliance","v_delay_root_causes",
       "v_speed_violations_by_zone","v_restricted_zone_breach_dwell","v_discrepancy_trends_daily",
@@ -297,6 +377,8 @@ fi
 
 METRIC_COUNT=$(jq -n '{expressionType:"SIMPLE",aggregate:"COUNT",column:null,label:"Count"}')
 
+SQL_OPS_OVR_TENANT="SELECT * FROM public.v_ops_overview_daily WHERE tenant_code = COALESCE(NULLIF('{{ tam_tenant_code() }}',''), tenant_code)"
+DS_OPS_OVR_TENANT=$(create_dataset "v_ops_overview_daily_tenant" "public" "v_ops_overview_daily_tenant" "$SQL_OPS_OVR_TENANT")
 DS_OPS_OVR=$(create_dataset "v_ops_overview_daily")
 DS_FLT_HR=$(create_dataset "v_flight_movements_hourly")
 DS_VEH_SUM=$(create_dataset "v_vehicle_activity_summary_daily")
@@ -324,7 +406,7 @@ DS_FORE_VIOL=$(create_dataset "forecast_violations_hourly")
 
 echo "✅ Datasets created. Building charts..."
 
-CH_OPS_F=$(create_table_raw_chart "Ops Overview Daily" "$DS_OPS_OVR" tenant_code day flights vehicles alerts violations)
+CH_OPS_F=$(create_table_raw_chart "Ops Overview Daily" "$DS_OPS_OVR_TENANT" tenant_code day flights vehicles alerts violations)
 CH_FLT_HR=$(create_table_raw_chart "Flight Movements Hourly" "$DS_FLT_HR" tenant_code hour positions)
 CH_VEH_SUM=$(create_table_raw_chart "Vehicle Activity Daily" "$DS_VEH_SUM" tenant_code day vehicle_type telemetry_points avg_speed)
 CH_STAND_OCC=$(create_table_raw_chart "Stand Occupancy" "$DS_STAND_OCC" tenant_code stand_id sessions avg_turnaround_min)
@@ -360,6 +442,9 @@ CH_PRED_CONG=$(create_table_raw_chart "Congestion Forecast" "$DS_PRED_CONG" tena
 CH_PRED_ZONE=$(create_table_raw_chart "Zone Breach Probability" "$DS_PRED_ZONE" tenant_code zone_id horizon_minutes probability top_asset_categories as_of)
 CH_PRED_ASSET=$(create_table_raw_chart "Asset Violation Risk" "$DS_PRED_ASSET" tenant_code asset_identifier probability expected_severity as_of created_at)
 CH_FORE_VIOL=$(create_table_raw_chart "Violations Forecast (Hourly)" "$DS_FORE_VIOL" hour tenant_code expected_count lower upper created_at)
+
+# POC tenant-aware report: ensure chart 1 query context points to tenant-aware virtual dataset.
+sync_raw_table_query_context "$CH_OPS_F" "$DS_OPS_OVR_TENANT" tenant_code day flights vehicles alerts violations
 
 echo "✅ Charts created. Building dashboards..."
 
