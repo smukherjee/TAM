@@ -130,6 +130,25 @@ create_dataset() {
   echo "$RESP" | jq -r '.id'
 }
 
+tenant_scoped_sql() {
+  local SCHEMA=${1:-public}
+  local TABLE=$2
+  cat <<EOF
+SELECT *
+FROM ${SCHEMA}.${TABLE}
+WHERE tenant_code = COALESCE(NULLIF('{{ tam_tenant_code() }}',''), tenant_code)
+EOF
+}
+
+create_tenant_dataset() {
+  local NAME=$1
+  local SCHEMA=${2:-public}
+  local TABLE=${3:-$1}
+  local SQL
+  SQL=$(tenant_scoped_sql "$SCHEMA" "$TABLE")
+  create_dataset "$NAME" "$SCHEMA" "$NAME" "$SQL"
+}
+
 create_chart() {
   local NAME=$1; local DS=$2; local VIZ=$3; local PARAMS_JSON=$4
   if [ -z "$DS" ] || [ "$DS" == "null" ]; then echo ""; return; fi
@@ -377,36 +396,34 @@ fi
 
 METRIC_COUNT=$(jq -n '{expressionType:"SIMPLE",aggregate:"COUNT",column:null,label:"Count"}')
 
-SQL_OPS_OVR_TENANT="SELECT * FROM public.v_ops_overview_daily WHERE tenant_code = COALESCE(NULLIF('{{ tam_tenant_code() }}',''), tenant_code)"
-DS_OPS_OVR_TENANT=$(create_dataset "v_ops_overview_daily_tenant" "public" "v_ops_overview_daily_tenant" "$SQL_OPS_OVR_TENANT")
-DS_OPS_OVR=$(create_dataset "v_ops_overview_daily")
-DS_FLT_HR=$(create_dataset "v_flight_movements_hourly")
-DS_VEH_SUM=$(create_dataset "v_vehicle_activity_summary_daily")
-DS_STAND_OCC=$(create_dataset "v_stand_gate_occupancy")
-DS_SLA=$(create_dataset "v_turnaround_sla_compliance")
-DS_DELAY=$(create_dataset "v_delay_root_causes")
-DS_VIOL_ZONE=$(create_dataset "v_speed_violations_by_zone")
-DS_BREACH_DWELL=$(create_dataset "v_restricted_zone_breach_dwell")
-DS_DISCREP=$(create_dataset "v_discrepancy_trends_daily")
-DS_UTIL=$(create_dataset "v_asset_utilization_status_counts")
-DS_MAINT=$(create_dataset "v_maintenance_downtime_by_type")
-DS_DWELL_PROXY=$(create_dataset "v_dwell_proxy_by_zone_hourly")
-DS_ALERTS=$(create_dataset "v_alerts_summary_type_hour")
-DS_OFFEND=$(create_dataset "v_repeat_offenders_assets")
-DS_THRPT=$(create_dataset "v_throughput_ops_volume_today")
-DS_PIPE=$(create_dataset "v_pipeline_health_events_per_minute")
-DS_HM_ACT=$(create_dataset "v_activity_heatmap_latest")
-DS_HM_VIOL=$(create_dataset "v_violation_heatmap_latest")
-DS_STAND_CONFLICT=$(create_dataset "v_stand_conflicts")
-DS_PRED_TA=$(create_dataset "pred_turnaround_risk")
-DS_PRED_CONG=$(create_dataset "pred_congestion")
-DS_PRED_ZONE=$(create_dataset "pred_zone_breach")
-DS_PRED_ASSET=$(create_dataset "pred_asset_violation_risk")
-DS_FORE_VIOL=$(create_dataset "forecast_violations_hourly")
+DS_OPS_OVR=$(create_tenant_dataset "v_ops_overview_daily")
+DS_FLT_HR=$(create_tenant_dataset "v_flight_movements_hourly")
+DS_VEH_SUM=$(create_tenant_dataset "v_vehicle_activity_summary_daily")
+DS_STAND_OCC=$(create_tenant_dataset "v_stand_gate_occupancy")
+DS_SLA=$(create_tenant_dataset "v_turnaround_sla_compliance")
+DS_DELAY=$(create_tenant_dataset "v_delay_root_causes")
+DS_VIOL_ZONE=$(create_tenant_dataset "v_speed_violations_by_zone")
+DS_BREACH_DWELL=$(create_tenant_dataset "v_restricted_zone_breach_dwell")
+DS_DISCREP=$(create_tenant_dataset "v_discrepancy_trends_daily")
+DS_UTIL=$(create_tenant_dataset "v_asset_utilization_status_counts")
+DS_MAINT=$(create_tenant_dataset "v_maintenance_downtime_by_type")
+DS_DWELL_PROXY=$(create_tenant_dataset "v_dwell_proxy_by_zone_hourly")
+DS_ALERTS=$(create_tenant_dataset "v_alerts_summary_type_hour")
+DS_OFFEND=$(create_tenant_dataset "v_repeat_offenders_assets")
+DS_THRPT=$(create_tenant_dataset "v_throughput_ops_volume_today")
+DS_PIPE=$(create_tenant_dataset "v_pipeline_health_events_per_minute")
+DS_HM_ACT=$(create_tenant_dataset "v_activity_heatmap_latest")
+DS_HM_VIOL=$(create_tenant_dataset "v_violation_heatmap_latest")
+DS_STAND_CONFLICT=$(create_tenant_dataset "v_stand_conflicts")
+DS_PRED_TA=$(create_tenant_dataset "pred_turnaround_risk")
+DS_PRED_CONG=$(create_tenant_dataset "pred_congestion")
+DS_PRED_ZONE=$(create_tenant_dataset "pred_zone_breach")
+DS_PRED_ASSET=$(create_tenant_dataset "pred_asset_violation_risk")
+DS_FORE_VIOL=$(create_tenant_dataset "forecast_violations_hourly")
 
 echo "✅ Datasets created. Building charts..."
 
-CH_OPS_F=$(create_table_raw_chart "Ops Overview Daily" "$DS_OPS_OVR_TENANT" tenant_code day flights vehicles alerts violations)
+CH_OPS_F=$(create_table_raw_chart "Ops Overview Daily" "$DS_OPS_OVR" tenant_code day flights vehicles alerts violations)
 CH_FLT_HR=$(create_table_raw_chart "Flight Movements Hourly" "$DS_FLT_HR" tenant_code hour positions)
 CH_VEH_SUM=$(create_table_raw_chart "Vehicle Activity Daily" "$DS_VEH_SUM" tenant_code day vehicle_type telemetry_points avg_speed)
 CH_STAND_OCC=$(create_table_raw_chart "Stand Occupancy" "$DS_STAND_OCC" tenant_code stand_id sessions avg_turnaround_min)
@@ -443,8 +460,8 @@ CH_PRED_ZONE=$(create_table_raw_chart "Zone Breach Probability" "$DS_PRED_ZONE" 
 CH_PRED_ASSET=$(create_table_raw_chart "Asset Violation Risk" "$DS_PRED_ASSET" tenant_code asset_identifier probability expected_severity as_of created_at)
 CH_FORE_VIOL=$(create_table_raw_chart "Violations Forecast (Hourly)" "$DS_FORE_VIOL" hour tenant_code expected_count lower upper created_at)
 
-# POC tenant-aware report: ensure chart 1 query context points to tenant-aware virtual dataset.
-sync_raw_table_query_context "$CH_OPS_F" "$DS_OPS_OVR_TENANT" tenant_code day flights vehicles alerts violations
+# Ensure chart query_context is synced to the tenant-scoped dataset.
+sync_raw_table_query_context "$CH_OPS_F" "$DS_OPS_OVR" tenant_code day flights vehicles alerts violations
 
 echo "✅ Charts created. Building dashboards..."
 
