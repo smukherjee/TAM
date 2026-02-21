@@ -42,17 +42,20 @@
 **Decision**: Use `ST_DWithin` with 50m buffer instead of `ST_Contains`
 
 **Rationale**:
+
 - **GPS Accuracy**: Consumer-grade GPS accurate to ±5-15m, can drift to 50m in poor conditions
 - **False Positive Prevention**: Direct `ST_Contains` would trigger violations from GPS drift near boundaries
 - **Buffer Zone**: 50m buffer provides tolerance while maintaining security
 - **Confirmation Logic**: Require 2 consecutive readings within zone before triggering violation
 
 **Alternatives Considered**:
+
 - ❌ `ST_Contains` only: Too many false positives from GPS drift
 - ❌ 100m buffer: Too permissive, defeats security purpose
 - ✅ 50m buffer + 2 readings: Balances accuracy and security
 
 **Performance Optimization**:
+
 - GIST spatial indexes on all geometry columns
 - Query plan: Index scan on `restricted_zones` → ST_DWithin check (O(log n))
 - Benchmark: <5ms for 8 zones × 500 assets = 4000 checks
@@ -66,17 +69,20 @@
 **Decision**: 90-day hot storage with compression, then cold archive
 
 **Rationale**:
+
 - **Operational Needs**: Security investigations typically review last 30-90 days
 - **Compliance**: Aviation authorities require 90-day incident review window (ICAO Annex 19)
 - **Storage Efficiency**: TimescaleDB compression reduces size by 70-90% after 7 days
 - **Cost Balance**: 90 days hot + S3 archive = $200/month vs $2000/month for indefinite hot storage
 
 **Alternatives Considered**:
+
 - ❌ 30 days: Insufficient for compliance
 - ❌ 365 days hot: Unnecessary cost ($2000/month)
 - ✅ 90 days + archive: Meets compliance, optimized cost
 
 **Implementation**:
+
 ```sql
 -- TimescaleDB retention policy
 SELECT add_retention_policy('asset_movement_trail', INTERVAL '90 days');
@@ -94,11 +100,13 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 **Decision**: 8 standardized categories with color coding
 
 **Research Sources**:
+
 - IATA Ground Operations Manual (AHM 810)
 - Airport Service Manual Part 9 (ICAO Doc 9137)
 - Analysis of existing vehicles table data (VIDP, LIRN, YBBN)
 
 **Categories Defined**:
+
 1. **Emergency** (Red): Fire trucks, ambulances, security vehicles - Max 50 km/h
 2. **Fueling** (Orange): Fuel trucks, hydrant dispensers - Max 25 km/h  
 3. **Cargo** (Blue): Belt loaders, cargo tugs, ULD transporters - Max 20 km/h
@@ -109,6 +117,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 8. **Other** (Gray): Uncategorized assets - Max 20 km/h
 
 **Color Psychology**:
+
 - Red: Emergency, urgency
 - Orange: Caution (flammable fuels)
 - Blue: Cargo operations (industry standard)
@@ -126,6 +135,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 **Decision**: 5 rule-based detection types with configurable thresholds
 
 **Research Approach**:
+
 - Analyzed 30 days of historical vehicle tracking data
 - Identified patterns in manual incident reports
 - Consulted with ground handling managers at VIDP
@@ -133,11 +143,13 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 **Detection Types**:
 
 #### 5.1 UNEXPECTED_MOVEMENT
+
 - **Trigger**: Asset marked "Maintenance" or "Out of Service" moves >50m in 5 seconds
 - **Threshold Research**: Stationary assets drift <10m/hour from GPS variance
 - **Business Case**: Prevents unauthorized use of grounded equipment
 
-#### 5.2 LOCATION_MISMATCH  
+#### 5.2 LOCATION_MISMATCH 
+ 
 - **Trigger**: Asset register location differs from GPS by >100m
 - **Threshold Research**: Register updates lag by 5-15 minutes in normal ops
 - **Business Case**: Identifies lost/misplaced assets

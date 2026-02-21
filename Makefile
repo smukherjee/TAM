@@ -1,7 +1,7 @@
 # TAM Platform - Development Makefile
 # Commands to manage the development infrastructure
 
-.PHONY: help rebuild-all setup-all reset start stop logs status clean deploy-frontend deploy-backend wait-backend wait-superset provision-superset generate-fresh-data
+.PHONY: help rebuild-all setup-all reset start stop logs status clean deploy-frontend deploy-backend wait-backend wait-superset wait-nifi setup-nifi-flows provision-superset generate-fresh-data
 
 # Default target
 help:
@@ -46,7 +46,7 @@ setup-all: build-all start
 	@echo "Waiting for core services to become ready..."
 	@$(MAKE) wait-backend
 	@$(MAKE) wait-superset
-	@bash infrastructure/nifi/setup-nifi.sh
+	@$(MAKE) setup-nifi-flows
 	@$(MAKE) provision-superset
 	@$(MAKE) generate-fresh-data
 	@echo "Platform setup complete! Navigate to http://localhost:3000"
@@ -97,7 +97,7 @@ clean:
 	@echo "Local workspaces cleaned."
 
 wait-backend:
-	@echo "Waiting for Backend API at http://127.0.0.1:8080/actuator/health ..."
+	@echo "Waiting for Backend API at http://127.0.0.1:8080/api/actuator/health ..."
 	@attempts=90; \
 	missing_limit=30; \
 	for i in $$(seq 1 $$attempts); do \
@@ -128,7 +128,7 @@ wait-backend:
 			docker-compose -f docker-compose.dev.yml logs --tail=50 backend || true; \
 			exit 1; \
 		fi; \
-		resp=$$(curl --silent --show-error --fail --connect-timeout 1 --max-time 2 http://127.0.0.1:8080/actuator/health 2>/dev/null || true); \
+		resp=$$(curl --silent --show-error --fail --connect-timeout 1 --max-time 2 http://127.0.0.1:8080/api/actuator/health 2>/dev/null || true); \
 		if echo "$$resp" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'; then \
 			echo "Backend API is ready."; \
 			exit 0; \
@@ -188,9 +188,79 @@ wait-superset:
 	docker-compose -f docker-compose.dev.yml ps superset || true; \
 	exit 1
 
+wait-nifi:
+	@echo "Waiting for NiFi API at http://127.0.0.1:8091/nifi-api/flow/about ..."
+	@attempts=120; \
+	missing_limit=30; \
+	for i in $$(seq 1 $$attempts); do \
+		cid=$$(docker-compose -f docker-compose.dev.yml ps -q nifi 2>/dev/null || true); \
+		if [ -z "$$cid" ]; then \
+			if [ $$i -ge $$missing_limit ]; then \
+				echo "NiFi container was not created within $$((missing_limit*2)) seconds."; \
+				docker-compose -f docker-compose.dev.yml ps nifi || true; \
+				exit 1; \
+			fi; \
+			if [ $$((i % 5)) -eq 0 ]; then \
+				echo "Waiting for NiFi container to be created ($$i/$$missing_limit)..."; \
+			fi; \
+			sleep 2; \
+			continue; \
+		fi; \
+		state=$$(docker inspect -f '{{.State.Status}}' "$$cid" 2>/dev/null || echo "unknown"); \
+		health=$$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$$cid" 2>/dev/null || echo "unknown"); \
+		if [ "$$state" = "exited" ] || [ "$$state" = "dead" ]; then \
+			echo "NiFi container is $$state. Failing fast."; \
+			docker-compose -f docker-compose.dev.yml ps nifi || true; \
+			docker-compose -f docker-compose.dev.yml logs --tail=80 nifi || true; \
+			exit 1; \
+		fi; \
+		if [ "$$health" = "unhealthy" ]; then \
+			echo "NiFi container is unhealthy. Failing fast."; \
+			docker-compose -f docker-compose.dev.yml ps nifi || true; \
+			docker-compose -f docker-compose.dev.yml logs --tail=80 nifi || true; \
+			exit 1; \
+		fi; \
+		resp=$$(curl --silent --show-error --fail --connect-timeout 1 --max-time 3 http://127.0.0.1:8091/nifi-api/flow/about 2>/dev/null || true); \
+		if echo "$$resp" | grep -q '"title":"NiFi"'; then \
+			echo "NiFi API is ready."; \
+			exit 0; \
+		fi; \
+		if [ $$((i % 10)) -eq 0 ]; then \
+			echo "Still waiting for NiFi API ($$i/$$attempts)..."; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "NiFi API not ready after 240 seconds."; \
+	docker-compose -f docker-compose.dev.yml ps nifi || true; \
+	exit 1
+
+setup-nifi-flows: wait-nifi
+	@echo "Configuring NiFi flows..."
+	@attempts=3; \
+	for i in $$(seq 1 $$attempts); do \
+		if bash infrastructure/nifi/setup-nifi.sh; then \
+			echo "NiFi flow setup completed."; \
+			exit 0; \
+		fi; \
+		echo "NiFi flow setup attempt $$i/$$attempts failed; retrying..."; \
+		sleep 3; \
+	done; \
+	echo "NiFi flow setup failed after $$attempts attempts."; \
+	exit 1
+
 provision-superset: wait-superset
 	@echo "Provisioning Superset reports..."
-	@bash infrastructure/superset/create-all-reports.sh
+	@attempts=3; \
+	for i in $$(seq 1 $$attempts); do \
+		if bash infrastructure/superset/create-all-reports.sh; then \
+			echo "Superset provisioning completed."; \
+			exit 0; \
+		fi; \
+		echo "Superset provisioning attempt $$i/$$attempts failed; retrying..."; \
+		sleep 3; \
+	done; \
+	echo "Superset provisioning failed after $$attempts attempts."; \
+	exit 1
 
 generate-fresh-data: wait-backend
 	@echo "Generating fresh simulation/report data for VIDP, LIRN, YBBN..."

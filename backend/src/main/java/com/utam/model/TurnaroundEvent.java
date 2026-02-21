@@ -1,5 +1,6 @@
 package com.utam.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ public class TurnaroundEvent {
 
     @Id
     @Column(name = "event_unique_id")
+    @JsonAlias({"eventId"})
     private String eventUniqueId;
 
     @Column(name = "camera_id")
@@ -35,6 +37,7 @@ public class TurnaroundEvent {
 
     @Column(name = "tenant_code")
     @JsonProperty("tenant_code")
+    @JsonAlias({"icao_code", "icaoCode"})
     private String tenantCode;
 
     @JsonProperty("creation_timestamp")

@@ -57,6 +57,7 @@ services:
       - "8093:8093"       # ListenHTTP for Vehicle data
       - "8094:8094"       # ListenHTTP for CV Event data
     environment:
+      - NIFI_WEB_HTTP_HOST=0.0.0.0
       - NIFI_WEB_HTTP_PORT=8080
       - SINGLE_USER_CREDENTIALS_USERNAME=admin
       - SINGLE_USER_CREDENTIALS_PASSWORD=admin123456789
@@ -69,7 +70,7 @@ services:
       redpanda:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/nifi"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/nifi-api/flow/about"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -163,6 +164,7 @@ services:
       MINIO_SECRET_KEY: minioadmin
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      NIFI_INGESTION_URL: http://nifi:8094/cv-event-ingest
       SIMULATION_ADSB_URL: http://nifi:8092/adsb-ingest
       SIMULATION_VEHICLE_URL: http://nifi:8093/vehicle-ingest
       SIMULATION_CV_URL: http://nifi:8094/cv-event-ingest
@@ -174,7 +176,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -248,6 +250,8 @@ services:
     environment:
       SUPERSET_SECRET_KEY: tam-dev-secret-key-change-in-prod
       SUPERSET_LOAD_EXAMPLES: "no"
+      PYTHONPATH: /app/pythonpath
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
     volumes:
       - superset_data:/app/superset_home
       - ./infrastructure/superset/superset_config.py:/app/pythonpath/superset_config.py

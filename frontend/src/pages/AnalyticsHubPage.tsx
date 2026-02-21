@@ -207,22 +207,19 @@ const AnalyticsHubPage = () => {
     return scopedUrl.toString();
   };
 
-  // Get Superset dashboard URL with tenant suffix
+  // Superset dashboards are shared; tenant scope is passed as URL params.
   const getSupersetDashboardUrl = (dashboardSlug: string) => {
-    const tenantSuffix = tenantCode ? `_${tenantCode.toLowerCase()}` : '';
-    // Try tenant-specific first, fallback handled by Superset
-    const url = `http://localhost:8089/superset/dashboard/${dashboardSlug}${tenantSuffix}/?standalone=2&show_filters=0`;
+    const url = `http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`;
     return withTenantScope(url, 'superset');
   };
 
-  // Get chart-focused URL while remaining on tenant-scoped dashboards.
+  // Chart-specific embeds are most stable via direct slice routes.
   const getSupersetChartUrl = (chartId: string) => {
     for (const category of Object.values(chartCategories)) {
       const chart = category.charts.find((c) => c.id === chartId);
       if (chart) {
-        const url = new URL(getSupersetDashboardUrl(category.supersetDashboard));
-        url.searchParams.set('slice_id', String(chart.sliceId));
-        return url.toString();
+        const url = `http://localhost:8089/superset/slice/${chart.sliceId}/?standalone=true`;
+        return withTenantScope(url, 'superset');
       }
     }
     return getSupersetDashboardUrl(chartCategories[activeCategory].supersetDashboard);

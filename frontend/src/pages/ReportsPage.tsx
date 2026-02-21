@@ -6,8 +6,7 @@ const ReportsPage: React.FC = () => {
     const { user } = useAuth();
 
     const tenantCode = user?.icaoCode?.toUpperCase();
-    const tenantSuffix = tenantCode ? `_${tenantCode.toLowerCase()}` : '';
-    const dashboardSlug = `tam_ops${tenantSuffix}`;
+    const dashboardSlug = 'tam_ops_full';
     const supersetUrl = new URL(`http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`);
     if (tenantCode) {
         supersetUrl.searchParams.set('tenant_code', tenantCode);

@@ -76,7 +76,7 @@ usage() {
 
 check_backend() {
     print_info "Checking backend connectivity..."
-    if curl -s -o /dev/null -w "%{http_code}" "${BACKEND_URL}/actuator/health" | grep -q "200"; then
+    if curl -s -o /dev/null -w "%{http_code}" "${BACKEND_URL}/api/actuator/health" | grep -q "200"; then
         print_success "Backend is reachable at ${BACKEND_URL}"
         return 0
     else

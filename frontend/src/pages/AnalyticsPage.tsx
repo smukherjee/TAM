@@ -6,21 +6,14 @@ const AnalyticsPage = () => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'executive' | 'flight' | 'turnaround' | 'vehicle' | 'pipeline' | 'infrastructure' | 'anomaly' | 'stand' | 'superset'>('executive');
 
-    // Determine Superset Dashboard Slug based on User Context
-    const getDashboardSlug = () => {
-        if (!user) return 'tam_ops';
-        
-        // If user has an ICAO code, show that tenant's dashboard
-        if (user.icaoCode) {
-            return `tam_ops_${user.icaoCode.trim().toLowerCase()}`;
-        }
-        
-        // Fallback to generic dashboard
-        return 'tam_ops';
-    };
-
-    const dashboardSlug = getDashboardSlug();
-    const supersetUrl = `http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`;
+    const dashboardSlug = 'tam_ops_full';
+    const supersetUrlObj = new URL(`http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`);
+    if (user?.icaoCode) {
+        const tenant = user.icaoCode.trim().toUpperCase();
+        supersetUrlObj.searchParams.set('tenant_code', tenant);
+        supersetUrlObj.searchParams.set('icao', tenant);
+    }
+    const supersetUrl = supersetUrlObj.toString();
     const supersetTitle = user?.icaoCode ? `TAM Ops - ${user.icaoCode}` : 'Superset BI Reports';
 
     // Grafana dashboard configurations

@@ -60,7 +60,21 @@ public class TurnaroundService {
 
             logger.info("Received Raw Turnaround JSON: {}", message); // DEBUG
 
+            int persisted = 0;
             for (TurnaroundEvent event : events) {
+                if (event.getEventUniqueId() == null || event.getEventUniqueId().isBlank()) {
+                    logger.debug("Skipping turnaround payload without event_unique_id");
+                    continue;
+                }
+                if (event.getActivityType() == null || event.getActivityType().isBlank()) {
+                    logger.debug("Skipping turnaround payload {} without activity_type", event.getEventUniqueId());
+                    continue;
+                }
+                if (event.getTenantCode() == null || event.getTenantCode().isBlank()) {
+                    logger.debug("Skipping turnaround payload {} without tenant_code/icao_code", event.getEventUniqueId());
+                    continue;
+                }
+
                 logger.info("Saving Event: {}, Tenant: {}", event.getActivityType(), event.getTenantCode()); // DEBUG
 
                 if (event.getCreationTimestamp() != null) {
@@ -70,8 +84,9 @@ public class TurnaroundService {
 
                 repository.save(event);
                 consumedCounter.increment();
+                persisted++;
             }
-            logger.debug("Consumed {} turnaround events", events.size());
+            logger.debug("Consumed {} turnaround events", persisted);
         } catch (Exception e) {
             logger.error("Error processing turnaround message: {}", message, e);
             errorCounter.increment();
