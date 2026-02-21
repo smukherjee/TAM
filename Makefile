@@ -97,7 +97,7 @@ backend-build:
 	cd backend && mvn clean package -DskipTests
 
 frontend-build:
-	cd frontend && npm install && npm run build
+	cd frontend && npm install  --legacy-peer-deps && npm run build
 
 build-all: backend-build frontend-build
 	@echo "Build complete!"

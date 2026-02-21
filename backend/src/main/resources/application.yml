@@ -11,7 +11,7 @@ spring:
     activate:
       on-profile: local
   datasource:
-    url: jdbc:postgresql://localhost:5432/utam
+    url: jdbc:postgresql://localhost:5433/utam
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
