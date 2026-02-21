@@ -9,27 +9,27 @@ ADMIN_PASS=${ADMIN_PASS:-admin}
 
 echo "📊 Provisioning Superset reports at $SUPERSET_URL"
 
-req() { curl -s "$@"; }
+req() { curl -s -b /tmp/cookies.txt -H "X-CSRFToken: $API_CSRF" "$@"; }
 
-# 1) Login
-TOKEN=$(req -X POST "$SUPERSET_URL/api/v1/security/login" \
-  -H "Content-Type: application/json" \
-  -d "{\"username\": \"$ADMIN_USER\", \"password\": \"$ADMIN_PASS\", \"provider\": \"db\"}" | jq -r '.access_token')
+# 1) Login via Session Auth (Fixes AnonymousUserMixin bug)
+LOGIN_CSRF=$(curl -s -c /tmp/cookies.txt "$SUPERSET_URL/login/" | grep -o 'csrf_token" type="hidden" value="[^"]*' | cut -d'"' -f5 || echo "")
+curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt -X POST "$SUPERSET_URL/login/" \
+  -d "username=$ADMIN_USER&password=$ADMIN_PASS&csrf_token=$LOGIN_CSRF" >/dev/null
 
-if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
-  echo "❌ Superset login failed"
+API_CSRF=$(curl -s -b /tmp/cookies.txt "$SUPERSET_URL/api/v1/security/csrf_token/" | jq -r '.result' || echo "")
+if [ -z "$API_CSRF" ] || [ "$API_CSRF" == "null" ]; then
+  echo "❌ Superset login failed (no API CSRF token retrieved)"
   exit 1
 fi
-AUTH_HEADER="Authorization: Bearer $TOKEN"
 
 # 2) Ensure TimescaleDB connection exists
-DB_ID=$(req -X GET "$SUPERSET_URL/api/v1/database/" -H "$AUTH_HEADER" | jq -r '.result[] | select(.database_name == "TimescaleDB") | .id')
+DB_ID=$(req -X GET "$SUPERSET_URL/api/v1/database/" | jq -r '.result[] | select(.database_name == "TimescaleDB") | .id')
 
 if [ -z "$DB_ID" ] || [ "$DB_ID" == "null" ]; then
   echo "ℹ️ Creating TimescaleDB database connection"
   PAYLOAD=$(jq -n \
     '{database_name: "TimescaleDB", sqlalchemy_uri: "postgresql+psycopg2://postgres:password@timescaledb:5432/utam", expose_in_sqllab: true, allow_run_async: true}')
-  RESP=$(req -X POST "$SUPERSET_URL/api/v1/database/" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$PAYLOAD")
+  RESP=$(req -X POST "$SUPERSET_URL/api/v1/database/" -H "Content-Type: application/json" -d "$PAYLOAD")
   DB_ID=$(echo "$RESP" | jq -r '.id')
 fi
 
@@ -46,7 +46,7 @@ create_dataset() {
   local TABLE=${3:-$1}
   local SQL=${4:-}
   local EXISTING
-  EXISTING=$(req -X GET "$SUPERSET_URL/api/v1/dataset/?q=(filters:!((col:table_name,opr:eq,value:$NAME)))" -H "$AUTH_HEADER" | jq -r \
+  EXISTING=$(req -X GET "$SUPERSET_URL/api/v1/dataset/?q=(filters:!((col:table_name,opr:eq,value:$NAME)))" | jq -r \
     ".result[] | select(.table_name == \"$NAME\") | .id")
   if [ -n "$EXISTING" ]; then echo "$EXISTING"; return; fi
 
@@ -59,7 +59,7 @@ create_dataset() {
       '{database: $db, schema: $schema, table_name: $table}')
   fi
 
-  RESP=$(req -X POST "$SUPERSET_URL/api/v1/dataset/" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$PAYLOAD")
+  RESP=$(req -X POST "$SUPERSET_URL/api/v1/dataset/" -H "Content-Type: application/json" -d "$PAYLOAD")
   echo "$RESP" | jq -r '.id'
 }
 
@@ -73,16 +73,16 @@ create_chart() {
   local PARAMS_CLEAN
   PARAMS_CLEAN=$(echo "$PARAMS_JSON" | jq -c .)
   local EXIST_ID
-  EXIST_ID=$(req -X GET "$SUPERSET_URL/api/v1/chart/?q=(page_size:5000,filters:!((col:slice_name,opr:eq,value:$NAME)))" -H "$AUTH_HEADER" \
+  EXIST_ID=$(req -X GET "$SUPERSET_URL/api/v1/chart/?q=(page_size:5000,filters:!((col:slice_name,opr:eq,value:$NAME)))" \
     | jq -r '.result[0].id')
   local PAYLOAD
   PAYLOAD=$(jq -n --arg name "$NAME" --argjson ds "$DS" --arg viz "$VIZ" --arg params "$PARAMS_CLEAN" \
     '{slice_name: $name, datasource_id: $ds, datasource_type: "table", viz_type: $viz, params: $params}')
   if [ -n "$EXIST_ID" ] && [ "$EXIST_ID" != "null" ]; then
-    req -X PUT "$SUPERSET_URL/api/v1/chart/$EXIST_ID" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$PAYLOAD" >/dev/null
+    req -X PUT "$SUPERSET_URL/api/v1/chart/$EXIST_ID" -H "Content-Type: application/json" -d "$PAYLOAD" >/dev/null
     echo "$EXIST_ID"
   else
-    RESP=$(req -X POST "$SUPERSET_URL/api/v1/chart/" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$PAYLOAD")
+    RESP=$(req -X POST "$SUPERSET_URL/api/v1/chart/" -H "Content-Type: application/json" -d "$PAYLOAD")
     echo "$RESP" | jq -r '.id'
   fi
 }
@@ -100,18 +100,18 @@ create_table_raw_chart() {
 create_dashboard() {
   local TITLE=$1; local SLUG=$2
   local EXIST_ID
-  EXIST_ID=$(req -X GET "$SUPERSET_URL/api/v1/dashboard/?q=(filters:!((col:dashboard_title,opr:eq,value:$TITLE)))" -H "$AUTH_HEADER" | jq -r '.result[0].id')
+  EXIST_ID=$(req -X GET "$SUPERSET_URL/api/v1/dashboard/?q=(filters:!((col:dashboard_title,opr:eq,value:$TITLE)))" | jq -r '.result[0].id')
   if [ -n "$EXIST_ID" ] && [ "$EXIST_ID" != "null" ]; then echo "$EXIST_ID"; return; fi
   local payload
   payload=$(jq -n --arg title "$TITLE" --arg slug "$SLUG" '{dashboard_title:$title, slug:$slug}')
-  RESP=$(req -X POST "$SUPERSET_URL/api/v1/dashboard/" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$payload")
+  RESP=$(req -X POST "$SUPERSET_URL/api/v1/dashboard/" -H "Content-Type: application/json" -d "$payload")
   echo "$RESP" | jq -r '.id'
 }
 
 add_chart_to_dashboard() {
   local DASH_ID=$1; local CHART_ID=$2
   [ -z "$DASH_ID" ] || [ -z "$CHART_ID" ] && return
-  req -X POST "$SUPERSET_URL/api/v1/dashboard/$DASH_ID/charts/" -H "$AUTH_HEADER" -H "Content-Type: application/json" \
+  req -X POST "$SUPERSET_URL/api/v1/dashboard/$DASH_ID/charts/" -H "Content-Type: application/json" \
     -d "{\"chartIds\":[${CHART_ID}],\"newSliceIds\":[${CHART_ID}]}" >/dev/null 2>&1 || true
 }
 
@@ -240,7 +240,7 @@ attach_to_dashboard() {
   meta_str=$(echo "$meta" | jq -c .)
   payload=$(jq -n --arg title "$TITLE" --arg pos "$pos_str" --arg meta "$meta_str" '{dashboard_title:$title, position_json:$pos, json_metadata:$meta}')
 
-  req -X PUT "$SUPERSET_URL/api/v1/dashboard/$DASH_ID" -H "$AUTH_HEADER" -H "Content-Type: application/json" -d "$payload" >/dev/null 2>&1 || true
+  req -X PUT "$SUPERSET_URL/api/v1/dashboard/$DASH_ID" -H "Content-Type: application/json" -d "$payload" >/dev/null 2>&1 || true
 }
 
 attach_to_dashboard "$DASH_OPS" "TAM Ops Overview" "$DS_OPS_OVR" "$CH_OPS_F" "$CH_FLT_HR" "$CH_VEH_SUM" "$CH_THRPT" "$CH_LINE_FLT"

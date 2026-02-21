@@ -114,7 +114,7 @@ CREATE INDEX IF NOT EXISTS idx_asset_last_seen ON simulation_assets(last_seen);
 -- 4. Create simulation_vehicle_positions table (for tracking history)
 -- ============================================
 CREATE TABLE IF NOT EXISTS simulation_vehicle_positions (
-    id UUID PRIMARY KEY,
+    id UUID,
     vehicle_id UUID NOT NULL,
     tenant_code VARCHAR(10) NOT NULL,
     latitude DOUBLE PRECISION NOT NULL,
@@ -122,7 +122,8 @@ CREATE TABLE IF NOT EXISTS simulation_vehicle_positions (
     speed DOUBLE PRECISION NOT NULL,
     heading DOUBLE PRECISION NOT NULL,
     status VARCHAR(20) NOT NULL,
-    recorded_at TIMESTAMP WITH TIME ZONE NOT NULL
+    recorded_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (id, recorded_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_veh_pos_vehicle ON simulation_vehicle_positions(vehicle_id);
@@ -136,12 +137,13 @@ SELECT create_hypertable('simulation_vehicle_positions', by_range('recorded_at')
 -- 5. Create simulation_asset_positions table (for tracking history)
 -- ============================================
 CREATE TABLE IF NOT EXISTS simulation_asset_positions (
-    id UUID PRIMARY KEY,
+    id UUID,
     asset_id UUID NOT NULL,
     tenant_code VARCHAR(10) NOT NULL,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
-    recorded_at TIMESTAMP WITH TIME ZONE NOT NULL
+    recorded_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (id, recorded_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_asset_pos_asset ON simulation_asset_positions(asset_id);

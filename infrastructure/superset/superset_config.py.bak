@@ -32,6 +32,5 @@ WTF_CSRF_ENABLED = False
 SESSION_COOKIE_SAMESITE = None
 
 # Enable public/guest access for embedded charts (DEV ONLY)
-#PUBLIC_ROLE_LIKE = "Gamma"
-#AUTH_ROLE_PUBLIC = "Public"
-SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://postgres:password@timescaledb:5432/utam'
+PUBLIC_ROLE_LIKE = "Gamma"
+AUTH_ROLE_PUBLIC = "Public"

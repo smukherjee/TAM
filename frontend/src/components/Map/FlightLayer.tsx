@@ -43,16 +43,12 @@ const FlightLayer: React.FC = () => {
             };
 
             setFlights(prev => {
-                // Use callsign as the unique key instead of livePlotId
-                // livePlotId changes with every update in the simulation
                 const index = prev.findIndex(f => f.callsign === flightDisplay.callsign);
                 if (index >= 0) {
-                    // Update existing flight
                     const newFlights = [...prev];
                     newFlights[index] = flightDisplay;
                     return newFlights;
                 } else {
-                    // Add new flight
                     return [...prev, flightDisplay];
                 }
             });
@@ -79,7 +75,7 @@ const FlightLayer: React.FC = () => {
         if (!throttledFlights || !Array.isArray(throttledFlights)) {
             return [];
         }
-        
+
         return throttledFlights.map(flight => {
             try {
                 // Null-safe property access
@@ -87,20 +83,20 @@ const FlightLayer: React.FC = () => {
                     console.warn('FlightLayer: Skipping flight with missing data', flight);
                     return null;
                 }
-                
+
                 const isSelected = selectedFlight?.callsign === flight.callsign;
                 const iconOptions: AircraftIconOptions = {
                     heading: flight.heading || 0,
                     status: isSelected ? 'taxiing' : // Highlight selected flight with different status
-                           flight.altitude > 1000 ? 'airborne' : 
-                           flight.altitude > 100 ? 'taxiing' : 'landed'
+                        flight.altitude > 1000 ? 'airborne' :
+                            flight.altitude > 100 ? 'taxiing' : 'landed'
                 };
                 const icon = createAircraftIcon(iconOptions);
-                
+
                 return (
-                    <Marker 
-                        key={flight.callsign} 
-                        position={[flight.latitude, flight.longitude]} 
+                    <Marker
+                        key={flight.callsign}
+                        position={[flight.latitude, flight.longitude]}
                         icon={icon}
                         zIndexOffset={isSelected ? 1000 : 0}
                         eventHandlers={{
@@ -114,7 +110,7 @@ const FlightLayer: React.FC = () => {
             }
         }).filter(marker => marker !== null);
     }, [throttledFlights, selectedFlight]);
-    
+
     return (
         <>
             {flightMarkers}

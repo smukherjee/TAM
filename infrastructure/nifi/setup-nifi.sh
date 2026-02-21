@@ -109,8 +109,7 @@ create_listen_http() {
                     \"config\":{
                         \"properties\":{
                             \"Listening Port\":\"$PORT\",
-                            \"Base Path\":\"$BASE_PATH\",
-                            \"HTTP Context Map\":\"$HTTP_CONTEXT_MAP_ID\"
+                            \"Base Path\":\"$BASE_PATH\"
                         }
                     }
                 }
@@ -130,8 +129,7 @@ create_listen_http() {
                 \"config\":{
                     \"properties\":{
                         \"Listening Port\":\"$PORT\",
-                        \"Base Path\":\"$BASE_PATH\",
-                        \"HTTP Context Map\":\"$HTTP_CONTEXT_MAP_ID\"
+                        \"Base Path\":\"$BASE_PATH\"
                     }
                 }
             }
@@ -190,9 +188,7 @@ create_publish_kafka() {
                         \"bootstrap.servers\":\"$REDPANDA_BROKERS\",
                         \"topic\":\"$TOPIC\",
                         \"acks\":\"1\",
-                        \"use-transactions\":\"false\",
-                        \"headers.X-Tenant-ID\":\"vidp\",
-                        \"headers.X-Domain-ID\":\"tam\"
+                        \"use-transactions\":\"false\"
                     },
                     \"comments\":\"NOTE: Tenant should ideally come from event payload (tenant_code/icao_code), not hardcoded header. For multi-tenant support (VIDP/LIRN/YBBN), use separate processor groups or parameterize this value.\",
                     \"autoTerminatedRelationships\":[\"success\",\"failure\"]
