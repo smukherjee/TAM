@@ -5,8 +5,10 @@ import AlertSidebar from '../components/Turnaround/Alerts/AlertSidebar';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { getTurnaroundSessions, TurnaroundSessionSummary } from '../services/turnaroundService';
 import { getActiveAlerts, Alert } from '../services/alertService';
+import { useAuth } from '../context/AuthContext';
 
 const TurnaroundPage: React.FC = () => {
+    const { user } = useAuth();
     const [sessions, setSessions] = useState<TurnaroundSessionSummary[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ const TurnaroundPage: React.FC = () => {
         try {
             const [sessionsData, alertsData] = await Promise.all([
                 getTurnaroundSessions(),
-                getActiveAlerts()
+                getActiveAlerts(user?.icaoCode)
             ]);
             setSessions(sessionsData);
             setAlerts(alertsData);
@@ -34,7 +36,7 @@ const TurnaroundPage: React.FC = () => {
         fetchData();
         const interval = setInterval(fetchData, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [user?.icaoCode]);
 
     return (
         <div className="flex flex-col h-full">

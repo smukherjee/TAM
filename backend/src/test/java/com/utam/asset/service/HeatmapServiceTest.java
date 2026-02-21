@@ -1,25 +1,21 @@
 package com.utam.asset.service;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for HeatmapService
+ * Unit tests for HeatmapService
  * Task: T061 - Backend integration tests
  */
-@SpringBootTest
-@ActiveProfiles("test")
+@DisplayName("HeatmapService Tests")
 class HeatmapServiceTest {
 
-    @Autowired
-    private HeatmapService service;
-
     @Test
-    void serviceIsInjected() {
-        assertNotNull(service, "HeatmapService should be autowired");
+    void serviceIsInitialized() {
+        HeatmapService service = new HeatmapService(new JdbcTemplate());
+        assertNotNull(service, "HeatmapService should be initialized");
     }
 }

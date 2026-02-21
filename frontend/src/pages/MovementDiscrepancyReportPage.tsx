@@ -40,7 +40,7 @@ type ViewMode = 'table' | 'map';
 const MovementDiscrepancyReportPage: React.FC = () => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
-    const tenantCode = user?.icaoCode || 'YBBN';
+    const tenantCode = user?.icaoCode ?? '';
 
     // State
     const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -61,6 +61,7 @@ const MovementDiscrepancyReportPage: React.FC = () => {
     const { data: discrepanciesData, isLoading, error, refetch } = useQuery({
         queryKey: ['discrepancies', filters],
         queryFn: () => fetchMovementDiscrepancies(filters),
+        enabled: Boolean(tenantCode),
         refetchInterval: 30000
     });
 
@@ -72,8 +73,13 @@ const MovementDiscrepancyReportPage: React.FC = () => {
             thirtyDaysAgo.toISOString(),
             now.toISOString()
         ),
+        enabled: Boolean(tenantCode),
         refetchInterval: 60000
     });
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, tenantCode }));
+    }, [tenantCode]);
 
     // Acknowledge mutation
     const acknowledgeMutation = useMutation({
@@ -93,6 +99,7 @@ const MovementDiscrepancyReportPage: React.FC = () => {
 
     // WebSocket subscription for real-time updates
     useEffect(() => {
+        if (!tenantCode) return;
         const subscription = webSocketService.subscribeToDiscrepancies(tenantCode, (newDiscrepancy) => {
             toast.custom((t: { visible: boolean; id: string }) => (
                 <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} 

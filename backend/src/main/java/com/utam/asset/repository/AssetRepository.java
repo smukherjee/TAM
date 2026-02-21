@@ -19,6 +19,7 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
     @Query("SELECT a FROM Asset a WHERE a.tenantCode = :tenantCode " +
            "AND (LOWER(a.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(a.assetId) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(COALESCE(a.qrId, '')) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(a.category) LIKE LOWER(CONCAT('%', :query, '%')))")
     List<Asset> searchByTenantCodeAndQuery(
             @Param("tenantCode") String tenantCode, 

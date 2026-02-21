@@ -30,7 +30,7 @@ import { toast } from 'react-hot-toast';
 const RestrictedZoneReportPage: React.FC = () => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
-    const tenantCode = user?.icaoCode || 'YBBN';
+    const tenantCode = user?.icaoCode ?? '';
 
     // State
     const [filters, setFilters] = useState<ViolationFilters>({
@@ -50,6 +50,7 @@ const RestrictedZoneReportPage: React.FC = () => {
     const { data: violationsData, isLoading, error, refetch } = useQuery({
         queryKey: ['violations', filters],
         queryFn: () => fetchZoneViolations(filters),
+        enabled: Boolean(tenantCode),
         refetchInterval: 30000 // Refetch every 30 seconds
     });
 
@@ -61,8 +62,13 @@ const RestrictedZoneReportPage: React.FC = () => {
             thirtyDaysAgo.toISOString(),
             now.toISOString()
         ),
+        enabled: Boolean(tenantCode),
         refetchInterval: 60000
     });
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, tenantCode }));
+    }, [tenantCode]);
 
     // Acknowledge mutation
     const acknowledgeMutation = useMutation({
@@ -82,6 +88,7 @@ const RestrictedZoneReportPage: React.FC = () => {
 
     // WebSocket subscription for real-time updates
     useEffect(() => {
+        if (!tenantCode) return;
         const subscription = webSocketService.subscribeToViolations(tenantCode, (newViolation) => {
             // Show toast for new violations
             toast.custom((t: { visible: boolean; id: string }) => (

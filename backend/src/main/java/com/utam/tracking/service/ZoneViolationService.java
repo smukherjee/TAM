@@ -52,7 +52,7 @@ public class ZoneViolationService {
                 ZoneViolation.ViolationSeverity.valueOf(severity.toUpperCase());
             violations = violationRepository.findByTenantCodeAndSeverity(tenantCode, severityEnum, pageable);
         } else if (acknowledged != null) {
-            violations = violationRepository.findByAcknowledged(acknowledged, pageable);
+            violations = violationRepository.findByTenantCodeAndAcknowledged(tenantCode, acknowledged, pageable);
         } else if (startDate != null && endDate != null) {
             violations = violationRepository.findByTenantCodeAndTimestampBetween(
                 tenantCode, startDate, endDate, pageable);
@@ -67,22 +67,28 @@ public class ZoneViolationService {
      * Get a single violation by ID.
      */
     @Transactional(readOnly = true)
-    public ZoneViolationDTO getViolationById(UUID id) {
-        return violationRepository.findById(id)
+    public ZoneViolationDTO getViolationById(UUID id, String tenantCode) {
+        return violationRepository.findByIdAndTenantCode(id, tenantCode)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Violation not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Violation not found for tenant: " + tenantCode));
     }
 
     /**
      * Acknowledge a violation.
      */
     @Transactional
-    public ZoneViolationDTO acknowledgeViolation(UUID violationId, String userId, String notes) {
-        ZoneViolation violation = violationRepository.findById(violationId)
-                .orElseThrow(() -> new RuntimeException("Violation not found: " + violationId));
+    public ZoneViolationDTO acknowledgeViolation(UUID violationId, String tenantCode, String userId, String notes) {
+        ZoneViolation violation = violationRepository.findByIdAndTenantCode(violationId, tenantCode)
+                .orElseThrow(() -> new RuntimeException("Violation not found for tenant: " + tenantCode));
 
         violation.setAcknowledged(true);
-        violation.setAcknowledgedBy(userId != null ? UUID.fromString(userId) : null);
+        if (userId != null) {
+            try {
+                violation.setAcknowledgedBy(UUID.fromString(userId));
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid UUID format for userId: {}", userId);
+            }
+        }
         violation.setAcknowledgedAt(ZonedDateTime.now());
         violation.setResolutionNotes(notes);
 

@@ -40,6 +40,15 @@ public interface AssetMovementTrailRepository extends JpaRepository<AssetMovemen
                         ZonedDateTime endTime);
 
         /**
+         * Find movement trail by asset identifier within a time range, across
+         * tenants.
+         */
+        List<AssetMovementTrail> findByAssetIdentifierAndTimestampBetweenOrderByTimestampAsc(
+                        String assetIdentifier,
+                        ZonedDateTime startTime,
+                        ZonedDateTime endTime);
+
+        /**
          * Find recent movements for a tenant after a specific time
          */
         Page<AssetMovementTrail> findByTenantCodeAndTimestampAfterOrderByTimestampDesc(

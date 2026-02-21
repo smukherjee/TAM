@@ -161,11 +161,11 @@ export const fetchDiscrepancyStatistics = async (
  * Fetch movement trail for an asset within a date range
  */
 export const fetchMovementTrail = async (
-    assetId: string,
+    assetIdentifier: string,
     startDate: string,
     endDate: string
 ): Promise<MovementTrail> => {
-    const response = await api.get(`${TRACKING_API}/trail/${assetId}`, {
+    const response = await api.get(`${TRACKING_API}/trail/${encodeURIComponent(assetIdentifier)}`, {
         params: { startDate, endDate }
     });
     return response.data;
@@ -175,11 +175,11 @@ export const fetchMovementTrail = async (
  * Fetch only the trail summary (without points) for performance
  */
 export const fetchTrailSummary = async (
-    assetId: string,
+    assetIdentifier: string,
     startDate: string,
     endDate: string
 ): Promise<TrailSummary> => {
-    const response = await api.get(`${TRACKING_API}/trail/${assetId}/summary`, {
+    const response = await api.get(`${TRACKING_API}/trail/${encodeURIComponent(assetIdentifier)}/summary`, {
         params: { startDate, endDate }
     });
     return response.data;
@@ -189,12 +189,12 @@ export const fetchTrailSummary = async (
  * Export movement trail data in specified format
  */
 export const exportTrail = async (
-    assetId: string,
+    assetIdentifier: string,
     startDate: string,
     endDate: string,
     format: 'csv' | 'json' = 'csv'
 ): Promise<Blob> => {
-    const response = await api.get(`${TRACKING_API}/trail/${assetId}/export`, {
+    const response = await api.get(`${TRACKING_API}/trail/${encodeURIComponent(assetIdentifier)}/export`, {
         params: { startDate, endDate, format },
         responseType: 'blob'
     });
@@ -205,16 +205,16 @@ export const exportTrail = async (
  * Download trail export file
  */
 export const downloadTrailExport = async (
-    assetId: string,
+    assetIdentifier: string,
     startDate: string,
     endDate: string,
     format: 'csv' | 'json' = 'csv'
 ): Promise<void> => {
-    const blob = await exportTrail(assetId, startDate, endDate, format);
+    const blob = await exportTrail(assetIdentifier, startDate, endDate, format);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `movement_trail_${assetId}_${new Date().toISOString().split('T')[0]}.${format}`;
+    link.download = `movement_trail_${assetIdentifier}_${new Date().toISOString().split('T')[0]}.${format}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

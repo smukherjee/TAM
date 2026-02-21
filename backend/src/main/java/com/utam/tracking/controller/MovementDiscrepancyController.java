@@ -51,7 +51,8 @@ public class MovementDiscrepancyController {
     @GetMapping
     @Operation(summary = "Get movement discrepancies", description = "Get movement discrepancies with filters and pagination")
     public ResponseEntity<Page<MovementDiscrepancyDTO>> getDiscrepancies(
-            @Parameter(description = "Tenant code") @RequestParam String tenantCode,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @Parameter(description = "Tenant code") @RequestParam(required = false) String tenantCode,
             @Parameter(description = "Start date") @RequestParam(required = false) 
                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
             @Parameter(description = "End date") @RequestParam(required = false) 
@@ -60,9 +61,10 @@ public class MovementDiscrepancyController {
                 @RequestParam(required = false) String discrepancyType,
             @Parameter(description = "Acknowledged filter") @RequestParam(required = false) Boolean acknowledged,
             @PageableDefault(size = 20) Pageable pageable) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
         Page<MovementDiscrepancyDTO> discrepancies = discrepancyService.getDiscrepancies(
-            tenantCode, startDate, endDate, discrepancyType, acknowledged, pageable);
+            resolvedTenantCode, startDate, endDate, discrepancyType, acknowledged, pageable);
         
         return ResponseEntity.ok(discrepancies);
     }
@@ -70,22 +72,27 @@ public class MovementDiscrepancyController {
     @GetMapping("/{id}")
     @Operation(summary = "Get discrepancy by ID", description = "Get a specific movement discrepancy by its ID")
     public ResponseEntity<MovementDiscrepancyDTO> getDiscrepancyById(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @PathVariable UUID id) {
-        
-        MovementDiscrepancyDTO discrepancy = discrepancyService.getDiscrepancyById(id);
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
+        MovementDiscrepancyDTO discrepancy = discrepancyService.getDiscrepancyById(id, resolvedTenantCode);
         return ResponseEntity.ok(discrepancy);
     }
 
     @PostMapping("/{id}/acknowledge")
     @Operation(summary = "Acknowledge discrepancy", description = "Acknowledge a movement discrepancy with resolution notes")
     public ResponseEntity<MovementDiscrepancyDTO> acknowledgeDiscrepancy(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @PathVariable UUID id,
             @Valid @RequestBody AcknowledgeRequestDTO request,
             @AuthenticationPrincipal UserDetails user) {
 
         String userId = user != null ? user.getUsername() : "system";
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
         MovementDiscrepancyDTO acknowledged = discrepancyService.acknowledgeDiscrepancy(
-            id, userId, request.getResolutionNotes());
+            id, resolvedTenantCode, userId, request.getResolutionNotes());
         
         return ResponseEntity.ok(acknowledged);
     }
@@ -93,11 +100,13 @@ public class MovementDiscrepancyController {
     @GetMapping("/statistics")
     @Operation(summary = "Get discrepancy statistics", description = "Get discrepancy statistics for a tenant")
     public ResponseEntity<Map<String, Object>> getStatistics(
-            @RequestParam String tenantCode,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
-        Map<String, Object> stats = discrepancyService.getDiscrepancyStatistics(tenantCode, startDate, endDate);
+        Map<String, Object> stats = discrepancyService.getDiscrepancyStatistics(resolvedTenantCode, startDate, endDate);
         return ResponseEntity.ok(stats);
     }
 
@@ -119,8 +128,9 @@ public class MovementDiscrepancyController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     public ResponseEntity<byte[]> exportDiscrepanciesExcel(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
             @Parameter(description = "Tenant code", required = true)
-            @RequestParam String tenantCode,
+            @RequestParam(required = false) String tenantCode,
 
             @Parameter(description = "Start date")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
@@ -133,19 +143,20 @@ public class MovementDiscrepancyController {
 
             @Parameter(description = "Acknowledged filter")
             @RequestParam(required = false) Boolean acknowledged) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
         // Get all discrepancies (unpaged) for export
         List<MovementDiscrepancyDTO> discrepancies = discrepancyService.getAllDiscrepanciesForExport(
-            tenantCode, startDate, endDate, discrepancyType, acknowledged);
+            resolvedTenantCode, startDate, endDate, discrepancyType, acknowledged);
 
         String startDateStr = startDate != null ? startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
         String endDateStr = endDate != null ? endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
 
         byte[] excelBytes = reportExportService.exportDiscrepanciesToExcel(
-            discrepancies, tenantCode, startDateStr, endDateStr);
+            discrepancies, resolvedTenantCode, startDateStr, endDateStr);
 
         String filename = String.format("movement_discrepancies_%s_%s_to_%s.xlsx",
-            tenantCode, startDateStr, endDateStr);
+            resolvedTenantCode, startDateStr, endDateStr);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(
@@ -170,8 +181,9 @@ public class MovementDiscrepancyController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     public ResponseEntity<byte[]> exportDiscrepanciesPdf(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
             @Parameter(description = "Tenant code", required = true)
-            @RequestParam String tenantCode,
+            @RequestParam(required = false) String tenantCode,
 
             @Parameter(description = "Start date")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
@@ -184,19 +196,20 @@ public class MovementDiscrepancyController {
 
             @Parameter(description = "Acknowledged filter")
             @RequestParam(required = false) Boolean acknowledged) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
         // Get all discrepancies (unpaged) for export
         List<MovementDiscrepancyDTO> discrepancies = discrepancyService.getAllDiscrepanciesForExport(
-            tenantCode, startDate, endDate, discrepancyType, acknowledged);
+            resolvedTenantCode, startDate, endDate, discrepancyType, acknowledged);
 
         String startDateStr = startDate != null ? startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
         String endDateStr = endDate != null ? endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
 
         byte[] pdfBytes = reportExportService.exportDiscrepanciesToPdf(
-            discrepancies, tenantCode, startDateStr, endDateStr);
+            discrepancies, resolvedTenantCode, startDateStr, endDateStr);
 
         String filename = String.format("movement_discrepancies_%s_%s_to_%s.pdf",
-            tenantCode, startDateStr, endDateStr);
+            resolvedTenantCode, startDateStr, endDateStr);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -204,5 +217,15 @@ public class MovementDiscrepancyController {
         headers.setContentLength(pdfBytes.length);
 
         return ResponseEntity.ok().headers(headers).body(pdfBytes);
+    }
+
+    private String resolveTenantCode(String icaoCodeHeader, String tenantCodeParam) {
+        if (icaoCodeHeader != null && !icaoCodeHeader.isBlank()) {
+            return icaoCodeHeader;
+        }
+        if (tenantCodeParam != null && !tenantCodeParam.isBlank()) {
+            return tenantCodeParam;
+        }
+        return "VIDP";
     }
 }

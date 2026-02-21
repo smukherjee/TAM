@@ -51,7 +51,8 @@ public class ZoneViolationController {
     @GetMapping
     @Operation(summary = "Get zone violations", description = "Get zone violations with filters and pagination")
     public ResponseEntity<Page<ZoneViolationDTO>> getViolations(
-            @Parameter(description = "Tenant code") @RequestParam String tenantCode,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @Parameter(description = "Tenant code") @RequestParam(required = false) String tenantCode,
             @Parameter(description = "Start date") @RequestParam(required = false) 
                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
             @Parameter(description = "End date") @RequestParam(required = false) 
@@ -60,9 +61,10 @@ public class ZoneViolationController {
                 @RequestParam(required = false) String severity,
             @Parameter(description = "Acknowledged filter") @RequestParam(required = false) Boolean acknowledged,
             @PageableDefault(size = 20) Pageable pageable) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
         Page<ZoneViolationDTO> violations = violationService.getViolations(
-            tenantCode, startDate, endDate, severity, acknowledged, pageable);
+            resolvedTenantCode, startDate, endDate, severity, acknowledged, pageable);
         
         return ResponseEntity.ok(violations);
     }
@@ -70,22 +72,27 @@ public class ZoneViolationController {
     @GetMapping("/{id}")
     @Operation(summary = "Get violation by ID", description = "Get a specific zone violation by its ID")
     public ResponseEntity<ZoneViolationDTO> getViolationById(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @PathVariable UUID id) {
-        
-        ZoneViolationDTO violation = violationService.getViolationById(id);
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
+        ZoneViolationDTO violation = violationService.getViolationById(id, resolvedTenantCode);
         return ResponseEntity.ok(violation);
     }
 
     @PostMapping("/{id}/acknowledge")
     @Operation(summary = "Acknowledge violation", description = "Acknowledge a zone violation with resolution notes")
     public ResponseEntity<ZoneViolationDTO> acknowledgeViolation(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @PathVariable UUID id,
             @Valid @RequestBody AcknowledgeRequestDTO request,
             @AuthenticationPrincipal UserDetails user) {
 
         String userId = user != null ? user.getUsername() : "system";
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
         ZoneViolationDTO acknowledged = violationService.acknowledgeViolation(
-            id, userId, request.getResolutionNotes());
+            id, resolvedTenantCode, userId, request.getResolutionNotes());
         
         return ResponseEntity.ok(acknowledged);
     }
@@ -93,21 +100,25 @@ public class ZoneViolationController {
     @GetMapping("/statistics")
     @Operation(summary = "Get violation statistics", description = "Get violation statistics for a tenant")
     public ResponseEntity<Map<String, Object>> getStatistics(
-            @RequestParam String tenantCode,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
-        Map<String, Object> stats = violationService.getViolationStatistics(tenantCode, startDate, endDate);
+        Map<String, Object> stats = violationService.getViolationStatistics(resolvedTenantCode, startDate, endDate);
         return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/recent")
     @Operation(summary = "Get recent unacknowledged violations", description = "Get recent unacknowledged violations for alerts")
     public ResponseEntity<List<ZoneViolationDTO>> getRecentViolations(
-            @RequestParam String tenantCode,
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(required = false) String tenantCode,
             @RequestParam(defaultValue = "10") int limit) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
-        List<ZoneViolationDTO> violations = violationService.getRecentUnacknowledgedViolations(tenantCode, limit);
+        List<ZoneViolationDTO> violations = violationService.getRecentUnacknowledgedViolations(resolvedTenantCode, limit);
         return ResponseEntity.ok(violations);
     }
 
@@ -129,8 +140,9 @@ public class ZoneViolationController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     public ResponseEntity<byte[]> exportViolationsExcel(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
             @Parameter(description = "Tenant code", required = true)
-            @RequestParam String tenantCode,
+            @RequestParam(required = false) String tenantCode,
 
             @Parameter(description = "Start date")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
@@ -143,19 +155,20 @@ public class ZoneViolationController {
 
             @Parameter(description = "Acknowledged filter")
             @RequestParam(required = false) Boolean acknowledged) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
         // Get all violations (unpaged) for export
         List<ZoneViolationDTO> violations = violationService.getAllViolationsForExport(
-            tenantCode, startDate, endDate, severity, acknowledged);
+            resolvedTenantCode, startDate, endDate, severity, acknowledged);
 
         String startDateStr = startDate != null ? startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
         String endDateStr = endDate != null ? endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
 
         byte[] excelBytes = reportExportService.exportViolationsToExcel(
-            violations, tenantCode, startDateStr, endDateStr);
+            violations, resolvedTenantCode, startDateStr, endDateStr);
 
         String filename = String.format("zone_violations_%s_%s_to_%s.xlsx",
-            tenantCode, startDateStr, endDateStr);
+            resolvedTenantCode, startDateStr, endDateStr);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(
@@ -180,8 +193,9 @@ public class ZoneViolationController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     public ResponseEntity<byte[]> exportViolationsPdf(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
             @Parameter(description = "Tenant code", required = true)
-            @RequestParam String tenantCode,
+            @RequestParam(required = false) String tenantCode,
 
             @Parameter(description = "Start date")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
@@ -194,19 +208,20 @@ public class ZoneViolationController {
 
             @Parameter(description = "Acknowledged filter")
             @RequestParam(required = false) Boolean acknowledged) {
+        String resolvedTenantCode = resolveTenantCode(icaoCodeHeader, tenantCode);
 
         // Get all violations (unpaged) for export
         List<ZoneViolationDTO> violations = violationService.getAllViolationsForExport(
-            tenantCode, startDate, endDate, severity, acknowledged);
+            resolvedTenantCode, startDate, endDate, severity, acknowledged);
 
         String startDateStr = startDate != null ? startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
         String endDateStr = endDate != null ? endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : "all";
 
         byte[] pdfBytes = reportExportService.exportViolationsToPdf(
-            violations, tenantCode, startDateStr, endDateStr);
+            violations, resolvedTenantCode, startDateStr, endDateStr);
 
         String filename = String.format("zone_violations_%s_%s_to_%s.pdf",
-            tenantCode, startDateStr, endDateStr);
+            resolvedTenantCode, startDateStr, endDateStr);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -214,5 +229,15 @@ public class ZoneViolationController {
         headers.setContentLength(pdfBytes.length);
 
         return ResponseEntity.ok().headers(headers).body(pdfBytes);
+    }
+
+    private String resolveTenantCode(String icaoCodeHeader, String tenantCodeParam) {
+        if (icaoCodeHeader != null && !icaoCodeHeader.isBlank()) {
+            return icaoCodeHeader;
+        }
+        if (tenantCodeParam != null && !tenantCodeParam.isBlank()) {
+            return tenantCodeParam;
+        }
+        return "VIDP";
     }
 }

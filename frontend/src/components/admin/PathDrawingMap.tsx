@@ -70,8 +70,9 @@ const PathDrawingMap: React.FC<PathDrawingMapProps> = ({
     });
 
     // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution:
+        '&copy; OpenStreetMap contributors &copy; CARTO',
       maxZoom: 19,
     }).addTo(map);
 
@@ -87,9 +88,7 @@ const PathDrawingMap: React.FC<PathDrawingMapProps> = ({
     // Layer control
     L.control.layers(
       {
-        'Street Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-        }),
+        'Dark Map': darkLayer,
         'Satellite': satellite,
       },
       {},
@@ -353,11 +352,11 @@ const PathDrawingMap: React.FC<PathDrawingMapProps> = ({
       <div
         ref={mapContainerRef}
         style={{ height, width: '100%' }}
-        className="rounded-lg border border-gray-200"
+        className="rounded-lg border border-gray-700 bg-gray-900"
       />
       
       {!readOnly && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+        <div className="mt-2 flex items-center gap-2 text-sm text-gray-400">
           <span className="inline-flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-green-500" />
             Start
@@ -374,7 +373,7 @@ const PathDrawingMap: React.FC<PathDrawingMapProps> = ({
             Points: {currentWaypoints.length}
           </span>
           {isDrawing && (
-            <span className="text-blue-600 font-medium">
+            <span className="text-blue-400 font-medium">
               Drawing...
             </span>
           )}

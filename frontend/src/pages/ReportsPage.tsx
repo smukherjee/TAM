@@ -5,18 +5,14 @@ import { useAuth } from '../context/AuthContext';
 const ReportsPage: React.FC = () => {
     const { user } = useAuth();
 
-    // Determine Dashboard Slug based on User Context
-    const getDashboardSlug = () => {
-        if (!user || user.role === 'ADMIN') return 'tam_ops';
-        // For Tenants, look for specific dashboard
-        const icao = user.icaoCode ? user.icaoCode.toLowerCase() : '';
-        if (icao) return `tam_ops_${icao}`;
-        return 'tam_ops';
-    };
-
-    const dashboardSlug = getDashboardSlug();
-    // Use the determined slug
-    const supersetUrl = `http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`;
+    const tenantCode = user?.icaoCode?.toUpperCase();
+    const tenantSuffix = tenantCode ? `_${tenantCode.toLowerCase()}` : '';
+    const dashboardSlug = `tam_ops${tenantSuffix}`;
+    const supersetUrl = new URL(`http://localhost:8089/superset/dashboard/${dashboardSlug}/?standalone=2&show_filters=0`);
+    if (tenantCode) {
+        supersetUrl.searchParams.set('tenant_code', tenantCode);
+        supersetUrl.searchParams.set('icao', tenantCode);
+    }
 
     return (
         <div className="w-full h-full flex flex-col bg-gray-50">
@@ -27,7 +23,7 @@ const ReportsPage: React.FC = () => {
                     <p className="text-xs text-blue-500 mt-1">Dashboard: {dashboardSlug}</p>
                 </div>
                 <a
-                    href={supersetUrl}
+                    href={supersetUrl.toString()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -39,7 +35,7 @@ const ReportsPage: React.FC = () => {
 
             <div className="flex-1 relative bg-gray-100">
                 <iframe
-                    src={supersetUrl}
+                    src={supersetUrl.toString()}
                     title="Superset Analytics"
                     className="w-full h-full border-none"
                     sandbox="allow-same-origin allow-scripts allow-forms allow-popups"

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -55,6 +56,15 @@ public interface MovementDiscrepancyRepository extends JpaRepository<MovementDis
     );
 
     /**
+     * Find discrepancies by tenant and type.
+     */
+    Page<MovementDiscrepancy> findByTenantCodeAndDiscrepancyType(
+            String tenantCode,
+            MovementDiscrepancy.DiscrepancyType type,
+            Pageable pageable
+    );
+
+    /**
      * Find discrepancies by type (ordered)
      */
     Page<MovementDiscrepancy> findByDiscrepancyTypeOrderByTimestampDesc(
@@ -66,6 +76,11 @@ public interface MovementDiscrepancyRepository extends JpaRepository<MovementDis
      * Find unacknowledged discrepancies
      */
     Page<MovementDiscrepancy> findByAcknowledged(Boolean acknowledged, Pageable pageable);
+
+    /**
+     * Find discrepancies by tenant and acknowledged status.
+     */
+    Page<MovementDiscrepancy> findByTenantCodeAndAcknowledged(String tenantCode, Boolean acknowledged, Pageable pageable);
 
     /**
      * Find unacknowledged discrepancies (ordered)
@@ -92,6 +107,11 @@ public interface MovementDiscrepancyRepository extends JpaRepository<MovementDis
      * Count unacknowledged discrepancies for a tenant
      */
     long countByTenantCodeAndAcknowledged(String tenantCode, Boolean acknowledged);
+
+    /**
+     * Find discrepancy by ID scoped to tenant.
+     */
+    Optional<MovementDiscrepancy> findByIdAndTenantCode(UUID id, String tenantCode);
 
     /**
      * Find discrepancies for a specific asset

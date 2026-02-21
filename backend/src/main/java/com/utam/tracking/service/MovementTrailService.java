@@ -95,6 +95,98 @@ public class MovementTrailService {
     }
 
     /**
+     * Get movement trail for an asset using its string identifier within a date
+     * range.
+     * Used when asset_id UUID is not stored (trail data ingested with identifier
+     * only).
+     */
+    @Transactional(readOnly = true)
+    public MovementTrailDTO getTrailByIdentifier(String assetIdentifier, String tenantCode, ZonedDateTime startDate,
+            ZonedDateTime endDate) {
+        if (assetIdentifier == null || assetIdentifier.isBlank()) {
+            throw new IllegalArgumentException("Asset identifier is required");
+        }
+        assetIdentifier = assetIdentifier.trim();
+
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        if (days > MAX_TRAIL_DAYS) {
+            throw new IllegalArgumentException("Date range cannot exceed " + MAX_TRAIL_DAYS + " days");
+        }
+
+        String normalizedTenantCode = tenantCode == null ? null : tenantCode.trim();
+        if (normalizedTenantCode != null && normalizedTenantCode.isEmpty()) {
+            normalizedTenantCode = null;
+        }
+        if (normalizedTenantCode != null) {
+            normalizedTenantCode = normalizedTenantCode.toUpperCase(Locale.ROOT);
+        }
+
+        List<AssetMovementTrail> trailPoints = normalizedTenantCode == null
+                ? trailRepository.findByAssetIdentifierAndTimestampBetweenOrderByTimestampAsc(
+                        assetIdentifier, startDate, endDate)
+                : trailRepository.findByAssetIdentifierAndTenantCodeAndTimestampBetweenOrderByTimestampAsc(
+                        assetIdentifier, normalizedTenantCode, startDate, endDate);
+
+        if (trailPoints.isEmpty()) {
+            return MovementTrailDTO.builder()
+                    .assetIdentifier(assetIdentifier)
+                    .tenantCode(normalizedTenantCode)
+                    .startTime(startDate)
+                    .endTime(endDate)
+                    .totalPoints(0)
+                    .points(Collections.emptyList())
+                    .zoneEntries(Collections.emptyList())
+                    .build();
+        }
+
+        AssetMovementTrail first = trailPoints.get(0);
+        List<MovementTrailPointDTO> points = trailPoints.stream()
+                .map(this::toPointDTO)
+                .collect(Collectors.toList());
+
+        List<ZoneEntryDTO> zoneEntries = calculateZoneEntries(trailPoints);
+        TrailSummaryDTO summary = calculateTrailSummary(trailPoints, zoneEntries);
+
+        return MovementTrailDTO.builder()
+                .assetIdentifier(first.getAssetIdentifier())
+                .tenantCode(first.getTenantCode())
+                .startTime(startDate)
+                .endTime(endDate)
+                .totalPoints(points.size())
+                .points(points)
+                .zoneEntries(zoneEntries)
+                .summary(summary)
+                .totalDistanceMeters(summary.getTotalDistanceMeters())
+                .avgSpeed(summary.getAverageSpeedKmh())
+                .maxSpeed(summary.getMaxSpeedKmh())
+                .build();
+    }
+
+    /**
+     * Export trail data as CSV string using asset identifier.
+     */
+    public String exportTrailCsvByIdentifier(String assetIdentifier, String tenantCode, ZonedDateTime startDate,
+            ZonedDateTime endDate) {
+        MovementTrailDTO trail = getTrailByIdentifier(assetIdentifier, tenantCode, startDate, endDate);
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Timestamp,Latitude,Longitude,Speed,Heading,Status,Zone\n");
+
+        for (MovementTrailPointDTO point : trail.getPoints()) {
+            csv.append(String.format("%s,%f,%f,%s,%s,%s,%s\n",
+                    point.getTimestamp(),
+                    point.getLatitude(),
+                    point.getLongitude(),
+                    point.getSpeed() != null ? point.getSpeed() : "",
+                    point.getHeading() != null ? point.getHeading() : "",
+                    point.getStatus() != null ? point.getStatus() : "",
+                    point.getZoneName() != null ? point.getZoneName() : ""));
+        }
+
+        return csv.toString();
+    }
+
+    /**
      * Calculate zone entries from trail points.
      */
     public List<ZoneEntryDTO> calculateZoneEntries(List<AssetMovementTrail> trailPoints) {
@@ -105,7 +197,8 @@ public class MovementTrailService {
 
         for (AssetMovementTrail point : trailPoints) {
             String zoneName = point.getZone();
-            Point location = point.getLocation();
+            Double currentLat = extractLatitude(point);
+            Double currentLng = extractLongitude(point);
 
             if (zoneName != null && !zoneName.equals(currentZone)) {
                 // Exited previous zone
@@ -115,8 +208,8 @@ public class MovementTrailService {
                             .zoneName(currentZone)
                             .entryLatitude(entryLat)
                             .entryLongitude(entryLng)
-                            .exitLatitude(location.getY())
-                            .exitLongitude(location.getX())
+                            .exitLatitude(currentLat)
+                            .exitLongitude(currentLng)
                             .entryTime(entryTime)
                             .exitTime(point.getTimestamp())
                             .dwellTimeSeconds(dwellSeconds)
@@ -125,8 +218,8 @@ public class MovementTrailService {
                 // Enter new zone
                 currentZone = zoneName;
                 entryTime = point.getTimestamp();
-                entryLat = location.getY();
-                entryLng = location.getX();
+                entryLat = currentLat;
+                entryLng = currentLng;
             } else if (zoneName == null && currentZone != null) {
                 // Exited zone without entering another
                 long dwellSeconds = ChronoUnit.SECONDS.between(entryTime, point.getTimestamp());
@@ -134,8 +227,8 @@ public class MovementTrailService {
                         .zoneName(currentZone)
                         .entryLatitude(entryLat)
                         .entryLongitude(entryLng)
-                        .exitLatitude(location.getY())
-                        .exitLongitude(location.getX())
+                        .exitLatitude(currentLat)
+                        .exitLongitude(currentLng)
                         .entryTime(entryTime)
                         .exitTime(point.getTimestamp())
                         .dwellTimeSeconds(dwellSeconds)
@@ -179,17 +272,22 @@ public class MovementTrailService {
         Map<String, Integer> statusBreakdown = new HashMap<>();
         Set<String> restrictedZones = new HashSet<>();
 
-        Point prevPoint = null;
+        Double prevLat = null;
+        Double prevLng = null;
         for (AssetMovementTrail trail : trailPoints) {
-            Point current = trail.getLocation();
+            Double currentLat = extractLatitude(trail);
+            Double currentLng = extractLongitude(trail);
 
             // Calculate distance
-            if (prevPoint != null) {
+            if (prevLat != null && prevLng != null && currentLat != null && currentLng != null) {
                 totalDistance += calculateDistance(
-                        prevPoint.getY(), prevPoint.getX(),
-                        current.getY(), current.getX());
+                        prevLat, prevLng,
+                        currentLat, currentLng);
             }
-            prevPoint = current;
+            if (currentLat != null && currentLng != null) {
+                prevLat = currentLat;
+                prevLng = currentLng;
+            }
 
             // Track speed
             if (trail.getSpeed() != null) {
@@ -203,7 +301,7 @@ public class MovementTrailService {
             statusBreakdown.merge(status, 1, (a, b) -> a + b);
 
             // Track restricted zones
-            if (trail.getRestrictedZoneId() != null) {
+            if (trail.getRestrictedZoneId() != null && trail.getZone() != null) {
                 restrictedZones.add(trail.getZone());
             }
         }
@@ -276,6 +374,22 @@ public class MovementTrailService {
                 .inRestrictedZone(entity.getRestrictedZoneId() != null)
                 .metadata(entity.getMetadata())
                 .build();
+    }
+
+    private Double extractLatitude(AssetMovementTrail trail) {
+        Point location = trail.getLocation();
+        if (location != null) {
+            return location.getY();
+        }
+        return trail.getLatitude();
+    }
+
+    private Double extractLongitude(AssetMovementTrail trail) {
+        Point location = trail.getLocation();
+        if (location != null) {
+            return location.getX();
+        }
+        return trail.getLongitude();
     }
 
     /**

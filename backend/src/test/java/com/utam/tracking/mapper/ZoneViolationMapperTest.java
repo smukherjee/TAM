@@ -41,6 +41,7 @@ class ZoneViolationMapperTest {
         UUID id = UUID.randomUUID();
         UUID assetId = UUID.randomUUID();
         UUID zoneId = UUID.randomUUID();
+        UUID acknowledgedBy = UUID.randomUUID();
         ZonedDateTime timestamp = ZonedDateTime.now();
         ZonedDateTime acknowledgedAt = ZonedDateTime.now().minusHours(1);
         
@@ -62,7 +63,7 @@ class ZoneViolationMapperTest {
                 .durationSeconds(300)
                 .timestamp(timestamp)
                 .acknowledged(true)
-                .acknowledgedBy(UUID.randomUUID())
+                .acknowledgedBy(acknowledgedBy)
                 .acknowledgedAt(acknowledgedAt)
                 .resolutionNotes("Authorized after verification")
                 .tenantCode("VIDP")
@@ -87,7 +88,7 @@ class ZoneViolationMapperTest {
         assertEquals(300L, dto.getDurationSeconds());
         assertEquals(timestamp, dto.getTimestamp());
         assertTrue(dto.getAcknowledged());
-        assertEquals("admin@airport.com", dto.getAcknowledgedBy());
+        assertEquals(acknowledgedBy.toString(), dto.getAcknowledgedBy());
         assertEquals(acknowledgedAt, dto.getAcknowledgedAt());
         assertEquals("Authorized after verification", dto.getResolutionNotes());
         assertEquals("VIDP", dto.getTenantCode());
@@ -213,7 +214,7 @@ class ZoneViolationMapperTest {
         ZonedDateTime acknowledgedAt = ZonedDateTime.now();
         ZoneViolationDTO dto = ZoneViolationDTO.builder()
                 .acknowledged(true)
-                .acknowledgedBy("admin@test.com")
+                .acknowledgedBy(UUID.randomUUID().toString())
                 .acknowledgedAt(acknowledgedAt)
                 .resolutionNotes("Resolved by admin")
                 .build();
@@ -223,7 +224,7 @@ class ZoneViolationMapperTest {
 
         // Assert
         assertTrue(entity.getAcknowledged());
-        assertEquals("admin@test.com", entity.getAcknowledgedBy());
+        assertNotNull(entity.getAcknowledgedBy());
         assertEquals(acknowledgedAt, entity.getAcknowledgedAt());
         assertEquals("Resolved by admin", entity.getResolutionNotes());
     }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -52,6 +53,11 @@ public interface ZoneViolationRepository extends JpaRepository<ZoneViolation, UU
     Page<ZoneViolation> findByAcknowledged(Boolean acknowledged, Pageable pageable);
 
     /**
+     * Find violations by tenant and acknowledged status with pagination.
+     */
+    Page<ZoneViolation> findByTenantCodeAndAcknowledged(String tenantCode, Boolean acknowledged, Pageable pageable);
+
+    /**
      * Find unacknowledged violations (ordered)
      */
     Page<ZoneViolation> findByAcknowledgedOrderByTimestampDesc(Boolean acknowledged, Pageable pageable);
@@ -80,6 +86,11 @@ public interface ZoneViolationRepository extends JpaRepository<ZoneViolation, UU
             String tenantCode,
             Boolean acknowledged
     );
+
+    /**
+     * Find violation by ID scoped to tenant.
+     */
+    Optional<ZoneViolation> findByIdAndTenantCode(UUID id, String tenantCode);
 
     /**
      * Count violations by tenant and severity

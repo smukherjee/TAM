@@ -39,15 +39,13 @@ export interface TurnaroundSessionDetail {
 }
 
 export const getTurnaroundSessions = async (activeOnly: boolean = true): Promise<TurnaroundSessionSummary[]> => {
-    const response = await api.get('/turnaround/sessions', {
-        params: { activeOnly }
-    });
+    const response = await api.get('/turnaround/sessions', { params: { activeOnly } });
     return response.data;
 };
 
-export const getSessionDetails = async (id: string, icaoCode: string = 'VIDP'): Promise<TurnaroundSessionDetail> => {
+export const getSessionDetails = async (id: string, icaoCode?: string): Promise<TurnaroundSessionDetail> => {
     const response = await api.get(`/turnaround/sessions/${id}`, {
-        params: { icaoCode }
+        params: icaoCode ? { icaoCode } : {}
     });
     return response.data;
 };

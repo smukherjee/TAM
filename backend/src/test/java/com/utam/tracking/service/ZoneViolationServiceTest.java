@@ -138,7 +138,7 @@ class ZoneViolationServiceTest {
         void filtersByAcknowledged() {
             Page<ZoneViolation> page = new PageImpl<>(
                     Collections.singletonList(violation1), pageable, 1);
-            when(violationRepository.findByAcknowledged(eq(false), any(Pageable.class)))
+            when(violationRepository.findByTenantCodeAndAcknowledged(eq(tenantCode), eq(false), any(Pageable.class)))
                     .thenReturn(page);
 
             Page<ZoneViolationDTO> result = service.getViolations(
@@ -189,10 +189,10 @@ class ZoneViolationServiceTest {
         @Test
         @DisplayName("returns violation when found")
         void returnsViolationWhenFound() {
-            when(violationRepository.findById(violationId))
+            when(violationRepository.findByIdAndTenantCode(violationId, tenantCode))
                     .thenReturn(Optional.of(violation1));
 
-            ZoneViolationDTO result = service.getViolationById(violationId);
+            ZoneViolationDTO result = service.getViolationById(violationId, tenantCode);
 
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(violationId);
@@ -204,10 +204,10 @@ class ZoneViolationServiceTest {
         @DisplayName("throws exception when not found")
         void throwsExceptionWhenNotFound() {
             UUID unknownId = UUID.randomUUID();
-            when(violationRepository.findById(unknownId))
+            when(violationRepository.findByIdAndTenantCode(unknownId, tenantCode))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.getViolationById(unknownId))
+            assertThatThrownBy(() -> service.getViolationById(unknownId, tenantCode))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Violation not found");
         }
@@ -220,16 +220,17 @@ class ZoneViolationServiceTest {
         @Test
         @DisplayName("acknowledges violation successfully")
         void acknowledgesViolationSuccessfully() {
-            when(violationRepository.findById(violationId))
+            UUID userId = UUID.randomUUID();
+            when(violationRepository.findByIdAndTenantCode(violationId, tenantCode))
                     .thenReturn(Optional.of(violation1));
             when(violationRepository.save(any(ZoneViolation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             ZoneViolationDTO result = service.acknowledgeViolation(
-                    violationId, "supervisor@vidp.airport", "Investigated and cleared");
+                    violationId, tenantCode, userId.toString(), "Investigated and cleared");
 
             assertThat(result.getAcknowledged()).isTrue();
-            assertThat(result.getAcknowledgedBy()).isEqualTo("supervisor@vidp.airport");
+            assertThat(result.getAcknowledgedBy()).isEqualTo(userId.toString());
             assertThat(result.getResolutionNotes()).isEqualTo("Investigated and cleared");
             assertThat(result.getAcknowledgedAt()).isNotNull();
             
@@ -239,13 +240,13 @@ class ZoneViolationServiceTest {
         @Test
         @DisplayName("sets acknowledgedAt timestamp")
         void setsAcknowledgedAtTimestamp() {
-            when(violationRepository.findById(violationId))
+            when(violationRepository.findByIdAndTenantCode(violationId, tenantCode))
                     .thenReturn(Optional.of(violation1));
             when(violationRepository.save(any(ZoneViolation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             ZonedDateTime beforeAck = ZonedDateTime.now();
-            service.acknowledgeViolation(violationId, "user", "notes");
+            service.acknowledgeViolation(violationId, tenantCode, "user", "notes");
             ZonedDateTime afterAck = ZonedDateTime.now();
 
             ArgumentCaptor<ZoneViolation> captor = ArgumentCaptor.forClass(ZoneViolation.class);
@@ -261,11 +262,11 @@ class ZoneViolationServiceTest {
         @DisplayName("throws exception when violation not found")
         void throwsExceptionWhenNotFound() {
             UUID unknownId = UUID.randomUUID();
-            when(violationRepository.findById(unknownId))
+            when(violationRepository.findByIdAndTenantCode(unknownId, tenantCode))
                     .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> 
-                    service.acknowledgeViolation(unknownId, "user", "notes"))
+                    service.acknowledgeViolation(unknownId, tenantCode, "user", "notes"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Violation not found");
         }
@@ -388,10 +389,10 @@ class ZoneViolationServiceTest {
         @Test
         @DisplayName("maps all fields from entity to DTO")
         void mapsAllFields() {
-            when(violationRepository.findById(violationId))
+            when(violationRepository.findByIdAndTenantCode(violationId, tenantCode))
                     .thenReturn(Optional.of(violation1));
 
-            ZoneViolationDTO dto = service.getViolationById(violationId);
+            ZoneViolationDTO dto = service.getViolationById(violationId, tenantCode);
 
             assertThat(dto.getId()).isEqualTo(violation1.getId());
             assertThat(dto.getViolationId()).isEqualTo(violation1.getViolationId());
@@ -411,10 +412,10 @@ class ZoneViolationServiceTest {
         @DisplayName("handles null entry location gracefully")
         void handlesNullEntryLocation() {
             violation1.setEntryLocation(null);
-            when(violationRepository.findById(violationId))
+            when(violationRepository.findByIdAndTenantCode(violationId, tenantCode))
                     .thenReturn(Optional.of(violation1));
 
-            ZoneViolationDTO dto = service.getViolationById(violationId);
+            ZoneViolationDTO dto = service.getViolationById(violationId, tenantCode);
 
             assertThat(dto.getEntryLatitude()).isNull();
             assertThat(dto.getEntryLongitude()).isNull();

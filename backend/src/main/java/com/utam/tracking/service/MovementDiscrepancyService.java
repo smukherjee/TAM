@@ -49,9 +49,9 @@ public class MovementDiscrepancyService {
         if (discrepancyType != null && !discrepancyType.isEmpty()) {
             MovementDiscrepancy.DiscrepancyType type = 
                 MovementDiscrepancy.DiscrepancyType.valueOf(discrepancyType.toUpperCase());
-            discrepancies = discrepancyRepository.findByDiscrepancyType(type, pageable);
+            discrepancies = discrepancyRepository.findByTenantCodeAndDiscrepancyType(tenantCode, type, pageable);
         } else if (acknowledged != null) {
-            discrepancies = discrepancyRepository.findByAcknowledged(acknowledged, pageable);
+            discrepancies = discrepancyRepository.findByTenantCodeAndAcknowledged(tenantCode, acknowledged, pageable);
         } else if (startDate != null && endDate != null) {
             discrepancies = discrepancyRepository.findByTenantCodeAndTimestampBetween(
                 tenantCode, startDate, endDate, pageable);
@@ -66,19 +66,19 @@ public class MovementDiscrepancyService {
      * Get a single discrepancy by ID.
      */
     @Transactional(readOnly = true)
-    public MovementDiscrepancyDTO getDiscrepancyById(UUID id) {
-        return discrepancyRepository.findById(id)
+    public MovementDiscrepancyDTO getDiscrepancyById(UUID id, String tenantCode) {
+        return discrepancyRepository.findByIdAndTenantCode(id, tenantCode)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Discrepancy not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Discrepancy not found for tenant: " + tenantCode));
     }
 
     /**
      * Acknowledge a discrepancy.
      */
     @Transactional
-    public MovementDiscrepancyDTO acknowledgeDiscrepancy(UUID discrepancyId, String userId, String notes) {
-        MovementDiscrepancy discrepancy = discrepancyRepository.findById(discrepancyId)
-                .orElseThrow(() -> new RuntimeException("Discrepancy not found: " + discrepancyId));
+    public MovementDiscrepancyDTO acknowledgeDiscrepancy(UUID discrepancyId, String tenantCode, String userId, String notes) {
+        MovementDiscrepancy discrepancy = discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode)
+                .orElseThrow(() -> new RuntimeException("Discrepancy not found for tenant: " + tenantCode));
 
         discrepancy.setAcknowledged(true);
         try {

@@ -69,8 +69,9 @@ const ZoneEditorMap: React.FC<ZoneEditorMapProps> = ({
     });
 
     // Add tile layers
-    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution:
+        '&copy; OpenStreetMap contributors &copy; CARTO',
       maxZoom: 19,
     }).addTo(map);
 
@@ -85,7 +86,7 @@ const ZoneEditorMap: React.FC<ZoneEditorMapProps> = ({
     // Layer control
     L.control.layers(
       {
-        'Street Map': streetLayer,
+        'Dark Map': darkLayer,
         'Satellite': satelliteLayer,
       },
       {},
@@ -318,11 +319,11 @@ const ZoneEditorMap: React.FC<ZoneEditorMapProps> = ({
       <div
         ref={mapContainerRef}
         style={{ height, width: '100%' }}
-        className="rounded-lg border border-gray-200"
+        className="rounded-lg border border-gray-700 bg-gray-900"
       />
 
       {!readOnly && (
-        <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+        <div className="mt-2 flex items-center justify-between text-sm text-gray-400">
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1">
               <span className="w-3 h-3 bg-blue-500 rounded" />
@@ -340,7 +341,7 @@ const ZoneEditorMap: React.FC<ZoneEditorMapProps> = ({
           <div className="flex items-center gap-2">
             <span>Zones: {zones.length}</span>
             {isDrawing && (
-              <span className="text-blue-600 font-medium">Drawing...</span>
+              <span className="text-blue-400 font-medium">Drawing...</span>
             )}
           </div>
         </div>

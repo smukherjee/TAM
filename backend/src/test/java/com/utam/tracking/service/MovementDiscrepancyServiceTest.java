@@ -119,8 +119,8 @@ class MovementDiscrepancyServiceTest {
         void filtersByType() {
             Page<MovementDiscrepancy> page = new PageImpl<>(
                     Collections.singletonList(discrepancy1), pageable, 1);
-            when(discrepancyRepository.findByDiscrepancyType(
-                    eq(DiscrepancyType.LOCATION_MISMATCH), any(Pageable.class)))
+            when(discrepancyRepository.findByTenantCodeAndDiscrepancyType(
+                    eq(tenantCode), eq(DiscrepancyType.LOCATION_MISMATCH), any(Pageable.class)))
                     .thenReturn(page);
 
             Page<MovementDiscrepancyDTO> result = service.getDiscrepancies(
@@ -129,8 +129,8 @@ class MovementDiscrepancyServiceTest {
             assertThat(result.getTotalElements()).isEqualTo(1);
             assertThat(result.getContent().get(0).getDiscrepancyType())
                     .isEqualTo("LOCATION_MISMATCH");
-            verify(discrepancyRepository).findByDiscrepancyType(
-                    DiscrepancyType.LOCATION_MISMATCH, pageable);
+            verify(discrepancyRepository).findByTenantCodeAndDiscrepancyType(
+                    tenantCode, DiscrepancyType.LOCATION_MISMATCH, pageable);
         }
 
         @Test
@@ -138,7 +138,7 @@ class MovementDiscrepancyServiceTest {
         void filtersByAcknowledged() {
             Page<MovementDiscrepancy> page = new PageImpl<>(
                     Collections.singletonList(discrepancy1), pageable, 1);
-            when(discrepancyRepository.findByAcknowledged(eq(false), any(Pageable.class)))
+            when(discrepancyRepository.findByTenantCodeAndAcknowledged(eq(tenantCode), eq(false), any(Pageable.class)))
                     .thenReturn(page);
 
             Page<MovementDiscrepancyDTO> result = service.getDiscrepancies(
@@ -189,10 +189,10 @@ class MovementDiscrepancyServiceTest {
         @Test
         @DisplayName("returns discrepancy when found")
         void returnsDiscrepancyWhenFound() {
-            when(discrepancyRepository.findById(discrepancyId))
+            when(discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode))
                     .thenReturn(Optional.of(discrepancy1));
 
-            MovementDiscrepancyDTO result = service.getDiscrepancyById(discrepancyId);
+            MovementDiscrepancyDTO result = service.getDiscrepancyById(discrepancyId, tenantCode);
 
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(discrepancyId);
@@ -204,10 +204,10 @@ class MovementDiscrepancyServiceTest {
         @DisplayName("throws exception when not found")
         void throwsExceptionWhenNotFound() {
             UUID unknownId = UUID.randomUUID();
-            when(discrepancyRepository.findById(unknownId))
+            when(discrepancyRepository.findByIdAndTenantCode(unknownId, tenantCode))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.getDiscrepancyById(unknownId))
+            assertThatThrownBy(() -> service.getDiscrepancyById(unknownId, tenantCode))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Discrepancy not found");
         }
@@ -221,13 +221,13 @@ class MovementDiscrepancyServiceTest {
         @DisplayName("acknowledges discrepancy successfully with UUID userId")
         void acknowledgesDiscrepancySuccessfully() {
             UUID userId = UUID.randomUUID();
-            when(discrepancyRepository.findById(discrepancyId))
+            when(discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode))
                     .thenReturn(Optional.of(discrepancy1));
             when(discrepancyRepository.save(any(MovementDiscrepancy.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             MovementDiscrepancyDTO result = service.acknowledgeDiscrepancy(
-                    discrepancyId, userId.toString(), "Investigated and cleared");
+                    discrepancyId, tenantCode, userId.toString(), "Investigated and cleared");
 
             assertThat(result.getAcknowledged()).isTrue();
             assertThat(result.getResolutionNotes()).isEqualTo("Investigated and cleared");
@@ -239,14 +239,14 @@ class MovementDiscrepancyServiceTest {
         @Test
         @DisplayName("handles non-UUID userId gracefully")
         void handlesNonUuidUserId() {
-            when(discrepancyRepository.findById(discrepancyId))
+            when(discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode))
                     .thenReturn(Optional.of(discrepancy1));
             when(discrepancyRepository.save(any(MovementDiscrepancy.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // Should not throw even with invalid UUID
             MovementDiscrepancyDTO result = service.acknowledgeDiscrepancy(
-                    discrepancyId, "invalid-uuid-format", "notes");
+                    discrepancyId, tenantCode, "invalid-uuid-format", "notes");
 
             assertThat(result.getAcknowledged()).isTrue();
             verify(discrepancyRepository).save(any(MovementDiscrepancy.class));
@@ -256,13 +256,13 @@ class MovementDiscrepancyServiceTest {
         @DisplayName("sets acknowledgedAt timestamp")
         void setsAcknowledgedAtTimestamp() {
             UUID userId = UUID.randomUUID();
-            when(discrepancyRepository.findById(discrepancyId))
+            when(discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode))
                     .thenReturn(Optional.of(discrepancy1));
             when(discrepancyRepository.save(any(MovementDiscrepancy.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             ZonedDateTime beforeAck = ZonedDateTime.now();
-            service.acknowledgeDiscrepancy(discrepancyId, userId.toString(), "notes");
+            service.acknowledgeDiscrepancy(discrepancyId, tenantCode, userId.toString(), "notes");
             ZonedDateTime afterAck = ZonedDateTime.now();
 
             ArgumentCaptor<MovementDiscrepancy> captor = ArgumentCaptor.forClass(MovementDiscrepancy.class);
@@ -278,11 +278,11 @@ class MovementDiscrepancyServiceTest {
         @DisplayName("throws exception when discrepancy not found")
         void throwsExceptionWhenNotFound() {
             UUID unknownId = UUID.randomUUID();
-            when(discrepancyRepository.findById(unknownId))
+            when(discrepancyRepository.findByIdAndTenantCode(unknownId, tenantCode))
                     .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> 
-                    service.acknowledgeDiscrepancy(unknownId, "user", "notes"))
+                    service.acknowledgeDiscrepancy(unknownId, tenantCode, "user", "notes"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Discrepancy not found");
         }
@@ -355,10 +355,10 @@ class MovementDiscrepancyServiceTest {
         @Test
         @DisplayName("maps all fields from entity to DTO")
         void mapsAllFields() {
-            when(discrepancyRepository.findById(discrepancyId))
+            when(discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode))
                     .thenReturn(Optional.of(discrepancy1));
 
-            MovementDiscrepancyDTO dto = service.getDiscrepancyById(discrepancyId);
+            MovementDiscrepancyDTO dto = service.getDiscrepancyById(discrepancyId, tenantCode);
 
             assertThat(dto.getId()).isEqualTo(discrepancy1.getId());
             assertThat(dto.getDiscrepancyId()).isEqualTo(discrepancy1.getDiscrepancyId());
@@ -375,10 +375,10 @@ class MovementDiscrepancyServiceTest {
         @Test
         @DisplayName("maps location deviation data")
         void mapsLocationDeviationData() {
-            when(discrepancyRepository.findById(discrepancyId))
+            when(discrepancyRepository.findByIdAndTenantCode(discrepancyId, tenantCode))
                     .thenReturn(Optional.of(discrepancy1));
 
-            MovementDiscrepancyDTO dto = service.getDiscrepancyById(discrepancyId);
+            MovementDiscrepancyDTO dto = service.getDiscrepancyById(discrepancyId, tenantCode);
 
             assertThat(dto.getExpectedLocation()).isEqualTo("Terminal 2 Gate A");
             assertThat(dto.getActualLocation()).isEqualTo("Runway Holding Point");

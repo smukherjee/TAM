@@ -64,7 +64,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(DISTINCT stand) as \"Active Stands\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour';",
+                    "rawSql": "SELECT COUNT(DISTINCT stand) as \"Active Stands\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring});",
                     "refId": "A"
                 }
             ],
@@ -126,7 +126,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT COUNT(*) as \"Total Events (24h)\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '24 hours';",
+                    "rawSql": "SELECT COUNT(*) as \"Total Events (24h)\"\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '24 hours'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring});",
                     "refId": "A"
                 }
             ],
@@ -214,7 +214,7 @@
                         "uid": "Prometheus"
                     },
                     "editorMode": "code",
-                    "expr": "rate(simulator_events_generated_total[5m]) * 60",
+                    "expr": "rate(simulator_events_generated_total{icao=~\"${icao:regex}\"}[5m]) * 60",
                     "legendFormat": "{{type}} - {{icao}}",
                     "range": true,
                     "refId": "A"
@@ -304,7 +304,7 @@
                     "editorMode": "code",
                     "format": "time_series",
                     "rawQuery": true,
-                    "rawSql": "SELECT\n  time_bucket('5 minutes', event_time_stamp) AS time,\n  tenant_code,\n  COUNT(*) as events\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '6 hours'\nGROUP BY time, tenant_code\nORDER BY time;",
+                    "rawSql": "SELECT\n  time_bucket('5 minutes', event_time_stamp) AS time,\n  tenant_code,\n  COUNT(*) as events\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '6 hours'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring})\nGROUP BY time, tenant_code\nORDER BY time;",
                     "refId": "A"
                 }
             ],
@@ -367,7 +367,7 @@
                     "editorMode": "code",
                     "format": "table",
                     "rawQuery": true,
-                    "rawSql": "SELECT \n  stand,\n  activity_type,\n  COUNT(*) as event_count,\n  MAX(event_time_stamp) as last_event\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\nGROUP BY stand, activity_type\nORDER BY last_event DESC\nLIMIT 20;",
+                    "rawSql": "SELECT \n  stand,\n  activity_type,\n  COUNT(*) as event_count,\n  MAX(event_time_stamp) as last_event\nFROM turnaround_events\nWHERE event_time_stamp >= NOW() - INTERVAL '1 hour'\n  AND (${icao:sqlstring} = '.*' OR tenant_code = ${icao:sqlstring})\nGROUP BY stand, activity_type\nORDER BY last_event DESC\nLIMIT 20;",
                     "refId": "A"
                 }
             ],
@@ -384,7 +384,33 @@
         "Operations"
     ],
     "templating": {
-        "list": []
+        "list": [
+            {
+                "allValue": ".*",
+                "current": {
+                    "selected": true,
+                    "text": "All",
+                    "value": ".*"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "TimescaleDB"
+                },
+                "definition": "SELECT DISTINCT tenant_code FROM turnaround_events ORDER BY 1",
+                "hide": 0,
+                "includeAll": true,
+                "label": "ICAO",
+                "multi": false,
+                "name": "icao",
+                "options": [],
+                "query": "SELECT DISTINCT tenant_code FROM turnaround_events ORDER BY 1",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            }
+        ]
     },
     "time": {
         "from": "now-24h",

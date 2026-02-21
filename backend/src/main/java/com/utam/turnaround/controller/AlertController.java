@@ -17,7 +17,10 @@ public class AlertController {
     }
 
     @GetMapping
-    public List<Alert> getActiveAlerts(@RequestParam(defaultValue = "VIDP") String icaoCode) {
-        return alertService.getActiveAlerts(icaoCode);
+    public List<Alert> getActiveAlerts(
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCodeHeader,
+            @RequestParam(value = "icaoCode", required = false) String icaoCodeParam) {
+        String tenantCode = icaoCodeHeader != null ? icaoCodeHeader : (icaoCodeParam != null ? icaoCodeParam : "VIDP");
+        return alertService.getActiveAlerts(tenantCode);
     }
 }

@@ -164,8 +164,8 @@ const TrailMap: React.FC<TrailMapProps> = ({
 
     if (points.length === 0) {
         return (
-            <div className="h-full flex items-center justify-center bg-gray-100">
-                <p className="text-gray-500">No trail data available</p>
+            <div className="h-full flex items-center justify-center bg-gray-800">
+                <p className="text-gray-400">No trail data available</p>
             </div>
         );
     }
@@ -178,8 +178,8 @@ const TrailMap: React.FC<TrailMapProps> = ({
             scrollWheelZoom={true}
         >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
 
             <BoundsFitter points={points} />
@@ -217,7 +217,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
                     icon={createStartIcon()}
                 >
                     <Popup>
-                        <div className="p-2">
+                        <div className="p-2 bg-gray-900 text-gray-100">
                             <div className="font-semibold text-green-600">Start Point</div>
                             <div className="text-xs text-gray-500 mt-1">
                                 {format(new Date(points[0].timestamp), 'MMM d, yyyy HH:mm:ss')}
@@ -234,7 +234,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
                     icon={createEndIcon()}
                 >
                     <Popup>
-                        <div className="p-2">
+                        <div className="p-2 bg-gray-900 text-gray-100">
                             <div className="font-semibold text-red-600">End Point</div>
                             <div className="text-xs text-gray-500 mt-1">
                                 {format(new Date(points[points.length - 1].timestamp), 'MMM d, yyyy HH:mm:ss')}
@@ -251,7 +251,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
                     icon={createCurrentPositionIcon()}
                 >
                     <Popup>
-                        <div className="p-2 min-w-[200px]">
+                        <div className="p-2 min-w-[200px] bg-gray-900 text-gray-100">
                             <div className="font-semibold text-blue-600">Current Position</div>
                             <div className="text-xs text-gray-600 mt-2 space-y-1">
                                 <div>
@@ -285,7 +285,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
                     icon={createZoneEntryIcon(entry.zoneType)}
                 >
                     <Popup>
-                        <div className="p-2">
+                        <div className="p-2 bg-gray-900 text-gray-100">
                             <div className="font-semibold" style={{ color: ZONE_COLORS[entry.zoneType]?.stroke }}>
                                 {entry.zoneName}
                             </div>

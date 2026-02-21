@@ -15,9 +15,9 @@ export interface Alert {
     createdAt?: string;    // Frontend alias
 }
 
-export const getActiveAlerts = async (icaoCode: string = 'VIDP'): Promise<Alert[]> => {
+export const getActiveAlerts = async (icaoCode?: string): Promise<Alert[]> => {
     const response = await api.get('/alerts', {
-        params: { icaoCode }
+        params: icaoCode ? { icaoCode } : {}
     });
     // Map backend fields to frontend aliases for convenience
     return response.data.map((alert: Alert) => ({

@@ -1,7 +1,7 @@
 # TAM Platform - Development Makefile
 # Commands to manage the development infrastructure
 
-.PHONY: help rebuild-all setup-all reset start stop logs status clean
+.PHONY: help rebuild-all setup-all reset start stop logs status clean deploy-frontend deploy-backend wait-backend wait-superset provision-superset generate-fresh-data
 
 # Default target
 help:
@@ -21,6 +21,10 @@ help:
 	@echo "  make status        - Show running containers"
 	@echo "  make logs          - Tail logs from all services"
 	@echo ""
+	@echo "Data/BI Utilities:"
+	@echo "  make provision-superset - Create/update Superset datasets, charts, dashboards"
+	@echo "  make generate-fresh-data - Run generator-backed fresh data population for VIDP/LIRN/YBBN"
+	@echo ""
 	@echo "Service URLs:"
 	@echo "  Frontend:         http://localhost:3000"
 	@echo "  Backend API:      http://localhost:8080"
@@ -39,18 +43,28 @@ rebuild-all: reset setup-all
 	@echo "Full rebuild pipeline complete!"
 
 setup-all: build-all start
-	@echo "Wait for Infrastructure initialization (60 seconds)..."
-	@sleep 60
+	@echo "Waiting for core services to become ready..."
+	@$(MAKE) wait-backend
+	@$(MAKE) wait-superset
 	@bash infrastructure/nifi/setup-nifi.sh
-	@echo "Wait for Reporting BI initialization (15 seconds)..."
-	@sleep 15
-	@bash infrastructure/superset/create-all-reports.sh
+	@$(MAKE) provision-superset
+	@$(MAKE) generate-fresh-data
 	@echo "Platform setup complete! Navigate to http://localhost:3000"
 
 build-all: 
 	cd backend && mvn clean package -DskipTests
 	cd frontend && npm install --legacy-peer-deps && npm run build
 	@echo "Build complete!"
+
+deploy-frontend:
+	cd frontend && npm install --legacy-peer-deps && npm run build
+	docker-compose -f docker-compose.dev.yml up -d frontend
+	@echo "Frontend deployed!"
+
+deploy-backend:
+	cd backend && mvn clean package -DskipTests
+	docker-compose -f docker-compose.dev.yml up -d backend
+	@echo "Backend deployed!"
 
 # ============================================
 # Lifecycle Commands
@@ -81,3 +95,103 @@ clean:
 	cd backend && mvn clean
 	cd frontend && rm -rf node_modules dist
 	@echo "Local workspaces cleaned."
+
+wait-backend:
+	@echo "Waiting for Backend API at http://127.0.0.1:8080/actuator/health ..."
+	@attempts=90; \
+	missing_limit=30; \
+	for i in $$(seq 1 $$attempts); do \
+		cid=$$(docker-compose -f docker-compose.dev.yml ps -q backend 2>/dev/null || true); \
+		if [ -z "$$cid" ]; then \
+			if [ $$i -ge $$missing_limit ]; then \
+				echo "Backend container was not created within $$((missing_limit*2)) seconds."; \
+				docker-compose -f docker-compose.dev.yml ps backend || true; \
+				exit 1; \
+			fi; \
+			if [ $$((i % 5)) -eq 0 ]; then \
+				echo "Waiting for backend container to be created ($$i/$$missing_limit)..."; \
+			fi; \
+			sleep 2; \
+			continue; \
+		fi; \
+		state=$$(docker inspect -f '{{.State.Status}}' "$$cid" 2>/dev/null || echo "unknown"); \
+		health=$$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$$cid" 2>/dev/null || echo "unknown"); \
+		if [ "$$state" = "exited" ] || [ "$$state" = "dead" ]; then \
+			echo "Backend container is $$state. Failing fast."; \
+			docker-compose -f docker-compose.dev.yml ps backend || true; \
+			docker-compose -f docker-compose.dev.yml logs --tail=50 backend || true; \
+			exit 1; \
+		fi; \
+		if [ "$$health" = "unhealthy" ]; then \
+			echo "Backend container is unhealthy. Failing fast."; \
+			docker-compose -f docker-compose.dev.yml ps backend || true; \
+			docker-compose -f docker-compose.dev.yml logs --tail=50 backend || true; \
+			exit 1; \
+		fi; \
+		resp=$$(curl --silent --show-error --fail --connect-timeout 1 --max-time 2 http://127.0.0.1:8080/actuator/health 2>/dev/null || true); \
+		if echo "$$resp" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'; then \
+			echo "Backend API is ready."; \
+			exit 0; \
+		fi; \
+		if [ $$((i % 10)) -eq 0 ]; then \
+			echo "Still waiting for backend ($$i/$$attempts)..."; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "Backend API not ready after 180 seconds."; \
+	docker-compose -f docker-compose.dev.yml ps backend || true; \
+	exit 1
+
+wait-superset:
+	@echo "Waiting for Superset at http://127.0.0.1:8089/health ..."
+	@attempts=90; \
+	missing_limit=30; \
+	for i in $$(seq 1 $$attempts); do \
+		cid=$$(docker-compose -f docker-compose.dev.yml ps -q superset 2>/dev/null || true); \
+		if [ -z "$$cid" ]; then \
+			if [ $$i -ge $$missing_limit ]; then \
+				echo "Superset container was not created within $$((missing_limit*2)) seconds."; \
+				docker-compose -f docker-compose.dev.yml ps superset || true; \
+				exit 1; \
+			fi; \
+			if [ $$((i % 5)) -eq 0 ]; then \
+				echo "Waiting for superset container to be created ($$i/$$missing_limit)..."; \
+			fi; \
+			sleep 2; \
+			continue; \
+		fi; \
+		state=$$(docker inspect -f '{{.State.Status}}' "$$cid" 2>/dev/null || echo "unknown"); \
+		health=$$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$$cid" 2>/dev/null || echo "unknown"); \
+		if [ "$$state" = "exited" ] || [ "$$state" = "dead" ]; then \
+			echo "Superset container is $$state. Failing fast."; \
+			docker-compose -f docker-compose.dev.yml ps superset || true; \
+			docker-compose -f docker-compose.dev.yml logs --tail=50 superset || true; \
+			exit 1; \
+		fi; \
+		if [ "$$health" = "unhealthy" ]; then \
+			echo "Superset container is unhealthy. Failing fast."; \
+			docker-compose -f docker-compose.dev.yml ps superset || true; \
+			docker-compose -f docker-compose.dev.yml logs --tail=50 superset || true; \
+			exit 1; \
+		fi; \
+		resp=$$(curl --silent --show-error --fail --connect-timeout 1 --max-time 2 http://127.0.0.1:8089/health 2>/dev/null || true); \
+		if echo "$$resp" | grep -Eiq "healthy|ok"; then \
+			echo "Superset is ready."; \
+			exit 0; \
+		fi; \
+		if [ $$((i % 10)) -eq 0 ]; then \
+			echo "Still waiting for superset ($$i/$$attempts)..."; \
+		fi; \
+		sleep 2; \
+	done; \
+	echo "Superset not ready after 180 seconds."; \
+	docker-compose -f docker-compose.dev.yml ps superset || true; \
+	exit 1
+
+provision-superset: wait-superset
+	@echo "Provisioning Superset reports..."
+	@bash infrastructure/superset/create-all-reports.sh
+
+generate-fresh-data: wait-backend
+	@echo "Generating fresh simulation/report data for VIDP, LIRN, YBBN..."
+	@bash infrastructure/scripts/generate_fresh_data.sh VIDP LIRN YBBN --batch-size 100 --days 7

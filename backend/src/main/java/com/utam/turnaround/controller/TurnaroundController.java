@@ -21,16 +21,18 @@ public class TurnaroundController {
     @GetMapping("/sessions")
     public List<TurnaroundSessionSummaryDTO> getAllSessions(
             @RequestHeader(value = "X-User-ICAO", required = false) String icaoCode,
+            @RequestParam(value = "icaoCode", required = false) String icaoCodeParam,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
-        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
+        String tenantCode = icaoCode != null ? icaoCode : (icaoCodeParam != null ? icaoCodeParam : "VIDP");
         return turnaroundService.getAllSessions(tenantCode);
     }
 
     @GetMapping("/sessions/{id}")
     public TurnaroundSessionDetailDTO getSessionDetails(
             @PathVariable UUID id,
-            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCode) {
-        String tenantCode = icaoCode != null ? icaoCode : "VIDP";
+            @RequestHeader(value = "X-User-ICAO", required = false) String icaoCode,
+            @RequestParam(value = "icaoCode", required = false) String icaoCodeParam) {
+        String tenantCode = icaoCode != null ? icaoCode : (icaoCodeParam != null ? icaoCodeParam : "VIDP");
         return turnaroundService.getSessionDetails(id, tenantCode);
     }
 }

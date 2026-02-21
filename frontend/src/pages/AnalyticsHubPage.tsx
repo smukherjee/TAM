@@ -179,6 +179,7 @@ type GrafanaKey = keyof typeof grafanaDashboards;
 
 const AnalyticsHubPage = () => {
   const { user } = useAuth();
+  const tenantCode = user?.icaoCode?.toUpperCase();
   const [source, setSource] = useState<AnalyticsSource>('superset');
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('operations');
   const [activeGrafana, setActiveGrafana] = useState<GrafanaKey>('executive');
@@ -190,24 +191,40 @@ const AnalyticsHubPage = () => {
     return Object.values(chartCategories).reduce((sum, cat) => sum + cat.charts.length, 0);
   }, []);
 
-  // Get Superset dashboard URL with tenant suffix
-  const getSupersetDashboardUrl = (dashboardSlug: string) => {
-    const tenantSuffix = user?.icaoCode ? `_${user.icaoCode.toLowerCase()}` : '';
-    // Try tenant-specific first, fallback handled by Superset
-    return `http://localhost:8089/superset/dashboard/${dashboardSlug}${tenantSuffix}/?standalone=2&show_filters=0`;
+  const withTenantScope = (url: string, provider: 'grafana' | 'superset') => {
+    if (!tenantCode) return url;
+    const scopedUrl = new URL(url);
+    if (provider === 'grafana') {
+      // Support common dashboard variable names; unknown vars are ignored by Grafana.
+      scopedUrl.searchParams.set('var-tenantCode', tenantCode);
+      scopedUrl.searchParams.set('var-tenant_code', tenantCode);
+      scopedUrl.searchParams.set('var-icao', tenantCode);
+      scopedUrl.searchParams.set('var-airport', tenantCode);
+    } else {
+      scopedUrl.searchParams.set('tenant_code', tenantCode);
+      scopedUrl.searchParams.set('icao', tenantCode);
+    }
+    return scopedUrl.toString();
   };
 
-  // Get individual chart URL (embedded explore view) using actual Superset slice ID
+  // Get Superset dashboard URL with tenant suffix
+  const getSupersetDashboardUrl = (dashboardSlug: string) => {
+    const tenantSuffix = tenantCode ? `_${tenantCode.toLowerCase()}` : '';
+    // Try tenant-specific first, fallback handled by Superset
+    const url = `http://localhost:8089/superset/dashboard/${dashboardSlug}${tenantSuffix}/?standalone=2&show_filters=0`;
+    return withTenantScope(url, 'superset');
+  };
+
+  // Get chart-focused URL while remaining on tenant-scoped dashboards.
   const getSupersetChartUrl = (chartId: string) => {
-    // Find the chart with the matching id to get its sliceId
     for (const category of Object.values(chartCategories)) {
-      const chart = category.charts.find(c => c.id === chartId);
+      const chart = category.charts.find((c) => c.id === chartId);
       if (chart) {
-        // Use Superset's standalone slice URL (works without auth redirect)
-        return `http://localhost:8089/superset/slice/${chart.sliceId}/?standalone=true`;
+        const url = new URL(getSupersetDashboardUrl(category.supersetDashboard));
+        url.searchParams.set('slice_id', String(chart.sliceId));
+        return url.toString();
       }
     }
-    // Fallback to dashboard if chart not found
     return getSupersetDashboardUrl(chartCategories[activeCategory].supersetDashboard);
   };
 
@@ -251,7 +268,7 @@ const AnalyticsHubPage = () => {
   // Get current iframe URL based on source and selection
   const getCurrentUrl = () => {
     if (source === 'grafana') {
-      return grafanaDashboards[activeGrafana].url;
+      return withTenantScope(grafanaDashboards[activeGrafana].url, 'grafana');
     }
     // If a specific chart is selected, show that chart
     if (selectedChart) {
@@ -260,7 +277,7 @@ const AnalyticsHubPage = () => {
     // Otherwise show the first chart of the active category
     const firstChart = chartCategories[activeCategory].charts[0];
     if (firstChart) {
-      return `http://localhost:8089/superset/slice/${firstChart.sliceId}/?standalone=true`;
+      return getSupersetChartUrl(firstChart.id);
     }
     return getSupersetDashboardUrl(chartCategories[activeCategory].supersetDashboard);
   };

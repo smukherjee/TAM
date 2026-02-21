@@ -19,9 +19,8 @@ const AssetPopup: React.FC<AssetPopupProps> = ({ asset, onClose }) => {
     const navigate = useNavigate();
 
     const handleViewTrail = () => {
-        navigate(`/tracking/trail/${asset.assetId}`, {
-            state: { asset }
-        });
+        const trailIdentifier = asset.assetIdentifier || asset.assetId;
+        navigate(`/tracking/trail?assetId=${encodeURIComponent(trailIdentifier)}`);
         onClose();
     };
 

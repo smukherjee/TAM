@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMovementTrail, fetchTrailSummary, exportTrail } from '../services/trackingService';
 import { MovementTrail, TrailSummary } from '../types/tracking';
@@ -10,10 +12,10 @@ import TrailInfoPanel from '../components/Tracking/TrailInfoPanel';
 import TrailDateRangePicker from '../components/Tracking/TrailDateRangePicker';
 import { format, subHours, subDays } from 'date-fns';
 import toast from 'react-hot-toast';
-import { 
-    Route, 
-    Download, 
-    Loader2, 
+import {
+    Route,
+    Download,
+    Loader2,
     AlertCircle,
     MapPin,
     Clock
@@ -26,7 +28,9 @@ import {
  */
 const MovementTrailPage: React.FC = () => {
     // State
+    const [searchParams] = useSearchParams();
     const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+    const [selectedAssetIdentifier, setSelectedAssetIdentifier] = useState<string | null>(null);
     const [startDate, setStartDate] = useState<Date>(subHours(new Date(), 24));
     const [endDate, setEndDate] = useState<Date>(new Date());
     const [currentPointIndex, setCurrentPointIndex] = useState<number>(0);
@@ -34,32 +38,58 @@ const MovementTrailPage: React.FC = () => {
     const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
     const [isExporting, setIsExporting] = useState<boolean>(false);
 
+    // Pre-select asset from URL query param (?assetId=NAP-0004)
+    useEffect(() => {
+        const assetIdParam = searchParams.get('assetId');
+        if (!assetIdParam) return;
+
+        // Search for the asset by its human-readable assetId to get the internal UUID
+        api.get(`/assets/search?q=${encodeURIComponent(assetIdParam)}&limit=20`)
+            .then(response => {
+                const results = (response.data?.data || []) as Array<{ id: string; assetId?: string; identifier?: string }>;
+                if (results.length > 0) {
+                    // Find exact match by assetId
+                    const exact = results.find(
+                        a => (a.assetId || a.identifier || '').toLowerCase() === assetIdParam.toLowerCase()
+                    ) || results[0];
+                    setSelectedAssetId(exact.id);
+                    setSelectedAssetIdentifier(exact.assetId || exact.identifier || assetIdParam);
+                } else {
+                    // Allow direct identifier lookup even if asset search does not return a row.
+                    setSelectedAssetIdentifier(assetIdParam);
+                }
+            })
+            .catch(err => console.error('Failed to pre-select asset from URL:', err));
+        // Only run on mount / when the URL param changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
     // Fetch movement trail
-    const { 
-        data: trailData, 
-        isLoading: isLoadingTrail, 
+    const {
+        data: trailData,
+        isLoading: isLoadingTrail,
         error: trailError,
         refetch: refetchTrail
     } = useQuery<MovementTrail>({
-        queryKey: ['movementTrail', selectedAssetId, startDate.toISOString(), endDate.toISOString()],
+        queryKey: ['movementTrail', selectedAssetIdentifier, startDate.toISOString(), endDate.toISOString()],
         queryFn: () => fetchMovementTrail(
-            selectedAssetId!,
+            selectedAssetIdentifier!,
             startDate.toISOString(),
             endDate.toISOString()
         ),
-        enabled: !!selectedAssetId,
+        enabled: !!selectedAssetIdentifier,
         staleTime: 60000, // 1 minute
     });
 
     // Fetch trail summary
     const { data: summaryData } = useQuery<TrailSummary>({
-        queryKey: ['trailSummary', selectedAssetId, startDate.toISOString(), endDate.toISOString()],
+        queryKey: ['trailSummary', selectedAssetIdentifier, startDate.toISOString(), endDate.toISOString()],
         queryFn: () => fetchTrailSummary(
-            selectedAssetId!,
+            selectedAssetIdentifier!,
             startDate.toISOString(),
             endDate.toISOString()
         ),
-        enabled: !!selectedAssetId && !!trailData?.points?.length,
+        enabled: !!selectedAssetIdentifier && !!trailData?.points?.length,
     });
 
     // Current point based on playback
@@ -78,7 +108,7 @@ const MovementTrailPage: React.FC = () => {
 
         const animate = (currentTime: number) => {
             const delta = currentTime - lastTime;
-            
+
             if (delta >= intervalMs) {
                 lastTime = currentTime;
                 setCurrentPointIndex(prev => {
@@ -90,7 +120,7 @@ const MovementTrailPage: React.FC = () => {
                     return next;
                 });
             }
-            
+
             animationId = requestAnimationFrame(animate);
         };
 
@@ -110,8 +140,9 @@ const MovementTrailPage: React.FC = () => {
     }, [trailData]);
 
     // Handle asset selection
-    const handleAssetSelect = useCallback((assetId: string) => {
+    const handleAssetSelect = useCallback((assetId: string | null, assetIdentifier: string) => {
         setSelectedAssetId(assetId);
+        setSelectedAssetIdentifier(assetIdentifier);
         setCurrentPointIndex(0);
         setIsPlaying(false);
     }, []);
@@ -128,7 +159,7 @@ const MovementTrailPage: React.FC = () => {
     const handleQuickDateSelect = useCallback((preset: string) => {
         const now = new Date();
         let start: Date;
-        
+
         switch (preset) {
             case '1h':
                 start = subHours(now, 1);
@@ -148,7 +179,7 @@ const MovementTrailPage: React.FC = () => {
             default:
                 start = subHours(now, 24);
         }
-        
+
         setStartDate(start);
         setEndDate(now);
         setCurrentPointIndex(0);
@@ -164,12 +195,12 @@ const MovementTrailPage: React.FC = () => {
     // Handle playback toggle
     const handlePlayPause = useCallback(() => {
         if (!trailData?.points?.length) return;
-        
+
         // If at end, restart from beginning
         if (currentPointIndex >= trailData.points.length - 1) {
             setCurrentPointIndex(0);
         }
-        
+
         setIsPlaying(prev => !prev);
     }, [trailData?.points?.length, currentPointIndex]);
 
@@ -180,26 +211,26 @@ const MovementTrailPage: React.FC = () => {
 
     // Handle export
     const handleExport = async () => {
-        if (!selectedAssetId) return;
+        if (!selectedAssetIdentifier) return;
 
         setIsExporting(true);
         try {
             const blob = await exportTrail(
-                selectedAssetId,
+                selectedAssetIdentifier,
                 startDate.toISOString(),
                 endDate.toISOString(),
                 'csv'
             );
-            
+
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `trail_${selectedAssetId}_${format(startDate, 'yyyyMMdd')}_${format(endDate, 'yyyyMMdd')}.csv`;
+            a.download = `trail_${selectedAssetIdentifier}_${format(startDate, 'yyyyMMdd')}_${format(endDate, 'yyyyMMdd')}.csv`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            
+
             toast.success('Trail data exported successfully');
         } catch (error) {
             toast.error('Failed to export trail data');
@@ -220,12 +251,12 @@ const MovementTrailPage: React.FC = () => {
                             Movement Trail
                         </h1>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4">
                         {/* Export Button */}
                         <button
                             onClick={handleExport}
-                            disabled={!selectedAssetId || !trailData?.points?.length || isExporting}
+                            disabled={!selectedAssetIdentifier || !trailData?.points?.length || isExporting}
                             className="inline-flex items-center px-4 py-2 text-sm font-medium 
                                 text-gray-300 bg-gray-800 border border-gray-600 rounded-md 
                                 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -263,7 +294,7 @@ const MovementTrailPage: React.FC = () => {
                     {/* Refresh Button */}
                     <button
                         onClick={() => refetchTrail()}
-                        disabled={!selectedAssetId || isLoadingTrail}
+                        disabled={!selectedAssetIdentifier || isLoadingTrail}
                         className="inline-flex items-center px-3 py-2 text-sm font-medium 
                             text-gray-300 bg-gray-700 border border-gray-600 rounded-md 
                             hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -277,7 +308,7 @@ const MovementTrailPage: React.FC = () => {
             <div className="flex-1 flex overflow-hidden">
                 {/* Map Area */}
                 <div className="flex-1 relative">
-                    {!selectedAssetId ? (
+                    {!selectedAssetIdentifier ? (
                         // No Asset Selected State
                         <div className="h-full flex items-center justify-center bg-gray-800">
                             <div className="text-center">
@@ -344,7 +375,7 @@ const MovementTrailPage: React.FC = () => {
                 </div>
 
                 {/* Info Panel */}
-                {selectedAssetId && trailData?.points?.length && (
+                {selectedAssetIdentifier && trailData?.points?.length && (
                     <div className="w-80 bg-gray-800 border-l border-gray-700 overflow-y-auto">
                         <TrailInfoPanel
                             currentPoint={currentPoint}
@@ -356,7 +387,7 @@ const MovementTrailPage: React.FC = () => {
             </div>
 
             {/* Playback Controls */}
-            {selectedAssetId && trailData?.points?.length && (
+            {selectedAssetIdentifier && trailData?.points?.length && (
                 <div className="bg-gray-800 border-t border-gray-700">
                     {/* Timeline */}
                     <TrailTimeline
@@ -365,7 +396,7 @@ const MovementTrailPage: React.FC = () => {
                         currentIndex={currentPointIndex}
                         onScrub={handleTimelineScrub}
                     />
-                    
+
                     {/* Playback Controls */}
                     <TrailPlaybackControls
                         isPlaying={isPlaying}

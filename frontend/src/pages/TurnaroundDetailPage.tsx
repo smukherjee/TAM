@@ -7,9 +7,11 @@ import TurnaroundDetailSkeleton from '../components/Turnaround/TurnaroundDetailS
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Task } from 'gantt-task-react';
 import { ArrowLeft, Plane, Clock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const TurnaroundDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [session, setSession] = useState<TurnaroundSessionDetail | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -19,12 +21,12 @@ const TurnaroundDetailPage: React.FC = () => {
         if (id) {
             fetchSessionDetails(id);
         }
-    }, [id]);
+    }, [id, user?.icaoCode]);
 
     const fetchSessionDetails = async (sessionId: string) => {
         try {
             setLoading(true);
-            const data = await getSessionDetails(sessionId);
+            const data = await getSessionDetails(sessionId, user?.icaoCode);
             setSession(data);
             setError(null);
         } catch (err) {
