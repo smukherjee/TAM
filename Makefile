@@ -71,6 +71,7 @@ deploy-backend:
 # ============================================
 
 start:
+	docker-compose -f docker-compose.dev.yml build backend frontend
 	docker-compose -f docker-compose.dev.yml up -d
 	@echo "Services starting... Check with 'make status'"
 

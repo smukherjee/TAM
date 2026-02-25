@@ -71,28 +71,34 @@
 ## 2. Requested New Reports
 
 ### Report A: GSE Maintenance Report
+
 **Purpose:** Track health & availability of ground vehicle fleet.  
 **Fields:** GHA / Service Provider, Vehicle Number / Type / Name, Maintenance Status (red flag for "Under-Maintenance").
 
 ### Report B: Stand Utilization Report (Heat-Map)
+
 **Purpose:** 24-hour heat-map view of parking stand occupancy.  
 **Fields:** Stand (with flight count), Hourly time slots (00:00–23:00), Occupancy value (0 = vacant, 1 = occupied, 2 = conflict/double-booked).
 
 ### Report C: Gate Utilization Report
+
 **Purpose:** Monitor boarding gate usage.  
 **Fields:** Gate selector (filterable), Timeline bar (0:00–23:00), Color-coded activity blocks.
 
 ### Report D: Maintenance Reports (Suite)
+
 - **D1:** Predictive maintenance alerts — fault predictions from vibration/temperature trends
 - **D2:** Utilization logs — engine hours, service intervals due, downtime analysis
 - **D3:** Asset lifecycle reports — total usage, remaining life estimates
 
 ### Report E: Safety/Compliance Reports (Suite)
+
 - **E1:** Incident reconstructions — collision/near-miss videos with telematics overlay (speed, path)
 - **E2:** Driver behavior analytics — speeding, harsh maneuvers, fatigue patterns
 - **E3:** Compliance logs — automated safety records for audits (Annex 19 SPIs)
 
 ### Report F: Operational Efficiency Reports (Suite)
+
 - **F1:** Fleet utilization dashboards — idle time, allocation optimization, turnaround impact
 - **F2:** Fuel/emissions tracking — consumption trends, sustainability metrics
 - **F3:** Geofence breach summaries — unauthorized areas, ramp intrusions

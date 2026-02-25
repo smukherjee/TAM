@@ -2,10 +2,10 @@ import React, { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { MovementDiscrepancy, SEVERITY_COLORS, DISCREPANCY_TYPE_LABELS } from '../../types/tracking';
 import { formatDistanceToNow, format } from 'date-fns';
-import { 
-    X, 
-    AlertTriangle, 
-    MapPin, 
+import {
+    X,
+    AlertTriangle,
+    MapPin,
     Activity,
     CheckCircle,
     Loader2
@@ -116,10 +116,10 @@ const AcknowledgeDiscrepancyModal: React.FC<AcknowledgeDiscrepancyModalProps> = 
                                         {/* Severity */}
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm text-gray-400">Severity</span>
-                                            <span 
+                                            <span
                                                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                                style={{ 
-                                                    backgroundColor: `${SEVERITY_COLORS[discrepancy.severity]}20`, 
+                                                style={{
+                                                    backgroundColor: `${SEVERITY_COLORS[discrepancy.severity]}20`,
                                                     color: SEVERITY_COLORS[discrepancy.severity],
                                                     border: `1px solid ${SEVERITY_COLORS[discrepancy.severity]}40`
                                                 }}
@@ -135,16 +135,15 @@ const AcknowledgeDiscrepancyModal: React.FC<AcknowledgeDiscrepancyModalProps> = 
                                                     <MapPin className="h-4 w-4 mr-1" />
                                                     Deviation
                                                 </span>
-                                                <span className={`text-sm font-medium ${
-                                                    discrepancy.deviationMeters > 100 ? 'text-red-400' : 'text-gray-300'
-                                                }`}>
+                                                <span className={`text-sm font-medium ${discrepancy.deviationMeters > 100 ? 'text-red-400' : 'text-gray-300'
+                                                    }`}>
                                                     {formatDeviation(discrepancy.deviationMeters)}
                                                 </span>
                                             </div>
                                         )}
 
                                         {/* Expected Location */}
-                                        {discrepancy.expectedLatitude && discrepancy.expectedLongitude && (
+                                        {discrepancy.expectedLatitude != null && discrepancy.expectedLongitude != null && (
                                             <div className="flex justify-between">
                                                 <span className="text-sm text-gray-400">Expected</span>
                                                 <span className="text-sm text-green-400 font-mono">
@@ -154,7 +153,7 @@ const AcknowledgeDiscrepancyModal: React.FC<AcknowledgeDiscrepancyModalProps> = 
                                         )}
 
                                         {/* Actual Location */}
-                                        {discrepancy.actualLatitude && discrepancy.actualLongitude && (
+                                        {discrepancy.actualLatitude != null && discrepancy.actualLongitude != null && (
                                             <div className="flex justify-between">
                                                 <span className="text-sm text-gray-400">Actual</span>
                                                 <span className="text-sm text-red-400 font-mono">
@@ -189,8 +188,8 @@ const AcknowledgeDiscrepancyModal: React.FC<AcknowledgeDiscrepancyModalProps> = 
                                 {/* Form */}
                                 <form onSubmit={handleSubmit}>
                                     <div className="mb-4">
-                                        <label 
-                                            htmlFor="notes" 
+                                        <label
+                                            htmlFor="notes"
                                             className="block text-sm font-medium text-gray-300 mb-2"
                                         >
                                             Investigation Notes (Optional)

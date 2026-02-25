@@ -90,7 +90,7 @@ const AssetPopup: React.FC<AssetPopupProps> = ({ asset, onClose }) => {
                     )}
 
                     {/* Speed (if moving) */}
-                    {asset.speed !== undefined && asset.speed > 0 && (
+                    {asset.speed != null && asset.speed > 0 && (
                         <div className="flex items-center gap-2 text-sm">
                             <Gauge className="w-4 h-4 text-gray-500" />
                             <span className="text-gray-900">
@@ -109,7 +109,7 @@ const AssetPopup: React.FC<AssetPopupProps> = ({ asset, onClose }) => {
 
                     {/* Coordinates */}
                     <div className="text-xs text-gray-500 font-mono">
-                        {asset.latitude.toFixed(6)}, {asset.longitude.toFixed(6)}
+                        {asset.latitude?.toFixed(6) ?? 'N/A'}, {asset.longitude?.toFixed(6) ?? 'N/A'}
                     </div>
                 </div>
 

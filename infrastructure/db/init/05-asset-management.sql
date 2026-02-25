@@ -14,12 +14,14 @@ CREATE TABLE IF NOT EXISTS assets (
     tenant_code VARCHAR(4) REFERENCES tenants(code),
     location VARCHAR(100),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_assets_asset_id_tenant UNIQUE (asset_id, tenant_code)
 );
 
 CREATE INDEX IF NOT EXISTS idx_assets_tenant ON assets (tenant_code);
 CREATE INDEX IF NOT EXISTS idx_assets_status ON assets (status);
 CREATE INDEX IF NOT EXISTS idx_assets_category ON assets (category);
+CREATE INDEX IF NOT EXISTS idx_assets_asset_tenant ON assets (asset_id, tenant_code);
 
 -- 2. Seed Sample Assets for VIDP
 INSERT INTO assets (asset_id, name, qr_id, status, description, category, value, tenant_code, location) VALUES

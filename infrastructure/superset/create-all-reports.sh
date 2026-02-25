@@ -17,6 +17,29 @@ echo "📊 Provisioning Superset reports at $SUPERSET_URL"
 
 req() { curl -s -b /tmp/cookies.txt -H "X-CSRFToken: $API_CSRF" "$@"; }
 
+refresh_dataset_metadata() {
+  local DATASET_ID=$1
+  [ -z "$DATASET_ID" ] || [ "$DATASET_ID" = "null" ] && return 1
+
+  # For virtual datasets (with SQL), the /refresh endpoint sometimes fails silently in Superset 3.x
+  # if the underlying views are just created. A more reliable way is to PUT the dataset again.
+  local RESP HTTP COLS
+  HTTP=$(curl -s -o /tmp/superset_dataset_refresh_resp.json -w "%{http_code}" \
+    -b /tmp/cookies.txt -H "X-CSRFToken: $API_CSRF" -H "Content-Type: application/json" \
+    -X PUT "$SUPERSET_URL/api/v1/dataset/$DATASET_ID/refresh" -d '{}')
+
+  if [ "${HTTP:-500}" -ge 300 ]; then
+    echo "⚠️ Failed to refresh dataset metadata for id=$DATASET_ID (HTTP $HTTP)" >&2
+  fi
+  
+  # Check if columns are still empty, wait and retry once
+  COLS=$(curl -s -b /tmp/cookies.txt "$SUPERSET_URL/api/v1/dataset/$DATASET_ID" | jq '.result.columns | length')
+  if [ "${COLS:-0}" -eq 0 ]; then
+    sleep 2
+    curl -s -o /dev/null -b /tmp/cookies.txt -H "X-CSRFToken: $API_CSRF" -H "Content-Type: application/json" -X PUT "$SUPERSET_URL/api/v1/dataset/$DATASET_ID/refresh" -d '{}'
+  fi
+}
+
 exec_metadata_sql() {
   local sql="$1"
   if command -v psql >/dev/null 2>&1; then
@@ -122,12 +145,20 @@ create_dataset() {
         exit 1
       fi
     fi
+    refresh_dataset_metadata "$EXISTING"
     echo "$EXISTING"
     return
   fi
 
   RESP=$(req -X POST "$SUPERSET_URL/api/v1/dataset/" -H "Content-Type: application/json" -d "$PAYLOAD")
-  echo "$RESP" | jq -r '.id'
+  local CREATED_ID
+  CREATED_ID=$(echo "$RESP" | jq -r '.id // empty')
+  if [ -z "$CREATED_ID" ]; then
+    echo "❌ Failed to create dataset $NAME: $RESP" >&2
+    exit 1
+  fi
+  refresh_dataset_metadata "$CREATED_ID"
+  echo "$CREATED_ID"
 }
 
 tenant_scoped_sql() {
@@ -146,7 +177,7 @@ create_tenant_dataset() {
   local TABLE=${3:-$1}
   local SQL
   SQL=$(tenant_scoped_sql "$SCHEMA" "$TABLE")
-  create_dataset "$NAME" "$SCHEMA" "$NAME" "$SQL"
+  create_dataset "$NAME" "$SCHEMA" "$TABLE" "$SQL"
 }
 
 create_chart() {
@@ -305,7 +336,6 @@ is_already_provisioned() {
   missing_ds=$(list_datasets | jq -r --argjson db "$DB_ID" '
     [.result[] | select(.database.id == $db) | .table_name] as $have |
     [
-      "v_ops_overview_daily_tenant",
       "v_ops_overview_daily","v_flight_movements_hourly","v_vehicle_activity_summary_daily",
       "v_stand_gate_occupancy","v_turnaround_sla_compliance","v_delay_root_causes",
       "v_speed_violations_by_zone","v_restricted_zone_breach_dwell","v_discrepancy_trends_daily",

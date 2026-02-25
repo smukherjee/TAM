@@ -2,10 +2,10 @@ import React, { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { ZoneViolation, SEVERITY_COLORS } from '../../types/tracking';
 import { formatDistanceToNow, format } from 'date-fns';
-import { 
-    X, 
-    AlertOctagon, 
-    MapPin, 
+import {
+    X,
+    AlertOctagon,
+    MapPin,
     Clock,
     CheckCircle,
     Loader2
@@ -115,15 +115,15 @@ const AcknowledgeViolationModal: React.FC<AcknowledgeViolationModalProps> = ({
                                                 <span className="text-sm font-medium text-white">
                                                     {violation.zoneName}
                                                 </span>
-                                                <span 
+                                                <span
                                                     className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                                     style={{
-                                                        backgroundColor: violation.zoneType === 'PROHIBITED' ? 'rgba(127, 29, 29, 0.5)' : 
-                                                                        violation.zoneType === 'RESTRICTED' ? 'rgba(124, 45, 18, 0.5)' :
-                                                                        violation.zoneType === 'CONTROLLED' ? 'rgba(113, 63, 18, 0.5)' : 'rgba(30, 58, 138, 0.5)',
-                                                        color: violation.zoneType === 'PROHIBITED' ? '#FCA5A5' : 
-                                                               violation.zoneType === 'RESTRICTED' ? '#FDBA74' :
-                                                               violation.zoneType === 'CONTROLLED' ? '#FCD34D' : '#93C5FD'
+                                                        backgroundColor: violation.zoneType === 'PROHIBITED' ? 'rgba(127, 29, 29, 0.5)' :
+                                                            violation.zoneType === 'RESTRICTED' ? 'rgba(124, 45, 18, 0.5)' :
+                                                                violation.zoneType === 'CONTROLLED' ? 'rgba(113, 63, 18, 0.5)' : 'rgba(30, 58, 138, 0.5)',
+                                                        color: violation.zoneType === 'PROHIBITED' ? '#FCA5A5' :
+                                                            violation.zoneType === 'RESTRICTED' ? '#FDBA74' :
+                                                                violation.zoneType === 'CONTROLLED' ? '#FCD34D' : '#93C5FD'
                                                     }}
                                                 >
                                                     {violation.zoneType}
@@ -134,10 +134,10 @@ const AcknowledgeViolationModal: React.FC<AcknowledgeViolationModalProps> = ({
                                         {/* Severity */}
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm text-gray-500">Severity</span>
-                                            <span 
+                                            <span
                                                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                                style={{ 
-                                                    backgroundColor: `${SEVERITY_COLORS[violation.severity]}20`, 
+                                                style={{
+                                                    backgroundColor: `${SEVERITY_COLORS[violation.severity]}20`,
                                                     color: SEVERITY_COLORS[violation.severity],
                                                     border: `1px solid ${SEVERITY_COLORS[violation.severity]}40`
                                                 }}
@@ -175,7 +175,7 @@ const AcknowledgeViolationModal: React.FC<AcknowledgeViolationModalProps> = ({
                                             <div className="flex justify-between">
                                                 <span className="text-sm text-gray-400">Entry Location</span>
                                                 <span className="text-sm text-gray-300 font-mono">
-                                                    {violation.entryLatitude.toFixed(6)}, {violation.entryLongitude.toFixed(6)}
+                                                    {violation.entryLatitude?.toFixed(6) ?? 'N/A'}, {violation.entryLongitude?.toFixed(6) ?? 'N/A'}
                                                 </span>
                                             </div>
                                         )}
@@ -185,8 +185,8 @@ const AcknowledgeViolationModal: React.FC<AcknowledgeViolationModalProps> = ({
                                 {/* Form */}
                                 <form onSubmit={handleSubmit}>
                                     <div className="mb-4">
-                                        <label 
-                                            htmlFor="notes" 
+                                        <label
+                                            htmlFor="notes"
                                             className="block text-sm font-medium text-gray-300 mb-2"
                                         >
                                             Resolution Notes (Optional)

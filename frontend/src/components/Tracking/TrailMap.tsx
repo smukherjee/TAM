@@ -28,14 +28,14 @@ interface TrailMapProps {
 }
 
 // Component to update map view on current point change
-const MapUpdater: React.FC<{ 
-    point: MovementTrailPoint | null; 
+const MapUpdater: React.FC<{
+    point: MovementTrailPoint | null;
     followAsset: boolean;
 }> = ({ point, followAsset }) => {
     const map = useMap();
-    
+
     useEffect(() => {
-        if (point && followAsset) {
+        if (point && followAsset && point.latitude != null && point.longitude != null) {
             map.panTo([point.latitude, point.longitude], { animate: true });
         }
     }, [map, point, followAsset]);
@@ -50,11 +50,14 @@ const BoundsFitter: React.FC<{ points: MovementTrailPoint[] }> = ({ points }) =>
 
     useEffect(() => {
         if (points.length > 0 && !hasSetBounds.current) {
-            const bounds = L.latLngBounds(
-                points.map(p => [p.latitude, p.longitude] as [number, number])
-            );
-            map.fitBounds(bounds, { padding: [50, 50] });
-            hasSetBounds.current = true;
+            const validPoints = points.filter(p => p.latitude != null && p.longitude != null);
+            if (validPoints.length > 0) {
+                const bounds = L.latLngBounds(
+                    validPoints.map(p => [p.latitude, p.longitude] as [number, number])
+                );
+                map.fitBounds(bounds, { padding: [50, 50] });
+                hasSetBounds.current = true;
+            }
         }
     }, [map, points]);
 
@@ -83,21 +86,27 @@ const TrailMap: React.FC<TrailMapProps> = ({
 
     // Traveled path (up to current index)
     const traveledPath = useMemo(() => {
-        return points.slice(0, currentPointIndex + 1).map(p => [p.latitude, p.longitude] as [number, number]);
+        return points.slice(0, currentPointIndex + 1)
+            .filter(p => p.latitude != null && p.longitude != null)
+            .map(p => [p.latitude, p.longitude] as [number, number]);
     }, [points, currentPointIndex]);
 
     // Future path (after current index)
     const futurePath = useMemo(() => {
-        return points.slice(currentPointIndex).map(p => [p.latitude, p.longitude] as [number, number]);
+        return points.slice(currentPointIndex)
+            .filter(p => p.latitude != null && p.longitude != null)
+            .map(p => [p.latitude, p.longitude] as [number, number]);
     }, [points, currentPointIndex]);
 
     // Zone entry markers
     const zoneMarkers = useMemo(() => {
-        return zoneEntries.map((entry, index) => ({
-            ...entry,
-            index,
-            position: [entry.entryLatitude, entry.entryLongitude] as [number, number]
-        }));
+        return zoneEntries
+            .filter(e => e.entryLatitude != null && e.entryLongitude != null)
+            .map((entry, index) => ({
+                ...entry,
+                index,
+                position: [entry.entryLatitude, entry.entryLongitude] as [number, number]
+            }));
     }, [zoneEntries]);
 
     // Create custom marker icons
@@ -211,7 +220,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
             )}
 
             {/* Start marker */}
-            {points.length > 0 && (
+            {points.length > 0 && points[0].latitude != null && points[0].longitude != null && (
                 <Marker
                     position={[points[0].latitude, points[0].longitude]}
                     icon={createStartIcon()}
@@ -228,7 +237,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
             )}
 
             {/* End marker (if not same as current) */}
-            {points.length > 1 && currentPointIndex < points.length - 1 && (
+            {points.length > 1 && currentPointIndex < points.length - 1 && points[points.length - 1].latitude != null && points[points.length - 1].longitude != null && (
                 <Marker
                     position={[points[points.length - 1].latitude, points[points.length - 1].longitude]}
                     icon={createEndIcon()}
@@ -245,7 +254,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
             )}
 
             {/* Current position marker */}
-            {currentPoint && (
+            {currentPoint && currentPoint.latitude != null && currentPoint.longitude != null && (
                 <Marker
                     position={[currentPoint.latitude, currentPoint.longitude]}
                     icon={createCurrentPositionIcon()}
@@ -269,7 +278,7 @@ const TrailMap: React.FC<TrailMapProps> = ({
                                     </div>
                                 )}
                                 <div className="font-mono text-[10px] text-gray-400 mt-1">
-                                    {currentPoint.latitude.toFixed(6)}, {currentPoint.longitude.toFixed(6)}
+                                    {currentPoint.latitude?.toFixed(6) ?? 'N/A'}, {currentPoint.longitude?.toFixed(6) ?? 'N/A'}
                                 </div>
                             </div>
                         </div>
@@ -290,8 +299,8 @@ const TrailMap: React.FC<TrailMapProps> = ({
                                 {entry.zoneName}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                                <span className="inline-block px-1.5 py-0.5 rounded text-xs" 
-                                    style={{ 
+                                <span className="inline-block px-1.5 py-0.5 rounded text-xs"
+                                    style={{
                                         backgroundColor: ZONE_COLORS[entry.zoneType]?.fill,
                                         color: ZONE_COLORS[entry.zoneType]?.stroke
                                     }}>

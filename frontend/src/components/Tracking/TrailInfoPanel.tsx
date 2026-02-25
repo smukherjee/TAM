@@ -1,10 +1,10 @@
 import React from 'react';
 import { MovementTrailPoint, TrailSummary, MovementTrail } from '../../types/tracking';
 import { format } from 'date-fns';
-import { 
-    MapPin, 
-    Clock, 
-    Gauge, 
+import {
+    MapPin,
+    Clock,
+    Gauge,
     Navigation,
     Route,
     AlertTriangle,
@@ -81,7 +81,7 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                 <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                     Current Position
                 </h4>
-                
+
                 {currentPoint ? (
                     <div className="space-y-3">
                         {/* Timestamp */}
@@ -102,10 +102,10 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                             <MapPin className="h-4 w-4 text-gray-500 mr-2 mt-0.5" />
                             <div>
                                 <div className="font-mono text-sm text-gray-300">
-                                    {currentPoint.latitude.toFixed(6)}
+                                    {currentPoint.latitude?.toFixed(6) ?? 'N/A'}
                                 </div>
                                 <div className="font-mono text-sm text-gray-300">
-                                    {currentPoint.longitude.toFixed(6)}
+                                    {currentPoint.longitude?.toFixed(6) ?? 'N/A'}
                                 </div>
                             </div>
                         </div>
@@ -119,13 +119,13 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                         </div>
 
                         {/* Heading */}
-                        {currentPoint.heading !== undefined && (
+                        {currentPoint.heading != null && (
                             <div className="flex items-center">
-                                <Navigation className="h-4 w-4 text-gray-500 mr-2" 
+                                <Navigation className="h-4 w-4 text-gray-500 mr-2"
                                     style={{ transform: `rotate(${currentPoint.heading}deg)` }}
                                 />
                                 <span className="text-sm text-gray-300">
-                                    {currentPoint.heading.toFixed(0)}° bearing
+                                    {currentPoint.heading?.toFixed(0) ?? '0'}° bearing
                                 </span>
                             </div>
                         )}
@@ -167,7 +167,7 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                         Trail Summary
                     </h4>
-                    
+
                     <div className="grid grid-cols-2 gap-3">
                         {/* Total Distance */}
                         <div className="bg-gray-700 rounded-lg p-3">
@@ -244,14 +244,13 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                         Zone Dwell Times
                     </h4>
-                    
+
                     <div className="space-y-2">
                         {summary.zoneDwellTimes.map((zone, index) => (
-                            <div 
+                            <div
                                 key={`dwell-${index}`}
-                                className={`rounded-lg p-3 ${
-                                    ZONE_TYPE_COLORS[zone.zoneType] || 'bg-gray-700 text-gray-300'
-                                }`}
+                                className={`rounded-lg p-3 ${ZONE_TYPE_COLORS[zone.zoneType] || 'bg-gray-700 text-gray-300'
+                                    }`}
                             >
                                 <div className="flex justify-between items-start">
                                     <div>

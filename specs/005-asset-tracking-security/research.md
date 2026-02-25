@@ -15,6 +15,7 @@
 **Decision**: Apache NiFi with ExecuteSQLRecord processor
 
 **Rationale**:
+
 - **Constitution Compliance**: Constitution mandates "Ingestion: Apache NiFi (Containerized)"
 - **Separation of Concerns**: Decouples data ingestion from business logic
 - **Scalability**: NiFi handles backpressure, retry logic, and flow management
@@ -22,11 +23,13 @@
 - **Reusability**: NiFi flow can be reused for other database polling scenarios
 
 **Alternatives Considered**:
+
 - ❌ Spring Boot @Scheduled: Violates constitution, tightly coupled
 - ❌ Kafka Connect JDBC Source: Requires additional connector setup, overkill for MVP
 - ✅ NiFi ExecuteSQL: Constitution-compliant, proven pattern in existing architecture
 
 **Implementation Details**:
+
 - Processor: `ExecuteSQLRecord`
 - Schedule: Every 5 seconds
 - Query: `SELECT vehicle_id, latitude, longitude, speed, heading, status, timestamp FROM vehicles WHERE updated_at > ${last_poll_time}`
@@ -148,28 +151,32 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 - **Threshold Research**: Stationary assets drift <10m/hour from GPS variance
 - **Business Case**: Prevents unauthorized use of grounded equipment
 
-#### 5.2 LOCATION_MISMATCH 
- 
+#### 5.2 LOCATION_MISMATCH
+
 - **Trigger**: Asset register location differs from GPS by >100m
 - **Threshold Research**: Register updates lag by 5-15 minutes in normal ops
 - **Business Case**: Identifies lost/misplaced assets
 
 #### 5.3 SPEED_ANOMALY
+
 - **Trigger**: Speed exceeds category maximum by >20%
 - **Threshold Research**: Speed limits from airport safety manuals
 - **Business Case**: Prevents accidents, enforces safety rules
 
 #### 5.4 MISSING_TRACKING
+
 - **Trigger**: No GPS update for >10 minutes while status = "In Use"
 - **Threshold Research**: Normal GPS reporting interval = 5 seconds, allow 2× buffer
 - **Business Case**: Detects tracker malfunction or tampering
 
 #### 5.5 DUPLICATE_SIGNAL
+
 - **Trigger**: Same asset ID reported at 2+ locations >500m apart simultaneously
 - **Threshold Research**: Max asset speed (50 km/h) = 833m/min, use 500m for 30s window
 - **Business Case**: Identifies QR code duplication or system errors
 
 **Severity Calibration**:
+
 - CRITICAL: Immediate safety risk (duplicate signals, high-speed violations)
 - HIGH: Security/compliance risk (location mismatch >500m, missing tracking >10 min)
 - MEDIUM: Operational irregularity (unexpected movement, minor mismatch)
@@ -184,18 +191,21 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 **Decision**: 4 selectable resolutions (10m, 25m, 50m, 100m)
 
 **Rationale**:
+
 - **10m**: Stand-level detail (parking stands are 20-40m wide) - 0.0001° lat/lng
 - **25m**: Apron section detail - 0.00025°
 - **50m**: Terminal area overview - 0.0005°
 - **100m**: Whole airport perspective - 0.001°
 
 **Technical Approach**:
+
 - PostGIS `ST_SnapToGrid(location, resolution)` for aggregation
 - Materialized views pre-aggregate at 10m, runtime resampling for coarser grids
 - 10m grid for VIDP airport (5km × 3km) = 150,000 cells × 720 hours/month = 108M records
 - With TimescaleDB compression: ~2GB/month
 
 **Alternatives Considered**:
+
 - ❌ Fixed 50m: Too coarse for stand analysis, too fine for airport overview
 - ❌ Adaptive grid: Complex implementation, unclear UX
 - ✅ User-selectable 4 levels: Clear mental model, covers all use cases
@@ -209,17 +219,20 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 **Decision**: WebSocket (SockJS + STOMP) - reuse existing infrastructure
 
 **Rationale**:
+
 - **Existing Investment**: Platform already uses WebSocket for flight/vehicle tracking
 - **Bi-directional**: Supports future features (acknowledge violations from UI)
 - **Reliability**: SockJS fallback to long-polling if WebSocket unavailable
 - **Topic-based**: STOMP supports tenant-specific topics `/topic/violations/{tenantCode}`
 
 **Alternatives Considered**:
+
 - ❌ SSE: One-way only, no existing infrastructure
 - ❌ Polling: Inefficient, 5-second lag
 - ✅ WebSocket: Proven, <1 second latency
 
 **Implementation**:
+
 - Topics: `/topic/violations/{tenantCode}`, `/topic/assets/live/{tenantCode}`
 - Message format: JSON with event type, asset details, timestamp
 - Throttling: Max 1 message per asset per 5 seconds (prevent spam)
@@ -233,16 +246,19 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 **Decision**: TanStack Query (React Query) + Zustand for filters
 
 **Rationale**:
+
 - **TanStack Query**: Handles server state, caching, background refetch
 - **Zustand**: Lightweight client state (filters, UI preferences)
 - **Separation**: Server state (assets, violations) separate from UI state (filters, view mode)
 
 **Cache Strategy**:
+
 - Asset positions: 5-second stale time (matches ingestion interval)
 - Zone violations: 1-minute stale time (less dynamic)
 - Heatmap data: 5-minute stale time (expensive aggregation)
 
 **Alternatives Considered**:
+
 - ❌ Redux: Overkill for this feature, boilerplate heavy
 - ❌ Context API: No caching, manual refetch logic
 - ✅ React Query + Zustand: Best practice, minimal code
@@ -268,6 +284,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 ## Best Practices Applied
 
 ### Database Design
+
 - ✅ Hypertables for time-series data (asset_movement_trail, zone_violations, movement_discrepancies)
 - ✅ Continuous aggregates for analytics (zone_violations_hourly, movement_discrepancies_daily)
 - ✅ Spatial indexes (GIST) on all geometry columns
@@ -275,6 +292,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 - ✅ Compression after 7 days (70-90% size reduction)
 
 ### API Design
+
 - ✅ RESTful endpoints with pagination (default 50, max 500)
 - ✅ ISO 8601 timestamps
 - ✅ Consistent error responses (RFC 7807 Problem Details)
@@ -282,6 +300,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 - ✅ HATEOAS links for related resources
 
 ### Frontend Architecture
+
 - ✅ Component-based design (atomic design principles)
 - ✅ Custom hooks for reusable logic (useAssetLiveUpdates, useHeatmapData)
 - ✅ TypeScript for type safety
@@ -289,6 +308,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 - ✅ Accessibility (WCAG 2.1 AA)
 
 ### Performance
+
 - ✅ Database indexes on all foreign keys and frequently queried columns
 - ✅ Query result caching (5-second TTL for live data)
 - ✅ Pagination for large result sets
@@ -297,6 +317,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 - ✅ Lazy loading for heatmap data (fetch on-demand)
 
 ### Security
+
 - ✅ Role-based access control (ADMIN, GH, AIRPORT_USER)
 - ✅ Tenant isolation (row-level security in queries)
 - ✅ SQL injection prevention (parameterized queries)
@@ -308,6 +329,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 ## Open Questions & Future Research
 
 ### Deferred to Phase 2
+
 1. **ML-based anomaly detection**: Pattern learning from historical movements
 2. **Predictive alerts**: Forecast zone violations before they occur
 3. **Computer vision integration**: Verify violations with CCTV footage
@@ -315,6 +337,7 @@ SELECT add_compression_policy('asset_movement_trail', INTERVAL '7 days');
 5. **Automated remediation**: Send alerts directly to driver devices
 
 ### Monitoring Needs
+
 - Track false positive rate for zone violations (target: <5%)
 - Measure user adoption (target: 80% of GH managers weekly usage within 1 month)
 - Monitor heatmap query performance (target: <5 seconds for 30-day aggregation)

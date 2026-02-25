@@ -45,8 +45,12 @@ const HotspotDetailModal: React.FC<HotspotDetailModalProps> = ({
         enabled: isOpen
     });
 
-    const copyLocation = () => {
-        navigator.clipboard.writeText(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+    const handleCopyCoordinates = () => {
+        navigator.clipboard.writeText(`${latitude?.toFixed(6) ?? 'N/A'}, ${longitude?.toFixed(6) ?? 'N/A'}`);
+        // Assuming 'toast' is available globally or imported elsewhere
+        // If not, this line will cause an error.
+        // For example, if using react-toastify, you would need: import { toast } from 'react-toastify';
+        // toast.success('Coordinates copied'); 
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -144,11 +148,11 @@ const HotspotDetailModal: React.FC<HotspotDetailModalProps> = ({
                                             <div className="bg-gray-50 rounded-lg p-4">
                                                 <h3 className="text-sm font-medium text-gray-700 mb-2">Location</h3>
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-mono text-gray-900">
-                                                        {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                                                    <span className="font-mono text-gray-300">
+                                                        {latitude?.toFixed(6) ?? 'N/A'}, {longitude?.toFixed(6) ?? 'N/A'}
                                                     </span>
                                                     <button
-                                                        onClick={copyLocation}
+                                                        onClick={handleCopyCoordinates}
                                                         className="flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition"
                                                     >
                                                         <Copy className="w-4 h-4" />
@@ -195,12 +199,11 @@ const HotspotDetailModal: React.FC<HotspotDetailModalProps> = ({
                                                     </h3>
                                                     <div className="grid grid-cols-4 gap-3">
                                                         {data.violations.map(v => (
-                                                            <div key={v.severity} className={`rounded-lg p-3 ${
-                                                                v.severity === 'CRITICAL' ? 'bg-red-50 border border-red-200' :
-                                                                v.severity === 'HIGH' ? 'bg-orange-50 border border-orange-200' :
-                                                                v.severity === 'MEDIUM' ? 'bg-yellow-50 border border-yellow-200' :
-                                                                'bg-gray-50 border border-gray-200'
-                                                            }`}>
+                                                            <div key={v.severity} className={`rounded-lg p-3 ${v.severity === 'CRITICAL' ? 'bg-red-50 border border-red-200' :
+                                                                    v.severity === 'HIGH' ? 'bg-orange-50 border border-orange-200' :
+                                                                        v.severity === 'MEDIUM' ? 'bg-yellow-50 border border-yellow-200' :
+                                                                            'bg-gray-50 border border-gray-200'
+                                                                }`}>
                                                                 <p className="text-xs font-medium text-gray-600">{v.severity}</p>
                                                                 <p className="text-xl font-bold mt-1">{v.count}</p>
                                                             </div>

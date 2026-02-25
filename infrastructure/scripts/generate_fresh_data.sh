@@ -152,6 +152,25 @@ generate_historical_data() {
     fi
 }
 
+# Sync vehicle->asset mappings and dependent tracking tables
+sync_vehicle_assets() {
+    local airport=$1
+    print_info "Syncing vehicle-to-asset mappings for ${airport}..."
+
+    local response
+    response=$(curl -s -X POST "${BACKEND_URL}/api/admin/generators/sync-vehicle-assets/${airport}")
+
+    if echo "$response" | grep -q '"success":true'; then
+        local mappings_created
+        mappings_created=$(echo "$response" | grep -o '"mappingsCreated":[0-9]*' | cut -d: -f2)
+        print_success "Vehicle-asset sync completed for ${airport} (mappings: ${mappings_created:-0})"
+        return 0
+    else
+        print_error "Failed to sync vehicle assets for ${airport}: $response"
+        return 1
+    fi
+}
+
 # Refresh materialized views
 refresh_views() {
     print_info "Refreshing materialized views..."
@@ -168,6 +187,43 @@ refresh_views() {
     fi
 }
 
+# Verify that movement trail data exists for every requested tenant.
+# Fails hard if any tenant has zero rows.
+verify_trail_counts() {
+    local failed=0
+
+    print_info "Verifying asset_movement_trail rows for requested tenants..."
+
+    for airport in "$@"; do
+        local count
+        count=$(docker-compose -f docker-compose.dev.yml exec -T timescaledb \
+            psql -U postgres -d utam -t -A \
+            -c "SELECT COUNT(*) FROM asset_movement_trail WHERE tenant_code='${airport}';" \
+            | tr -d '[:space:]')
+
+        if [ -z "$count" ]; then
+            print_error "Could not read trail count for ${airport}"
+            failed=1
+            continue
+        fi
+
+        if [ "$count" -gt 0 ]; then
+            print_success "asset_movement_trail rows for ${airport}: ${count}"
+        else
+            print_error "asset_movement_trail rows for ${airport}: 0"
+            failed=1
+        fi
+    done
+
+    if [ "$failed" -ne 0 ]; then
+        print_error "Post-check failed: one or more tenants have zero asset_movement_trail rows."
+        return 1
+    fi
+
+    print_success "Post-check passed: all requested tenants have asset movement trail data."
+    return 0
+}
+
 # Process a single airport
 process_airport() {
     local airport=$1
@@ -177,13 +233,14 @@ process_airport() {
     
     # Clear data unless skipped
     if [ "$SKIP_CLEAR" = false ]; then
-        clear_airport_data "$airport" || true
+        clear_airport_data "$airport"
     fi
     
     # Generate data unless clear-only
     if [ "$CLEAR_ONLY" = false ]; then
-        generate_batch_data "$airport" "$BATCH_SIZE" || true
-        generate_historical_data "$airport" "$HISTORICAL_DAYS" || true
+        generate_batch_data "$airport" "$BATCH_SIZE"
+        generate_historical_data "$airport" "$HISTORICAL_DAYS"
+        sync_vehicle_assets "$airport"
     fi
 }
 
@@ -247,6 +304,8 @@ main() {
     
     # Refresh materialized views after all data is generated
     if [ "$CLEAR_ONLY" = false ]; then
+        echo ""
+        verify_trail_counts "${airports[@]}"
         echo ""
         refresh_views
     fi

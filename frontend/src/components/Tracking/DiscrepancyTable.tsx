@@ -1,10 +1,10 @@
 import React from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { MovementDiscrepancy, SEVERITY_COLORS, DISCREPANCY_TYPE_LABELS } from '../../types/tracking';
-import { 
-    CheckCircle, 
-    AlertTriangle, 
-    ChevronLeft, 
+import {
+    CheckCircle,
+    AlertTriangle,
+    ChevronLeft,
     ChevronRight,
     MapPin,
     ArrowRight
@@ -38,8 +38,8 @@ const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
         return (
             <span
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                style={{ 
-                    backgroundColor: `${color}20`, 
+                style={{
+                    backgroundColor: `${color}20`,
                     color: color,
                     border: `1px solid ${color}40`
                 }}
@@ -108,8 +108,8 @@ const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
                         {discrepancies.map((discrepancy) => (
-                            <tr 
-                                key={discrepancy.id} 
+                            <tr
+                                key={discrepancy.id}
                                 className={`hover:bg-gray-700 ${!discrepancy.acknowledged ? 'bg-orange-900/20' : ''}`}
                             >
                                 {/* Asset */}
@@ -134,7 +134,7 @@ const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
                                 {/* Location */}
                                 <td className="px-4 py-3 whitespace-nowrap">
                                     <div className="flex items-center text-sm">
-                                        {discrepancy.expectedLatitude && discrepancy.expectedLongitude ? (
+                                        {discrepancy.expectedLatitude != null && discrepancy.expectedLongitude != null ? (
                                             <div className="flex items-center">
                                                 <div className="flex items-center text-green-400">
                                                     <MapPin className="h-3.5 w-3.5 mr-1" />
@@ -146,7 +146,7 @@ const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
                                                 <div className="flex items-center text-red-400">
                                                     <MapPin className="h-3.5 w-3.5 mr-1" />
                                                     <span className="font-mono text-xs">
-                                                        {discrepancy.actualLatitude?.toFixed(4)}
+                                                        {discrepancy.actualLatitude?.toFixed(4) ?? 'N/A'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -154,7 +154,7 @@ const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
                                             <div className="flex items-center text-gray-300">
                                                 <MapPin className="h-3.5 w-3.5 mr-1" />
                                                 <span className="font-mono text-xs">
-                                                    {discrepancy.actualLatitude?.toFixed(4)}, {discrepancy.actualLongitude?.toFixed(4)}
+                                                    {discrepancy.actualLatitude?.toFixed(4) ?? 'N/A'}, {discrepancy.actualLongitude?.toFixed(4) ?? 'N/A'}
                                                 </span>
                                             </div>
                                         )}
@@ -163,9 +163,8 @@ const DiscrepancyTable: React.FC<DiscrepancyTableProps> = ({
 
                                 {/* Deviation */}
                                 <td className="px-4 py-3 whitespace-nowrap">
-                                    <span className={`text-sm font-medium ${
-                                        (discrepancy.deviationMeters || 0) > 100 ? 'text-red-400' : 'text-gray-300'
-                                    }`}>
+                                    <span className={`text-sm font-medium ${(discrepancy.deviationMeters || 0) > 100 ? 'text-red-400' : 'text-gray-300'
+                                        }`}>
                                         {formatDeviation(discrepancy.deviationMeters)}
                                     </span>
                                 </td>

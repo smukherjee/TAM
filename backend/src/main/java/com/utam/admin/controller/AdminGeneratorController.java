@@ -68,6 +68,8 @@ public class AdminGeneratorController {
         try {
             log.info("Starting batch population for tenant: {} with batchSize: {}", tenantCode, batchSize);
             Map<String, Integer> results = orchestrator.populateBatch(tenantCode, batchSize);
+            int mappingsCreated = orchestrator.syncVehiclesToAssets(tenantCode);
+            results.put("vehicle_asset_mappings", mappingsCreated);
             return ResponseEntity.ok(new BatchResponse(
                     true,
                     "Batch population completed",
@@ -100,11 +102,14 @@ public class AdminGeneratorController {
             
             Map<String, BatchResponse> responses = new java.util.HashMap<>();
             results.forEach((tenant, result) -> {
+                Map<String, Integer> resultMap = new java.util.HashMap<>(result.recordsGenerated());
+                int mappingsCreated = orchestrator.syncVehiclesToAssets(tenant);
+                resultMap.put("vehicle_asset_mappings", mappingsCreated);
                 responses.put(tenant, new BatchResponse(
                         result.success(),
                         result.message(),
                         tenant,
-                        result.recordsGenerated()
+                        resultMap
                 ));
             });
             
@@ -262,11 +267,14 @@ public class AdminGeneratorController {
         try {
             GeneratorOrchestrator.HistoricalDataResult result =
                     orchestrator.generateHistoricalData(tenantCode, daysBack, samplesPerDay);
+            int mappingsCreated = orchestrator.syncVehiclesToAssets(tenantCode);
+            Map<String, Integer> recordsByGenerator = new java.util.HashMap<>(result.recordsByGenerator());
+            recordsByGenerator.put("vehicle_asset_mappings", mappingsCreated);
             return ResponseEntity.ok(new HistoricalDataResponse(
                     result.success(),
                     result.totalRecords(),
                     result.durationMs(),
-                    result.recordsByGenerator()
+                    recordsByGenerator
             ));
         } catch (Exception e) {
             log.error("Historical data generation failed: {}", e.getMessage());
