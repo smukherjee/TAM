@@ -1,0 +1,3 @@
+SELECT *
+FROM public.v_ops_overview_daily
+WHERE tenant_code = COALESCE(NULLIF('{{ tam_tenant_code() }}',''), tenant_code)

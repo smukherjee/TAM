@@ -1,0 +1,1 @@
+{"id":1,"result":{"sql":"SELECT *\nFROM public.v_ops_overview_daily\nWHERE tenant_code = COALESCE(NULLIF('{{ tam_tenant_code() }}',''), tenant_code)"}}

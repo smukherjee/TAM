@@ -123,32 +123,29 @@ create_dataset() {
     | if length > 0 then min else empty end
   ')
 
-  local PAYLOAD
-  if [ -n "$SQL" ]; then
-    PAYLOAD=$(jq -n --arg name "$NAME" --arg sql "$SQL" --argjson db "$DB_ID" --arg schema "$SCHEMA" \
-      '{database: $db, table_name: $name, sql: $sql, schema: $schema}')
-  else
-    PAYLOAD=$(jq -n --argjson db "$DB_ID" --arg schema "$SCHEMA" --arg table "$TABLE" \
-      '{database: $db, schema: $schema, table_name: $table}')
-  fi
-
   if [ -n "$EXISTING" ]; then
-    # Keep existing datasets in sync when virtual SQL changes.
-    if [ -n "$SQL" ]; then
-      local UPDATE_PAYLOAD UPDATE_RESP UPDATE_ID
-      UPDATE_PAYLOAD=$(jq -n --arg name "$NAME" --arg sql "$SQL" --arg schema "$SCHEMA" \
-        '{table_name: $name, schema: $schema, sql: $sql}')
-      UPDATE_RESP=$(req -X PUT "$SUPERSET_URL/api/v1/dataset/$EXISTING" -H "Content-Type: application/json" -d "$UPDATE_PAYLOAD")
-      UPDATE_ID=$(echo "$UPDATE_RESP" | jq -r '.id // .result.id // empty')
-      if [ -z "$UPDATE_ID" ]; then
-        echo "❌ Failed to update virtual dataset $NAME (id=$EXISTING): $UPDATE_RESP" >&2
-        exit 1
-      fi
-    fi
+    # Clear SQL to force physical column extraction
+    local TEMP_PAYLOAD
+    TEMP_PAYLOAD=$(jq -n --arg name "$NAME" --arg schema "$SCHEMA" '{table_name: $name, schema: $schema, sql: ""}')
+    req -X PUT "$SUPERSET_URL/api/v1/dataset/$EXISTING" -H "Content-Type: application/json" -d "$TEMP_PAYLOAD" >/dev/null
+
     refresh_dataset_metadata "$EXISTING"
+
+    # Restore SQL
+    if [ -n "$SQL" ]; then
+      local UPDATE_PAYLOAD
+      UPDATE_PAYLOAD=$(jq -n --arg name "$NAME" --arg sql "$SQL" --arg schema "$SCHEMA" '{table_name: $name, schema: $schema, sql: $sql}')
+      req -X PUT "$SUPERSET_URL/api/v1/dataset/$EXISTING" -H "Content-Type: application/json" -d "$UPDATE_PAYLOAD" >/dev/null
+    fi
+
     echo "$EXISTING"
     return
   fi
+
+  # For new datasets, create without SQL first to fetch columns
+  local PAYLOAD
+  PAYLOAD=$(jq -n --argjson db "$DB_ID" --arg schema "$SCHEMA" --arg table "$TABLE" \
+    '{database: $db, schema: $schema, table_name: $table}')
 
   RESP=$(req -X POST "$SUPERSET_URL/api/v1/dataset/" -H "Content-Type: application/json" -d "$PAYLOAD")
   local CREATED_ID
@@ -157,7 +154,16 @@ create_dataset() {
     echo "❌ Failed to create dataset $NAME: $RESP" >&2
     exit 1
   fi
+  
   refresh_dataset_metadata "$CREATED_ID"
+  
+  # Then update with SQL if provided
+  if [ -n "$SQL" ]; then
+    local UPDATE_PAYLOAD
+    UPDATE_PAYLOAD=$(jq -n --arg name "$NAME" --arg sql "$SQL" --arg schema "$SCHEMA" '{table_name: $name, schema: $schema, sql: $sql}')
+    req -X PUT "$SUPERSET_URL/api/v1/dataset/$CREATED_ID" -H "Content-Type: application/json" -d "$UPDATE_PAYLOAD" >/dev/null
+  fi
+
   echo "$CREATED_ID"
 }
 
