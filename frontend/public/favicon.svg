@@ -11,6 +11,6 @@
   <g transform="translate(32,32) rotate(-45) translate(-16,-16)" fill="white">
     <path d="M26 32l-4-8h-6l2 8-2 8h6l4-8zm-14-4h6l3-12h4l-2 12h6l2-4h3l-1 8 1 8h-3l-2-4h-6l2 12h-4l-3-12h-6l-2-4 2-4z"/>
   </g>
-  <!-- TAM text -->
-  <text x="32" y="56" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white">TAM</text>
+  <!-- Turnwise text -->
+  <text x="32" y="56" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white">Turnwise</text>
 </svg>

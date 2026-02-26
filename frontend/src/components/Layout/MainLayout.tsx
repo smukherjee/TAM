@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, Activity, BarChart3, Plane, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp, Flame, AlertOctagon, AlertTriangle, Route } from 'lucide-react';
+import { Map, Activity, BarChart3, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp, Flame, AlertOctagon, AlertTriangle, Route } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -25,12 +25,14 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className={`relative bg-gray-800 border-r border-gray-700 flex flex-col shadow-2xl z-20 transition-all duration-300 ease-in-out ${isOpen ? 'w-64' : 'w-20'}`}>
 
                 {/* Header */}
-                <div className="p-6 border-b border-gray-700 flex items-center justify-between bg-gray-900 h-20 overflow-hidden">
+                <div className="p-4 border-b border-gray-700 flex items-center justify-between bg-gray-900 h-20 overflow-hidden">
                     <div className="flex items-center space-x-3">
-                        <Plane className="text-blue-500 animate-pulse shrink-0" size={28} />
-                        <h1 className={`text-xl font-bold tracking-wider transition-opacity duration-200 whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                            TAM <span className="text-blue-500">OS</span>
-                        </h1>
+                        <img
+                            src="/assets/turnwise-logo.svg"
+                            alt="Turnwise logo"
+                            className={`h-8 w-auto transition-all duration-200 shrink-0 ${isOpen ? 'opacity-100' : 'opacity-90'}`}
+                        />
+                        <h1 className="sr-only">Turnwise</h1>
                     </div>
                 </div>
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plane } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -24,10 +23,10 @@ const LoginPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
             <div className="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-700">
-                <div className="flex items-center justify-center mb-8 text-blue-500">
-                    <Plane size={48} />
+                <div className="flex items-center justify-center mb-6">
+                    <img src="/assets/turnwise-logo.svg" alt="Turnwise" className="h-16 w-auto" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">TAM Operations Login</h2>
+                <h2 className="sr-only">Sign in</h2>
 
                 {error && (
                     <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded mb-4 text-sm">
