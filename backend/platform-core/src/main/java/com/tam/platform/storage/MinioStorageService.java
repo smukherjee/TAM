@@ -23,14 +23,16 @@ public class MinioStorageService implements ObjectStorageService {
     @Override
     @SneakyThrows
     public void upload(String bucket, String key, InputStream data, long size, String contentType) {
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucket)
-                        .object(key)
-                        .stream(data, size, -1)
-                        .contentType(contentType)
-                        .build()
-        );
+        // MinIO uploads disabled: previously invoked minioClient.putObject(...)
+        // Commenting out to stop writes to object storage.
+        // minioClient.putObject(
+        //         PutObjectArgs.builder()
+        //                 .bucket(bucket)
+        //                 .object(key)
+        //                 .stream(data, size, -1)
+        //                 .contentType(contentType)
+        //                 .build()
+        // );
     }
 
     @Override

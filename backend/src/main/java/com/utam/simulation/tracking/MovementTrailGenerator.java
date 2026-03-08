@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +31,7 @@ public class MovementTrailGenerator {
     private final VehicleDataGenerator vehicleDataGenerator;
     private final FlightDataGenerator flightDataGenerator;
     private final MeterRegistry meterRegistry;
+    private final com.utam.tracking.service.MovementTrailIngestionService ingestionService;
 
     // Position history with rolling window (default 5 minutes)
     private final Map<String, Deque<TrailPoint>> vehicleTrails = new ConcurrentHashMap<>();
@@ -43,11 +46,13 @@ public class MovementTrailGenerator {
     public MovementTrailGenerator(SimulationConfig config,
                                   VehicleDataGenerator vehicleDataGenerator,
                                   FlightDataGenerator flightDataGenerator,
-                                  MeterRegistry meterRegistry) {
+                                  MeterRegistry meterRegistry,
+                                  com.utam.tracking.service.MovementTrailIngestionService ingestionService) {
         this.config = config;
         this.vehicleDataGenerator = vehicleDataGenerator;
         this.flightDataGenerator = flightDataGenerator;
         this.meterRegistry = meterRegistry;
+        this.ingestionService = ingestionService;
     }
 
     @PostConstruct
@@ -258,22 +263,47 @@ public class MovementTrailGenerator {
                 String vehicleId = String.format("HIST-V%03d", v);
                 double vLat = centerLat + (random.nextDouble() - 0.5) * 0.01;
                 double vLon = centerLon + (random.nextDouble() - 0.5) * 0.01;
-                double speed = 15 + random.nextDouble() * 25; // 15-40 km/h
+                // Bias speeds toward ~30 km/h with small variance
+                double speed = 30.0 + (random.nextDouble() - 0.5) * 6.0; // ~27-33 km/h
                 double heading = random.nextDouble() * 360;
 
                 for (int s = 0; s < samplesPerDay; s++) {
                     Instant timestamp = dayStart.plusSeconds(s * intervalSeconds);
-                    
-                    // Simulate movement pattern (random walk with bias)
-                    double moveAmount = speed / 3600.0 / 111000.0 * intervalSeconds;
-                    heading += (random.nextDouble() - 0.5) * 20; // Gradual heading change
-                    vLat += Math.cos(Math.toRadians(heading)) * moveAmount;
-                    vLon += Math.sin(Math.toRadians(heading)) * moveAmount;
-                    speed = Math.max(5, Math.min(40, speed + (random.nextDouble() - 0.5) * 5));
 
-                    // Add to historical data (we'd persist this to DB in production)
-                    // For now, we just count
-                    totalGenerated++;
+                    // Simulate movement pattern (biased walk with realistic unit conversion)
+                    // speed (km/h) -> meters/sec = speed/3.6
+                    double metersPerSecond = speed / 3.6;
+                    double metersMoved = metersPerSecond * intervalSeconds;
+                    double moveDegrees = metersMoved / 111000.0; // approx degrees latitude
+
+                    heading += (random.nextDouble() - 0.5) * 10; // Gradual heading change
+                    vLat += Math.cos(Math.toRadians(heading)) * moveDegrees;
+                    vLon += Math.sin(Math.toRadians(heading)) * moveDegrees;
+
+                    // Small speed variation
+                    speed = Math.max(5.0, Math.min(60.0, speed + (random.nextDouble() - 0.5) * 2.0));
+
+                    // Persist via ingestion service so normal processing (zone detection, register update) runs
+                    try {
+                        ZonedDateTime zts = ZonedDateTime.ofInstant(timestamp, ZoneOffset.UTC);
+                        ingestionService.processPositionUpdate(
+                                null,
+                                vehicleId,
+                                null,
+                                "Vehicle",
+                                vehicleId,
+                                vLat,
+                                vLon,
+                                speed,
+                                heading,
+                                "ACTIVE",
+                                zts,
+                                tenantCode
+                        );
+                        totalGenerated++;
+                    } catch (Exception e) {
+                        log.warn("Failed to persist historical trail point for {}: {}", vehicleId, e.getMessage());
+                    }
                 }
             }
 

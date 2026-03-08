@@ -247,7 +247,7 @@ public class AdminGeneratorController {
     public ResponseEntity<HistoricalDataResponse> generateHistoricalData(
             @RequestParam(defaultValue = "VIDP") String tenantCode,
             @RequestParam(defaultValue = "7") int daysBack,
-            @RequestParam(defaultValue = "24") int samplesPerDay) {
+            @RequestParam(defaultValue = "1440") int samplesPerDay) {
         return handleHistoricalGeneration(tenantCode, daysBack, samplesPerDay);
     }
 
@@ -259,7 +259,7 @@ public class AdminGeneratorController {
     public ResponseEntity<HistoricalDataResponse> generateHistoricalDataWithPath(
             @PathVariable String tenantCode,
             @RequestParam(name = "days", defaultValue = "7") int days,
-            @RequestParam(name = "samplesPerDay", defaultValue = "24") int samplesPerDay) {
+            @RequestParam(name = "samplesPerDay", defaultValue = "1440") int samplesPerDay) {
         return handleHistoricalGeneration(tenantCode, days, samplesPerDay);
     }
 

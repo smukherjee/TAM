@@ -102,7 +102,8 @@ public class FlightConsumer {
             String tenant = !flights.isEmpty() && flights.get(0).getTenantCode() != null ? flights.get(0).getTenantCode() : "VIDP";
             String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
             String filename = "archives/raw/" + tenant + "/" + timestamp + "/flight_" + java.util.UUID.randomUUID() + ".json";
-            minioService.uploadJson(filename, message);
+            // MinIO upload invocation removed to stop writes to object storage.
+            // Previously: minioService.uploadJson(filename, message);
 
         } catch (Exception e) {
             logger.error("Error processing flight message: {}", message, e);

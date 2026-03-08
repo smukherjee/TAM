@@ -30,16 +30,17 @@ public class MinioService {
         try {
             byte[] contentBytes = jsonContent.getBytes(StandardCharsets.UTF_8);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(contentBytes);
-
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(rawDataBucket)
-                            .object(objectName)
-                            .stream(inputStream, contentBytes.length, -1)
-                            .contentType("application/json")
-                            .build()
-            );
-            logger.debug("Uploaded {} to MinIO bucket {}", objectName, rawDataBucket);
+            // MinIO uploads disabled: previously the code called `minioClient.putObject(...)` here.
+            // Commenting out actual upload to stop writes to MinIO.
+            // minioClient.putObject(
+            //         PutObjectArgs.builder()
+            //                 .bucket(rawDataBucket)
+            //                 .object(objectName)
+            //                 .stream(inputStream, contentBytes.length, -1)
+            //                 .contentType("application/json")
+            //                 .build()
+            // );
+            logger.warn("MinIO uploads disabled — skipping upload of {} to bucket {}", objectName, rawDataBucket);
         } catch (Exception e) {
             logger.error("Error uploading to MinIO: {}", e.getMessage());
         }

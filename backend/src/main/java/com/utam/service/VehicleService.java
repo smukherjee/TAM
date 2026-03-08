@@ -105,7 +105,8 @@ public class VehicleService {
             }
             String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"));
             String filename = "archives/raw/" + tenant + "/" + timestamp + "/vehicle_" + UUID.randomUUID() + ".json";
-            minioService.uploadJson(filename, message);
+            // MinIO upload invocation removed to stop writes to object storage.
+            // Previously: minioService.uploadJson(filename, message);
 
         } catch (Exception e) {
             logger.error("Error processing vehicle message: {}", message, e);

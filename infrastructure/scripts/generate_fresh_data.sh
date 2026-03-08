@@ -26,6 +26,7 @@ BACKEND_URL="${BACKEND_URL:-http://localhost:8080}"
 DEFAULT_AIRPORTS=("VIDP" "LIRN" "YBBN")
 BATCH_SIZE=100
 HISTORICAL_DAYS=7
+SAMPLES_PER_DAY=1440
 CLEAR_ONLY=false
 SKIP_CLEAR=false
 
@@ -69,6 +70,7 @@ show_help() {
     echo "  --skip-clear    Generate data without clearing first"
     echo "  --batch-size N  Set batch size for generation (default: 100)"
     echo "  --days N        Days of historical data to generate (default: 7)"
+    echo "  --samples-per-day N  Samples per entity per day for historical data (default: 1440)"
     echo "  --help          Show this help message"
     echo ""
     echo "Examples:"
@@ -139,7 +141,7 @@ generate_historical_data() {
     print_info "Generating ${days} days of historical data for ${airport}..."
     
     local response
-    response=$(curl -s -X POST "${BACKEND_URL}/api/admin/generators/historical/${airport}?days=${days}&samplesPerDay=24")
+    response=$(curl -s -X POST "${BACKEND_URL}/api/admin/generators/historical/${airport}?days=${days}&samplesPerDay=${SAMPLES_PER_DAY}")
     
     if echo "$response" | grep -q '"success":true'; then
         local total_records=$(echo "$response" | grep -o '"totalRecords":[0-9]*' | cut -d: -f2)
@@ -271,6 +273,10 @@ main() {
                 HISTORICAL_DAYS=$2
                 shift 2
                 ;;
+            --samples-per-day)
+                SAMPLES_PER_DAY=$2
+                shift 2
+                ;;
             *)
                 airports+=("$1")
                 shift
@@ -290,6 +296,7 @@ main() {
     echo "  Airports:        ${airports[*]}"
     echo "  Batch Size:      ${BATCH_SIZE}"
     echo "  Historical Days: ${HISTORICAL_DAYS}"
+    echo "  Samples/Day:     ${SAMPLES_PER_DAY}"
     echo "  Clear Only:      ${CLEAR_ONLY}"
     echo "  Skip Clear:      ${SKIP_CLEAR}"
     echo ""
