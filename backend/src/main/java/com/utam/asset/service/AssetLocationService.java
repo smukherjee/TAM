@@ -45,6 +45,37 @@ public class AssetLocationService {
     }
 
     /**
+     * Appends "AND column IN (?, ?, ...)" for a comma-separated multi-select filter value
+     * (frontend joins selected checkboxes with commas, e.g. "Emergency,Fueling").
+     */
+    private void appendInClause(StringBuilder sql, String column, String commaSeparated, List<Object> params) {
+        List<String> values = Arrays.stream(commaSeparated.split(","))
+                .map(String::trim)
+                .filter(v -> !v.isEmpty())
+                .toList();
+        if (values.isEmpty()) {
+            return;
+        }
+        sql.append(" AND ").append(column).append(" IN (")
+                .append(String.join(",", values.stream().map(v -> "?").toList()))
+                .append(")");
+        params.addAll(values);
+    }
+
+    /**
+     * Appends the ground-handler filter. "Untagged" matches assets with no assigned
+     * company; any other value matches that company exactly (no more implicit NULL bleed-through).
+     */
+    private void appendGroundHandlerClause(StringBuilder sql, String groundHandler, List<Object> params) {
+        if ("Untagged".equalsIgnoreCase(groundHandler)) {
+            sql.append(" AND a.company IS NULL");
+        } else {
+            sql.append(" AND a.company = ?");
+            params.add(groundHandler);
+        }
+    }
+
+    /**
      * Get all live assets with optional filters.
      * Cached for 5 seconds to reduce database load.
      *
@@ -52,21 +83,23 @@ public class AssetLocationService {
      * @param category   Filter by asset category (optional)
      * @param status     Filter by asset status (optional)
      * @param zoneId     Filter by restricted zone UUID (optional)
+     * @param groundHandler Filter by owning ground handler; pass "Untagged" to match assets with no company (optional)
      * @param limit      Max results (default 100, max 500)
      * @param offset     Pagination offset
      * @return List of asset locations
      */
-    @Cacheable(value = "liveAssets", key = "#tenantCode + '_' + #category + '_' + #status + '_' + #zoneId + '_' + #limit + '_' + #offset")
+    @Cacheable(value = "liveAssets", key = "#tenantCode + '_' + #category + '_' + #status + '_' + #zoneId + '_' + #groundHandler + '_' + #limit + '_' + #offset")
     public List<AssetLocationDTO> getAllLiveAssets(
             String tenantCode,
             String category,
             String status,
             UUID zoneId,
+            String groundHandler,
             Integer limit,
             Integer offset) {
 
-        logger.debug("Querying live assets: tenant={}, category={}, status={}, zone={}, limit={}, offset={}",
-                tenantCode, category, status, zoneId, limit, offset);
+        logger.debug("Querying live assets: tenant={}, category={}, status={}, zone={}, groundHandler={}, limit={}, offset={}",
+                tenantCode, category, status, zoneId, groundHandler, limit, offset);
 
         StringBuilder sql = new StringBuilder("""
                 SELECT
@@ -84,6 +117,7 @@ public class AssetLocationService {
                     amt.heading,
                     alr.last_updated AS last_seen,
                     a.tenant_code,
+                    a.company,
                     a.qr_id,
                     a.value,
                     a.description,
@@ -95,7 +129,13 @@ public class AssetLocationService {
                     ) AS has_violation
                 FROM assets a
                 JOIN asset_location_register alr ON a.asset_id = alr.asset_identifier
-                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.geometry, 50)
+                LEFT JOIN LATERAL (
+                    SELECT id, zone_name, zone_type
+                    FROM restricted_zones
+                    WHERE ST_DWithin(alr.current_location, geometry, 50)
+                    ORDER BY ST_Distance(alr.current_location, geometry)
+                    LIMIT 1
+                ) rz ON true
                 LEFT JOIN LATERAL (
                     SELECT speed, heading
                     FROM asset_movement_trail
@@ -110,18 +150,20 @@ public class AssetLocationService {
         params.add(tenantCode);
 
         if (category != null && !category.isEmpty()) {
-            sql.append(" AND a.category = ?");
-            params.add(category);
+            appendInClause(sql, "a.category", category, params);
         }
 
         if (status != null && !status.isEmpty()) {
-            sql.append(" AND a.status = ?");
-            params.add(status);
+            appendInClause(sql, "a.status", status, params);
         }
 
         if (zoneId != null) {
             sql.append(" AND rz.id = ?");
             params.add(zoneId);
+        }
+
+        if (groundHandler != null && !groundHandler.isEmpty()) {
+            appendGroundHandlerClause(sql, groundHandler, params);
         }
 
         // Order by last_seen descending (most recent first)
@@ -140,7 +182,7 @@ public class AssetLocationService {
     /**
      * Get total count of live assets (for pagination).
      */
-    public long countLiveAssets(String tenantCode, String category, String status, UUID zoneId) {
+    public long countLiveAssets(String tenantCode, String category, String status, UUID zoneId, String groundHandler) {
         StringBuilder sql = new StringBuilder("""
                 SELECT COUNT(DISTINCT a.id)
                 FROM assets a
@@ -153,18 +195,20 @@ public class AssetLocationService {
         params.add(tenantCode);
 
         if (category != null && !category.isEmpty()) {
-            sql.append(" AND a.category = ?");
-            params.add(category);
+            appendInClause(sql, "a.category", category, params);
         }
 
         if (status != null && !status.isEmpty()) {
-            sql.append(" AND a.status = ?");
-            params.add(status);
+            appendInClause(sql, "a.status", status, params);
         }
 
         if (zoneId != null) {
             sql.append(" AND rz.id = ?");
             params.add(zoneId);
+        }
+
+        if (groundHandler != null && !groundHandler.isEmpty()) {
+            appendGroundHandlerClause(sql, groundHandler, params);
         }
 
         Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
@@ -197,6 +241,7 @@ public class AssetLocationService {
                     amt.heading,
                     alr.last_updated AS last_seen,
                     a.tenant_code,
+                    a.company,
                     a.qr_id,
                     a.value,
                     a.description,
@@ -208,7 +253,13 @@ public class AssetLocationService {
                     ) AS has_violation
                 FROM assets a
                 JOIN asset_location_register alr ON a.asset_id = alr.asset_identifier
-                LEFT JOIN restricted_zones rz ON ST_DWithin(alr.current_location, rz.geometry, 50)
+                LEFT JOIN LATERAL (
+                    SELECT id, zone_name, zone_type
+                    FROM restricted_zones
+                    WHERE ST_DWithin(alr.current_location, geometry, 50)
+                    ORDER BY ST_Distance(alr.current_location, geometry)
+                    LIMIT 1
+                ) rz ON true
                 LEFT JOIN LATERAL (
                     SELECT speed, heading
                     FROM asset_movement_trail
@@ -249,6 +300,7 @@ public class AssetLocationService {
                     amt.heading,
                     alr.last_updated AS last_seen,
                     a.tenant_code,
+                    a.company,
                     a.qr_id,
                     a.value,
                     a.description,
@@ -283,7 +335,7 @@ public class AssetLocationService {
      * @return List of assets
      */
     public List<AssetLocationDTO> getAssetsByCategory(String category, String tenantCode) {
-        return getAllLiveAssets(tenantCode, category, null, null, 500, 0);
+        return getAllLiveAssets(tenantCode, category, null, null, null, 500, 0);
     }
 
     /**
@@ -319,7 +371,7 @@ public class AssetLocationService {
                     .isMoving(rs.getBoolean("is_moving"))
                     .hasViolation(rs.getBoolean("has_violation"))
                     .categoryColor(categoryColor)
-                    .owner(rs.getString("tenant_code")) // Default to tenant as owner
+                    .owner(rs.getString("company") != null ? rs.getString("company") : rs.getString("tenant_code"))
                     .build();
         }
     }

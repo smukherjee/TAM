@@ -1,8 +1,11 @@
 package com.utam.simulation.tracking;
 
+import com.utam.asset.service.VehicleAssetMapService;
 import com.utam.simulation.config.SimulationConfig;
 import com.utam.simulation.flight.FlightDataGenerator;
 import com.utam.simulation.flight.FlightPositionDTO;
+import com.utam.simulation.vehicle.SimVehicleRepository;
+import com.utam.simulation.vehicle.Vehicle;
 import com.utam.simulation.vehicle.VehicleDataGenerator;
 import com.utam.simulation.vehicle.VehiclePositionDTO;
 import io.micrometer.core.instrument.Counter;
@@ -32,6 +35,8 @@ public class MovementTrailGenerator {
     private final FlightDataGenerator flightDataGenerator;
     private final MeterRegistry meterRegistry;
     private final com.utam.tracking.service.MovementTrailIngestionService ingestionService;
+    private final SimVehicleRepository simVehicleRepository;
+    private final VehicleAssetMapService vehicleAssetMapService;
 
     // Position history with rolling window (default 5 minutes)
     private final Map<String, Deque<TrailPoint>> vehicleTrails = new ConcurrentHashMap<>();
@@ -47,12 +52,16 @@ public class MovementTrailGenerator {
                                   VehicleDataGenerator vehicleDataGenerator,
                                   FlightDataGenerator flightDataGenerator,
                                   MeterRegistry meterRegistry,
-                                  com.utam.tracking.service.MovementTrailIngestionService ingestionService) {
+                                  com.utam.tracking.service.MovementTrailIngestionService ingestionService,
+                                  SimVehicleRepository simVehicleRepository,
+                                  VehicleAssetMapService vehicleAssetMapService) {
         this.config = config;
         this.vehicleDataGenerator = vehicleDataGenerator;
         this.flightDataGenerator = flightDataGenerator;
         this.meterRegistry = meterRegistry;
         this.ingestionService = ingestionService;
+        this.simVehicleRepository = simVehicleRepository;
+        this.vehicleAssetMapService = vehicleAssetMapService;
     }
 
     @PostConstruct
@@ -250,8 +259,12 @@ public class MovementTrailGenerator {
         Random random = new Random();
         int totalGenerated = 0;
 
-        // Generate historical trails for simulated entities
-        int numVehicles = 50;  // Simulate 50 vehicles
+        // Backfill trails for the real vehicles registered for this tenant, so the
+        // history actually shows up when looking up an asset's Movement Trail (e.g. VIDP-WT-004).
+        List<Vehicle> tenantVehicles = simVehicleRepository.findByTenantCode(tenantCode);
+        if (tenantVehicles.isEmpty()) {
+            log.warn("No vehicles found for tenant {}, skipping historical vehicle trail generation", tenantCode);
+        }
         int numFlights = 20;   // Simulate 20 flights per day
 
         for (int day = daysBack; day >= 1; day--) {
@@ -259,10 +272,19 @@ public class MovementTrailGenerator {
             long intervalSeconds = 86400 / samplesPerDay;
 
             // Generate vehicle trails for this day
-            for (int v = 0; v < numVehicles; v++) {
-                String vehicleId = String.format("HIST-V%03d", v);
-                double vLat = centerLat + (random.nextDouble() - 0.5) * 0.01;
-                double vLon = centerLon + (random.nextDouble() - 0.5) * 0.01;
+            for (Vehicle vehicle : tenantVehicles) {
+                String vehicleId = vehicle.getVehicleId();
+                Optional<com.utam.asset.service.VehicleAssetMapService.AssetInfo> assetInfo =
+                        vehicleAssetMapService.findByVehicle(vehicleId, tenantCode);
+                if (assetInfo.isEmpty()) {
+                    log.warn("No asset mapping for vehicle {} (tenant {}), skipping historical trail", vehicleId, tenantCode);
+                    continue;
+                }
+                UUID assetId = assetInfo.get().id();
+                double vLat = (vehicle.getLatitude() != null ? vehicle.getLatitude() : centerLat)
+                        + (random.nextDouble() - 0.5) * 0.01;
+                double vLon = (vehicle.getLongitude() != null ? vehicle.getLongitude() : centerLon)
+                        + (random.nextDouble() - 0.5) * 0.01;
                 // Bias speeds toward ~30 km/h with small variance
                 double speed = 30.0 + (random.nextDouble() - 0.5) * 6.0; // ~27-33 km/h
                 double heading = random.nextDouble() * 360;
@@ -287,9 +309,9 @@ public class MovementTrailGenerator {
                     try {
                         ZonedDateTime zts = ZonedDateTime.ofInstant(timestamp, ZoneOffset.UTC);
                         ingestionService.processPositionUpdate(
-                                null,
+                                assetId,
                                 vehicleId,
-                                null,
+                                assetInfo.get().name(),
                                 "Vehicle",
                                 vehicleId,
                                 vLat,

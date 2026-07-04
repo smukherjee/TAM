@@ -106,11 +106,12 @@ public class VehicleAssetMapService {
      * @param vehicleName The human-readable vehicle name
      * @param vehicleType The vehicle type code or name (e.g., "FUEL", "Fuel Truck")
      * @param tenantCode  The tenant code (e.g., "VIDP")
+     * @param company     The owning ground handler (nullable = untagged asset)
      * @return The asset info if created/found successfully
      */
     @Transactional
     public Optional<AssetInfo> createOrUpdateAssetForVehicle(String vehicleId, String vehicleName,
-            String vehicleType, String tenantCode) {
+            String vehicleType, String tenantCode, String company) {
         try {
             // First check if mapping already exists
             Optional<AssetInfo> existing = findByVehicle(vehicleId, tenantCode);
@@ -142,13 +143,13 @@ public class VehicleAssetMapService {
             if (assetUuid == null) {
                 assetUuid = UUID.randomUUID();
                 String insertAssetSql = """
-                        INSERT INTO assets (id, asset_id, name, category, status, tenant_code, description, created_at)
-                        VALUES (?::uuid, ?, ?, ?, 'Available', ?, ?, now())
+                        INSERT INTO assets (id, asset_id, name, category, status, tenant_code, company, description, created_at)
+                        VALUES (?::uuid, ?, ?, ?, 'Available', ?, ?, ?, now())
                         ON CONFLICT (asset_id, tenant_code) DO UPDATE
-                        SET name = EXCLUDED.name, category = EXCLUDED.category, description = EXCLUDED.description
+                        SET name = EXCLUDED.name, category = EXCLUDED.category, company = EXCLUDED.company, description = EXCLUDED.description
                         """;
                 jdbcTemplate.update(insertAssetSql, assetUuid.toString(), vehicleId, assetName,
-                        category, tenantCode, description);
+                        category, tenantCode, company, description);
                 logger.debug("Created asset {} for vehicle {} (tenant {})", assetUuid, vehicleId, tenantCode);
             }
 
@@ -510,11 +511,11 @@ public class VehicleAssetMapService {
                             ELSE 'General Aviation'
                         END,
                         a.status,
-                        NOW() - ((gs * 2) || ' minutes')::INTERVAL
+                        NOW() - ((gs * 30) || ' minutes')::INTERVAL
                     FROM assets a
-                    CROSS JOIN generate_series(1, 10) gs
+                    CROSS JOIN generate_series(0, 335) gs
                     WHERE a.status = 'In Use'
-                    """ + (tenantCode != null ? " AND a.tenant_code = ?" : "") + """
+                    """ + (tenantCode != null ? " AND a.tenant_code = ?\n" : "") + """
                     ON CONFLICT DO NOTHING
                     """;
 

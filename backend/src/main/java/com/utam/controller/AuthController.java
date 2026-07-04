@@ -27,7 +27,8 @@ public class AuthController {
             if (user.getPassword().equals(request.getPassword())) {
                 String token = "mock-token-" + user.getId();
                 return ApiResponse
-                        .success(new LoginResponse(token, user.getUsername(), user.getRole(), user.getTenantCode()));
+                        .success(new LoginResponse(token, user.getUsername(), user.getRole(), user.getTenantCode(),
+                                user.getCompany()));
             }
         }
         // In a real app, use 401 Unauthorized

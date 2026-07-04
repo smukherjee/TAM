@@ -18,14 +18,6 @@ interface TrailInfoPanelProps {
     assetInfo?: MovementTrail;
 }
 
-// Zone type colors
-const ZONE_TYPE_COLORS: Record<string, string> = {
-    'PROHIBITED': 'text-red-400 bg-red-900/50',
-    'RESTRICTED': 'text-orange-400 bg-orange-900/50',
-    'CONTROLLED': 'text-yellow-400 bg-yellow-900/50',
-    'MAINTENANCE': 'text-blue-400 bg-blue-900/50',
-};
-
 /**
  * TrailInfoPanel - Side panel showing current position and summary stats
  * Feature: 005-asset-tracking-security
@@ -43,9 +35,10 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
         return `${(meters / 1000).toFixed(2)} km`;
     };
 
-    // Format duration
-    const formatDuration = (minutes?: number) => {
-        if (!minutes) return '0 min';
+    // Format duration (input in seconds)
+    const formatDuration = (seconds?: number) => {
+        if (!seconds) return '0 min';
+        const minutes = seconds / 60;
         if (minutes < 60) return `${minutes.toFixed(0)} min`;
         const hours = Math.floor(minutes / 60);
         const mins = Math.round(minutes % 60);
@@ -187,7 +180,7 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                                 <span className="text-xs">Duration</span>
                             </div>
                             <div className="text-lg font-semibold text-white">
-                                {formatDuration(summary.totalDurationMinutes)}
+                                {formatDuration(summary.totalDurationSeconds)}
                             </div>
                         </div>
 
@@ -220,7 +213,7 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                                 <span className="text-xs">Data Points</span>
                             </div>
                             <div className="text-lg font-semibold text-white">
-                                {summary.pointCount || 0}
+                                {summary.totalPoints || 0}
                             </div>
                         </div>
 
@@ -231,7 +224,7 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
                                 <span className="text-xs">Zone Entries</span>
                             </div>
                             <div className="text-lg font-semibold text-white">
-                                {summary.zoneEntryCount || 0}
+                                {summary.zonesEntered || 0}
                             </div>
                         </div>
                     </div>
@@ -239,35 +232,24 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
             )}
 
             {/* Zone Dwell Times Section */}
-            {summary?.zoneDwellTimes && summary.zoneDwellTimes.length > 0 && (
+            {summary?.dwellTimeByZone && Object.keys(summary.dwellTimeByZone).length > 0 && (
                 <div className="p-4 flex-1 overflow-y-auto">
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                         Zone Dwell Times
                     </h4>
 
                     <div className="space-y-2">
-                        {summary.zoneDwellTimes.map((zone, index) => (
+                        {Object.entries(summary.dwellTimeByZone).map(([zoneName, seconds]) => (
                             <div
-                                key={`dwell-${index}`}
-                                className={`rounded-lg p-3 ${ZONE_TYPE_COLORS[zone.zoneType] || 'bg-gray-700 text-gray-300'
-                                    }`}
+                                key={`dwell-${zoneName}`}
+                                className="rounded-lg p-3 bg-gray-700 text-gray-300"
                             >
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="font-medium text-sm">
-                                            {zone.zoneName}
-                                        </div>
-                                        <div className="text-xs opacity-75">
-                                            {zone.zoneType}
-                                        </div>
+                                <div className="flex justify-between items-center">
+                                    <div className="font-medium text-sm">
+                                        {zoneName}
                                     </div>
-                                    <div className="text-right">
-                                        <div className="font-semibold">
-                                            {formatDuration(zone.dwellTimeMinutes)}
-                                        </div>
-                                        <div className="text-xs opacity-75">
-                                            {zone.entryCount} {zone.entryCount === 1 ? 'entry' : 'entries'}
-                                        </div>
+                                    <div className="font-semibold">
+                                        {formatDuration(seconds)}
                                     </div>
                                 </div>
                             </div>
@@ -277,7 +259,7 @@ const TrailInfoPanel: React.FC<TrailInfoPanelProps> = ({
             )}
 
             {/* Empty state for zone dwell times */}
-            {(!summary?.zoneDwellTimes || summary.zoneDwellTimes.length === 0) && (
+            {(!summary?.dwellTimeByZone || Object.keys(summary.dwellTimeByZone).length === 0) && (
                 <div className="p-4 flex-1">
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                         Zone Dwell Times

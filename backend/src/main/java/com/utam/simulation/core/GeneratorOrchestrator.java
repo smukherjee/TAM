@@ -307,6 +307,17 @@ public class GeneratorOrchestrator {
             }
         }
 
+        // T072: Backfill asset_movement_trail for real vehicles (none of the generators above write it)
+        if (trailGenerator != null) {
+            try {
+                int trailPoints = trailGenerator.generateHistoricalTrails(tenantCode, daysBack, samplesPerDay);
+                generatedCounts.put("MovementTrailGenerator", trailPoints);
+            } catch (Exception e) {
+                log.error("Failed to generate historical movement trails for {}: {}", tenantCode, e.getMessage());
+                generatedCounts.put("MovementTrailGenerator", -1);
+            }
+        }
+
         long duration = System.currentTimeMillis() - startTime;
         int totalRecords = generatedCounts.values().stream()
             .filter(c -> c > 0)

@@ -29,20 +29,22 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     tenant_code VARCHAR(4) REFERENCES tenants(code),
+    company VARCHAR(100), -- ground handler company (GH role only); NULL for non-GH roles
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Seed Users
-INSERT INTO users (username, password, role, tenant_code) VALUES
-('admin_vidp', 'admin', 'ADMIN', 'VIDP'),
-('gh_vidp', 'gh', 'GH', 'VIDP'),
-('user_vidp', 'user', 'AIRPORT_USER', 'VIDP'),
-('admin_lirn', 'admin', 'ADMIN', 'LIRN'),
-('gh_lirn', 'gh', 'GH', 'LIRN'),
-('user_lirn', 'user', 'AIRPORT_USER', 'LIRN'),
-('admin_ybbn', 'admin', 'ADMIN', 'YBBN'),
-('gh_ybbn', 'gh', 'GH', 'YBBN'),
-('user_ybbn', 'user', 'AIRPORT_USER', 'YBBN')
+-- GH company values must match VEHICLE_GROUND_HANDLERS in VehicleDataGenerator.java
+INSERT INTO users (username, password, role, tenant_code, company) VALUES
+('admin_vidp', 'admin', 'ADMIN', 'VIDP', NULL),
+('gh_vidp', 'gh', 'GH', 'VIDP', 'TajSAT'),
+('user_vidp', 'user', 'AIRPORT_USER', 'VIDP', NULL),
+('admin_lirn', 'admin', 'ADMIN', 'LIRN', NULL),
+('gh_lirn', 'gh', 'GH', 'LIRN', 'Aviapartner'),
+('user_lirn', 'user', 'AIRPORT_USER', 'LIRN', NULL),
+('admin_ybbn', 'admin', 'ADMIN', 'YBBN', NULL),
+('gh_ybbn', 'gh', 'GH', 'YBBN', 'Swissport'),
+('user_ybbn', 'user', 'AIRPORT_USER', 'YBBN', NULL)
 ON CONFLICT (username) DO NOTHING;
 
 -- 4. Audit Logs (Traceability)

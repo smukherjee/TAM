@@ -92,6 +92,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO movement_discrepancies (
     discrepancy_id, asset_identifier, asset_name, asset_category,
     tenant_code, discrepancy_type, expected_location, actual_location,
+    expected_latitude, expected_longitude, actual_latitude, actual_longitude,
     distance_deviation_meters, severity, timestamp
 )
 SELECT
@@ -110,11 +111,7 @@ SELECT
         WHEN 2 THEN 'CATERING'
         ELSE 'GSE'
     END,
-    CASE (gs % 3)
-        WHEN 0 THEN 'VIDP'
-        WHEN 1 THEN 'LIRN'
-        ELSE 'YBBN'
-    END,
+    tenant_code,
     CASE (gs % 5)
         WHEN 0 THEN 'UNEXPECTED_MOVEMENT'
         WHEN 1 THEN 'LOCATION_MISMATCH'
@@ -124,7 +121,11 @@ SELECT
     END,
     'Stand A' || (gs % 20 + 1)::TEXT,
     'Stand B' || (gs % 20 + 1)::TEXT,
-    50 + random() * 500,
+    base_lat,
+    base_lng,
+    base_lat + (deviation_m / 111320.0) * SIN(angle),
+    base_lng + (deviation_m / (111320.0 * COS(RADIANS(base_lat)))) * COS(angle),
+    deviation_m,
     CASE (gs % 4)
         WHEN 0 THEN 'LOW'
         WHEN 1 THEN 'MEDIUM'
@@ -132,7 +133,24 @@ SELECT
         ELSE 'CRITICAL'
     END,
     NOW() - (gs || ' minutes')::INTERVAL
-FROM generate_series(1, 300) gs
+FROM (
+    SELECT
+        gs,
+        CASE (gs % 3) WHEN 0 THEN 'VIDP' WHEN 1 THEN 'LIRN' ELSE 'YBBN' END AS tenant_code,
+        CASE (gs % 3)
+            WHEN 0 THEN 28.5665 + (random() - 0.5) * 0.05  -- Delhi
+            WHEN 1 THEN 40.8844 + (random() - 0.5) * 0.05  -- Naples
+            ELSE -27.3842 + (random() - 0.5) * 0.05        -- Brisbane
+        END AS base_lat,
+        CASE (gs % 3)
+            WHEN 0 THEN 77.1031 + (random() - 0.5) * 0.05  -- Delhi
+            WHEN 1 THEN 14.2908 + (random() - 0.5) * 0.05  -- Naples
+            ELSE 153.1175 + (random() - 0.5) * 0.05        -- Brisbane
+        END AS base_lng,
+        50 + random() * 500 AS deviation_m,
+        random() * 2 * PI() AS angle
+    FROM generate_series(1, 300) gs
+) t
 ON CONFLICT DO NOTHING;
 
 -- =====================================================================

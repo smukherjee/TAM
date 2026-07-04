@@ -75,14 +75,17 @@ public class AssetLocationController {
             @Parameter(description = "Restricted zone UUID filter (optional)")
             @RequestParam(required = false) UUID zoneId,
 
+            @Parameter(description = "Ground handler filter; untagged assets always included (optional)")
+            @RequestParam(required = false) String groundHandler,
+
             @Parameter(description = "Page number (1-indexed, default 1)")
             @RequestParam(defaultValue = "1") Integer page,
 
             @Parameter(description = "Page size (default 50, max 500)")
             @RequestParam(defaultValue = "50") Integer pageSize) {
 
-        logger.info("GET /api/tracking/assets/live - tenant={}, category={}, status={}, zone={}, page={}, pageSize={}",
-                tenantCode, category, status, zoneId, page, pageSize);
+        logger.info("GET /api/tracking/assets/live - tenant={}, category={}, status={}, zone={}, groundHandler={}, page={}, pageSize={}",
+                tenantCode, category, status, zoneId, groundHandler, page, pageSize);
 
         // Validate page parameters
         if (page < 1) {
@@ -97,10 +100,10 @@ public class AssetLocationController {
 
         // Query assets
         List<AssetLocationDTO> assets = assetLocationService.getAllLiveAssets(
-                tenantCode, category, status, zoneId, pageSize, offset);
+                tenantCode, category, status, zoneId, groundHandler, pageSize, offset);
 
         // Get total count for pagination metadata
-        long totalCount = assetLocationService.countLiveAssets(tenantCode, category, status, zoneId);
+        long totalCount = assetLocationService.countLiveAssets(tenantCode, category, status, zoneId, groundHandler);
         int totalPages = (int) Math.ceil((double) totalCount / pageSize);
 
         // Build response

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Filter, MapPin, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Filter, MapPin, Package, Truck } from 'lucide-react';
 import { AssetFilters } from '../../types/assetTracking';
+import api from '../../services/api';
 
 interface AssetFilterPanelProps {
     isOpen: boolean;
@@ -8,18 +9,10 @@ interface AssetFilterPanelProps {
     onFilterChange: (filters: AssetFilters) => void;
     assetCount: number;
     totalCount: number;
+    tenantCode?: string;
+    userRole?: string;
+    userCompany?: string;
 }
-
-const CATEGORIES = [
-    'Emergency',
-    'Fueling',
-    'Cargo',
-    'Ground Support',
-    'Transport',
-    'Power',
-    'Services',
-    'Other'
-];
 
 const STATUSES = [
     'In Use',
@@ -38,11 +31,39 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
     onToggle,
     onFilterChange,
     assetCount,
-    totalCount
+    totalCount,
+    tenantCode,
+    userRole,
+    userCompany
 }) => {
+    const isGhUser = userRole === 'GH';
+
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
     const [selectedZone, setSelectedZone] = useState<string>('');
+    const [selectedGroundHandler, setSelectedGroundHandler] = useState<string>('');
+    const [groundHandlers, setGroundHandlers] = useState<string[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
+
+    // GH users are locked to their own company; everyone else picks from the tenant's list.
+    useEffect(() => {
+        if (isGhUser || !tenantCode) {
+            return;
+        }
+        api.get<{ success: boolean; data: string[] }>('/ground-handlers', { params: { tenantCode } })
+            .then(res => setGroundHandlers(res.data.data || []))
+            .catch(e => console.error('Failed to load ground handlers:', e));
+    }, [isGhUser, tenantCode]);
+
+    // Categories are asset tags, not a fixed enum — fetch the tenant's actual set from the DB.
+    useEffect(() => {
+        if (!tenantCode) {
+            return;
+        }
+        api.get<{ success: boolean; data: string[] }>('/asset-categories', { params: { tenantCode } })
+            .then(res => setCategories(res.data.data || []))
+            .catch(e => console.error('Failed to load asset categories:', e));
+    }, [tenantCode]);
 
     // Load filters from localStorage on mount
     useEffect(() => {
@@ -53,6 +74,9 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                 setSelectedCategories(parsed.categories || []);
                 setSelectedStatuses(parsed.statuses || []);
                 setSelectedZone(parsed.zone || '');
+                if (!isGhUser) {
+                    setSelectedGroundHandler(parsed.groundHandler || '');
+                }
             } catch (e) {
                 console.error('Failed to parse saved filters:', e);
             }
@@ -64,15 +88,16 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
         localStorage.setItem('assetFilters', JSON.stringify({
             categories: selectedCategories,
             statuses: selectedStatuses,
-            zone: selectedZone
+            zone: selectedZone,
+            groundHandler: selectedGroundHandler
         }));
-    }, [selectedCategories, selectedStatuses, selectedZone]);
+    }, [selectedCategories, selectedStatuses, selectedZone, selectedGroundHandler]);
 
     // Apply filters with debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             const newFilters: AssetFilters = {};
-            
+
             if (selectedCategories.length > 0) {
                 newFilters.category = selectedCategories.join(',');
             }
@@ -82,12 +107,16 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
             if (selectedZone) {
                 newFilters.zoneId = selectedZone;
             }
+            const effectiveGroundHandler = isGhUser ? userCompany : selectedGroundHandler;
+            if (effectiveGroundHandler) {
+                newFilters.groundHandler = effectiveGroundHandler;
+            }
 
             onFilterChange(newFilters);
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [selectedCategories, selectedStatuses, selectedZone, onFilterChange]);
+    }, [selectedCategories, selectedStatuses, selectedZone, selectedGroundHandler, isGhUser, userCompany, onFilterChange]);
 
     const handleCategoryToggle = (category: string) => {
         setSelectedCategories(prev =>
@@ -109,10 +138,12 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
         setSelectedCategories([]);
         setSelectedStatuses([]);
         setSelectedZone('');
-        onFilterChange({});
+        setSelectedGroundHandler('');
+        onFilterChange(isGhUser && userCompany ? { groundHandler: userCompany } : {});
     };
 
-    const hasActiveFilters = selectedCategories.length > 0 || selectedStatuses.length > 0 || selectedZone !== '';
+    const hasActiveFilters = selectedCategories.length > 0 || selectedStatuses.length > 0 || selectedZone !== ''
+        || (!isGhUser && selectedGroundHandler !== '');
 
     return (
         <>
@@ -165,7 +196,7 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                             <h3 className="text-sm font-semibold text-white">Category</h3>
                         </div>
                         <div className="space-y-2">
-                            {CATEGORIES.map(category => (
+                            {categories.map(category => (
                                 <label
                                     key={category}
                                     className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded"
@@ -223,6 +254,30 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                         </select>
                     </div>
 
+                    {/* Ground Handler Filter */}
+                    <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Truck className="w-4 h-4 text-gray-400" />
+                            <h3 className="text-sm font-semibold text-white">Ground Handler</h3>
+                        </div>
+                        {isGhUser ? (
+                            <p className="text-sm text-gray-300 bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
+                                {userCompany || 'Your company'} (scoped to your assets)
+                            </p>
+                        ) : (
+                            <select
+                                value={selectedGroundHandler}
+                                onChange={(e) => setSelectedGroundHandler(e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="">All Ground Handlers</option>
+                                {groundHandlers.map(gh => (
+                                    <option key={gh} value={gh}>{gh}</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
                     {/* Active Filters Summary */}
                     {hasActiveFilters && (
                         <div className="mt-6 p-3 bg-gray-800 rounded-lg border border-gray-700">
@@ -262,6 +317,17 @@ const AssetFilterPanel: React.FC<AssetFilterPanelProps> = ({
                                         <button
                                             onClick={() => setSelectedZone('')}
                                             className="hover:bg-purple-800 rounded-full"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </span>
+                                )}
+                                {!isGhUser && selectedGroundHandler && (
+                                    <span className="px-2 py-1 bg-orange-900/50 text-orange-300 text-xs rounded-full flex items-center gap-1 border border-orange-700/50">
+                                        GH: {selectedGroundHandler}
+                                        <button
+                                            onClick={() => setSelectedGroundHandler('')}
+                                            className="hover:bg-orange-800 rounded-full"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>

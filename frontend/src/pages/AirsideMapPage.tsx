@@ -25,11 +25,14 @@ const AirsideMapPage: React.FC = () => {
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['liveAssets', tenantCode, filters],
         queryFn: async () => {
+            // GH users are always scoped to their own company, regardless of panel state (UI-only scoping).
+            const effectiveGroundHandler = user?.role === 'GH' ? user.company : filters.groundHandler;
             const params = new URLSearchParams({
                 tenantCode,
                 ...(filters.category && { category: filters.category }),
                 ...(filters.status && { status: filters.status }),
                 ...(filters.zoneId && { zoneId: filters.zoneId }),
+                ...(effectiveGroundHandler && { groundHandler: effectiveGroundHandler }),
                 pageSize: '500'
             });
             
@@ -124,6 +127,9 @@ const AirsideMapPage: React.FC = () => {
                 onFilterChange={handleFilterChange}
                 assetCount={assets.length}
                 totalCount={data?.totalCount || 0}
+                tenantCode={tenantCode}
+                userRole={user?.role}
+                userCompany={user?.company}
             />
 
             {/* Map Component */}

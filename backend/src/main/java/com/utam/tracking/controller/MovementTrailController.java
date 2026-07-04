@@ -1,6 +1,7 @@
 package com.utam.tracking.controller;
 
 import com.utam.tracking.dto.MovementTrailDTO;
+import com.utam.tracking.dto.TrailSummaryDTO;
 import com.utam.tracking.service.MovementTrailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -78,15 +79,13 @@ public class MovementTrailController {
 
     @GetMapping("/{assetId}/summary")
     @Operation(summary = "Get trail summary", description = "Get summary statistics for a movement trail")
-    public ResponseEntity<MovementTrailDTO> getTrailSummary(
+    public ResponseEntity<TrailSummaryDTO> getTrailSummary(
             @Parameter(description = "Asset identifier") @PathVariable("assetId") String assetIdentifier,
             @Parameter(description = "Start date") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
             @Parameter(description = "End date") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate,
             @RequestHeader(value = "X-User-ICAO", required = false) String tenantCode) {
 
         MovementTrailDTO trail = trailService.getTrailByIdentifier(assetIdentifier, tenantCode, startDate, endDate);
-        // Return trail with summary but without points for efficiency
-        trail.setPoints(null);
-        return ResponseEntity.ok(trail);
+        return ResponseEntity.ok(trail.getSummary());
     }
 }

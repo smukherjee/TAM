@@ -96,11 +96,14 @@ const UnifiedMapPage: React.FC = () => {
     const { data: assetData, isLoading: assetsLoading } = useQuery({
         queryKey: ['liveAssets', tenantCode, assetFilters],
         queryFn: async () => {
+            // GH users are always scoped to their own company, regardless of drawer state (UI-only scoping).
+            const effectiveGroundHandler = user?.role === 'GH' ? user.company : assetFilters.groundHandler;
             const params = new URLSearchParams({
                 tenantCode,
                 ...(assetFilters.category && { category: assetFilters.category }),
                 ...(assetFilters.status && { status: assetFilters.status }),
                 ...(assetFilters.zoneId && { zoneId: assetFilters.zoneId }),
+                ...(effectiveGroundHandler && { groundHandler: effectiveGroundHandler }),
                 pageSize: '500'
             });
             
@@ -230,6 +233,9 @@ const UnifiedMapPage: React.FC = () => {
                 onFilterChange={setAssetFilters}
                 assetCount={assets.length}
                 totalCount={assetData?.totalCount || 0}
+                tenantCode={tenantCode}
+                userRole={user?.role}
+                userCompany={user?.company}
             />
 
             {/* Main Map */}

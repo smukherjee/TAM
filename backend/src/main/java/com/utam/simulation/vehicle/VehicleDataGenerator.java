@@ -87,6 +87,15 @@ public class VehicleDataGenerator extends BaseDataGenerator {
             Map.entry("AMBULIFT", "AM")       // Ambulift
     );
 
+    // Ground handlers per tenant. Vehicles are split across these so the GH filter has
+    // real cross-handler data to demonstrate isolation. Must match the `company` values
+    // seeded for gh_<tenant> users in 01-core-platform.sql.
+    private static final Map<String, List<String>> GROUND_HANDLERS = Map.of(
+            "VIDP", List.of("TajSAT", "Bird Group"),
+            "LIRN", List.of("Aviapartner", "GH Napoli"),
+            "YBBN", List.of("Swissport", "dnata")
+    );
+
     public VehicleDataGenerator(SimulationConfig config, MeterRegistry meterRegistry,
                                 SimVehicleRepository vehicleRepository,
                                 VehiclePositionRepository vehiclePositionRepository,
@@ -200,7 +209,8 @@ public class VehicleDataGenerator extends BaseDataGenerator {
                             vehicle.getVehicleId(),
                             vehicle.getVehicleName(),
                             type.getName(),
-                            tenantCode
+                            tenantCode,
+                            pickGroundHandler(tenantCode, i)
                     );
                     if (assetInfo.isPresent()) {
                         assetsMapped++;
@@ -228,7 +238,20 @@ public class VehicleDataGenerator extends BaseDataGenerator {
         return generated;
     }
 
-    private int getFleetSizeForType(SimulationConfig.FleetConfig fleetConfig, 
+    /**
+     * Deterministically splits generated vehicles across a tenant's ground handlers,
+     * so the GH filter has real cross-handler data. Falls back to untagged (null)
+     * for tenants with no configured handlers.
+     */
+    private String pickGroundHandler(String tenantCode, int index) {
+        List<String> handlers = GROUND_HANDLERS.get(tenantCode);
+        if (handlers == null || handlers.isEmpty()) {
+            return null;
+        }
+        return handlers.get(index % handlers.size());
+    }
+
+    private int getFleetSizeForType(SimulationConfig.FleetConfig fleetConfig,
                                     String typeCode, int defaultCount) {
         return switch (typeCode) {
             case "FUEL", "HYDR" -> fleetConfig.getFuelTrucks();
@@ -353,7 +376,7 @@ public class VehicleDataGenerator extends BaseDataGenerator {
             if (vehicle.heading < 0) vehicle.heading += 360;
 
             // Move at configured speed (converted from km/h to degrees/tick)
-            double speedDegrees = vehicle.maxSpeed / 111000.0 / 3600.0; // Very rough conversion
+            double speedDegrees = vehicle.maxSpeed / 111.0 / 3600.0; // km/h -> degrees/sec (rough, equirectangular)
             double newLat = vehicle.latitude + Math.cos(Math.toRadians(vehicle.heading)) * speedDegrees;
             double newLon = vehicle.longitude + Math.sin(Math.toRadians(vehicle.heading)) * speedDegrees;
             

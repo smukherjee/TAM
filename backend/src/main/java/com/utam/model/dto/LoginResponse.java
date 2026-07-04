@@ -5,12 +5,14 @@ public class LoginResponse {
     private String username;
     private String role;
     private String icaoCode;
+    private String company;
 
-    public LoginResponse(String token, String username, String role, String icaoCode) {
+    public LoginResponse(String token, String username, String role, String icaoCode, String company) {
         this.token = token;
         this.username = username;
         this.role = role;
         this.icaoCode = icaoCode;
+        this.company = company;
     }
 
     public String getToken() {
@@ -27,5 +29,9 @@ public class LoginResponse {
 
     public String getIcaoCode() {
         return icaoCode;
+    }
+
+    public String getCompany() {
+        return company;
     }
 }

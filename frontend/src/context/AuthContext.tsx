@@ -6,6 +6,7 @@ interface User {
     role: string;
     icaoCode: string;
     token: string;
+    company?: string;
 }
 
 interface AuthContextType {

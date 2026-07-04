@@ -116,33 +116,20 @@ export interface ZoneEntry {
 }
 
 /**
- * Trail Summary - Statistics for a movement trail
+ * Trail Summary - Statistics for a movement trail (matches backend TrailSummaryDTO)
  */
 export interface TrailSummary {
     totalPoints?: number;
-    pointCount?: number;
     totalDistanceMeters?: number;
     totalDurationSeconds?: number;
-    totalDurationMinutes?: number;
     averageSpeedKmh?: number;
     maxSpeedKmh?: number;
+    zonesEntered?: number;
+    restrictedZonesEntered?: number;
+    violationsCount?: number;
     totalDwellTimeSeconds?: number;
-    zonesVisited?: number;
-    zoneEntryCount?: number;
-    restrictedZoneEntriesCount?: number;
-    zoneBreakdown?: ZoneDwellTime[];
-    zoneDwellTimes?: ZoneDwellTime[];
-}
-
-/**
- * Zone Dwell Time - Time spent in each zone
- */
-export interface ZoneDwellTime {
-    zoneName: string;
-    zoneType: string;
-    dwellTimeSeconds?: number;
-    dwellTimeMinutes?: number;
-    entryCount: number;
+    dwellTimeByZone?: Record<string, number>;
+    statusBreakdown?: Record<string, number>;
 }
 
 /**

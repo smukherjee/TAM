@@ -247,7 +247,7 @@ public class AdminGeneratorController {
     public ResponseEntity<HistoricalDataResponse> generateHistoricalData(
             @RequestParam(defaultValue = "VIDP") String tenantCode,
             @RequestParam(defaultValue = "7") int daysBack,
-            @RequestParam(defaultValue = "1440") int samplesPerDay) {
+            @RequestParam(defaultValue = "24") int samplesPerDay) {
         return handleHistoricalGeneration(tenantCode, daysBack, samplesPerDay);
     }
 
@@ -259,15 +259,16 @@ public class AdminGeneratorController {
     public ResponseEntity<HistoricalDataResponse> generateHistoricalDataWithPath(
             @PathVariable String tenantCode,
             @RequestParam(name = "days", defaultValue = "7") int days,
-            @RequestParam(name = "samplesPerDay", defaultValue = "1440") int samplesPerDay) {
+            @RequestParam(name = "samplesPerDay", defaultValue = "24") int samplesPerDay) {
         return handleHistoricalGeneration(tenantCode, days, samplesPerDay);
     }
 
     private ResponseEntity<HistoricalDataResponse> handleHistoricalGeneration(String tenantCode, int daysBack, int samplesPerDay) {
         try {
+            // Sync vehicle-asset mappings first so historical trail generation can resolve real assetIds.
+            int mappingsCreated = orchestrator.syncVehiclesToAssets(tenantCode);
             GeneratorOrchestrator.HistoricalDataResult result =
                     orchestrator.generateHistoricalData(tenantCode, daysBack, samplesPerDay);
-            int mappingsCreated = orchestrator.syncVehiclesToAssets(tenantCode);
             Map<String, Integer> recordsByGenerator = new java.util.HashMap<>(result.recordsByGenerator());
             recordsByGenerator.put("vehicle_asset_mappings", mappingsCreated);
             return ResponseEntity.ok(new HistoricalDataResponse(

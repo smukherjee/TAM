@@ -24,6 +24,7 @@ export interface AssetLocation {
     isMoving: boolean;
     hasViolation: boolean;
     categoryColor: string;
+    owner?: string;
 }
 
 export interface AssetLocationResponse {
@@ -39,6 +40,7 @@ export interface AssetFilters {
     category?: string;
     status?: string;
     zoneId?: string;
+    groundHandler?: string;
 }
 
 /**

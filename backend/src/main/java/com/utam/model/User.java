@@ -22,6 +22,9 @@ public class User {
     @Column(name = "tenant_code")
     private String tenantCode;
 
+    @Column(name = "company")
+    private String company;
+
     public UUID getId() {
         return id;
     }
@@ -60,5 +63,13 @@ public class User {
 
     public void setTenantCode(String tenantCode) {
         this.tenantCode = tenantCode;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
     }
 }

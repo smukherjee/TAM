@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS assets (
     value DECIMAL(10, 2),
     tenant_code VARCHAR(4) REFERENCES tenants(code),
     location VARCHAR(100),
+    company VARCHAR(100), -- owning ground handler; NULL = untagged/shared asset, visible to all GH views
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT uq_assets_asset_id_tenant UNIQUE (asset_id, tenant_code)
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS assets (
 CREATE INDEX IF NOT EXISTS idx_assets_tenant ON assets (tenant_code);
 CREATE INDEX IF NOT EXISTS idx_assets_status ON assets (status);
 CREATE INDEX IF NOT EXISTS idx_assets_category ON assets (category);
+CREATE INDEX IF NOT EXISTS idx_assets_company ON assets (company);
 CREATE INDEX IF NOT EXISTS idx_assets_asset_tenant ON assets (asset_id, tenant_code);
 
 -- 2. Seed Sample Assets for VIDP

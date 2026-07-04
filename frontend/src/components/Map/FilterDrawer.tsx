@@ -1,6 +1,7 @@
-import React from 'react';
-import { X, Package, MapPin, RotateCcw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Package, MapPin, RotateCcw, Truck } from 'lucide-react';
 import { AssetFilters } from '../../types/assetTracking';
+import api from '../../services/api';
 
 interface FilterDrawerProps {
     isOpen: boolean;
@@ -9,18 +10,10 @@ interface FilterDrawerProps {
     onFilterChange: (filters: AssetFilters) => void;
     assetCount: number;
     totalCount: number;
+    tenantCode?: string;
+    userRole?: string;
+    userCompany?: string;
 }
-
-const CATEGORIES = [
-    'Emergency',
-    'Fueling',
-    'Cargo',
-    'Ground Support',
-    'Transport',
-    'Power',
-    'Services',
-    'Other'
-];
 
 const STATUSES = [
     'In Use',
@@ -39,10 +32,36 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
     filters,
     onFilterChange,
     assetCount,
-    totalCount
+    totalCount,
+    tenantCode,
+    userRole,
+    userCompany
 }) => {
+    const isGhUser = userRole === 'GH';
     const selectedCategories = filters.category?.split(',').filter(Boolean) || [];
     const selectedStatuses = filters.status?.split(',').filter(Boolean) || [];
+    const [groundHandlers, setGroundHandlers] = useState<string[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
+
+    // GH users are locked to their own company; everyone else picks from the tenant's list.
+    useEffect(() => {
+        if (isGhUser || !tenantCode) {
+            return;
+        }
+        api.get<{ success: boolean; data: string[] }>('/ground-handlers', { params: { tenantCode } })
+            .then(res => setGroundHandlers(res.data.data || []))
+            .catch(e => console.error('Failed to load ground handlers:', e));
+    }, [isGhUser, tenantCode]);
+
+    // Categories are asset tags, not a fixed enum — fetch the tenant's actual set from the DB.
+    useEffect(() => {
+        if (!tenantCode) {
+            return;
+        }
+        api.get<{ success: boolean; data: string[] }>('/asset-categories', { params: { tenantCode } })
+            .then(res => setCategories(res.data.data || []))
+            .catch(e => console.error('Failed to load asset categories:', e));
+    }, [tenantCode]);
 
     const handleCategoryToggle = (category: string) => {
         const newCategories = selectedCategories.includes(category)
@@ -73,11 +92,19 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
         });
     };
 
-    const handleClearAll = () => {
-        onFilterChange({});
+    const handleGroundHandlerChange = (groundHandler: string) => {
+        onFilterChange({
+            ...filters,
+            groundHandler: groundHandler || undefined
+        });
     };
 
-    const hasActiveFilters = selectedCategories.length > 0 || selectedStatuses.length > 0 || filters.zoneId;
+    const handleClearAll = () => {
+        onFilterChange(isGhUser && userCompany ? { groundHandler: userCompany } : {});
+    };
+
+    const hasActiveFilters = selectedCategories.length > 0 || selectedStatuses.length > 0 || filters.zoneId
+        || (!isGhUser && !!filters.groundHandler);
 
     return (
         <>
@@ -121,7 +148,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
                             <h3 className="text-sm font-semibold text-white">Category</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                            {CATEGORIES.map(category => (
+                            {categories.map(category => (
                                 <button
                                     key={category}
                                     onClick={() => handleCategoryToggle(category)}
@@ -176,13 +203,37 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
                         </select>
                     </div>
 
+                    {/* Ground Handler Filter */}
+                    <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Truck className="w-4 h-4 text-gray-400" />
+                            <h3 className="text-sm font-semibold text-white">Ground Handler</h3>
+                        </div>
+                        {isGhUser ? (
+                            <p className="text-sm text-gray-300 bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
+                                {userCompany || 'Your company'} (scoped to your assets)
+                            </p>
+                        ) : (
+                            <select
+                                value={filters.groundHandler || ''}
+                                onChange={(e) => handleGroundHandlerChange(e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="">All Ground Handlers</option>
+                                {groundHandlers.map(gh => (
+                                    <option key={gh} value={gh}>{gh}</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
                     {/* Active Filters */}
                     {hasActiveFilters && (
                         <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-gray-400">Active Filters</span>
                                 <span className="text-xs text-blue-400">
-                                    {selectedCategories.length + selectedStatuses.length + (filters.zoneId ? 1 : 0)} applied
+                                    {selectedCategories.length + selectedStatuses.length + (filters.zoneId ? 1 : 0) + (!isGhUser && filters.groundHandler ? 1 : 0)} applied
                                 </span>
                             </div>
                             <div className="flex flex-wrap gap-1">
@@ -205,6 +256,11 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
                                 {filters.zoneId && (
                                     <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-[10px] rounded-full">
                                         {filters.zoneId}
+                                    </span>
+                                )}
+                                {!isGhUser && filters.groundHandler && (
+                                    <span className="px-2 py-0.5 bg-orange-900/50 text-orange-300 text-[10px] rounded-full">
+                                        {filters.groundHandler}
                                     </span>
                                 )}
                             </div>

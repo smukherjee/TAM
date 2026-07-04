@@ -32,7 +32,7 @@ class AssetLocationServiceTest {
 
     @Test
     void getAllLiveAssetsReturnsNonNull() {
-        List<?> result = service.getAllLiveAssets("VIDP", null, null, null, 10, 0);
+        List<?> result = service.getAllLiveAssets("VIDP", null, null, null, null, 10, 0);
         assertNotNull(result, "getAllLiveAssets should never return null");
         assertTrue(result.isEmpty(), "stub jdbc template should return empty list");
     }
