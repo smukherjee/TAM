@@ -49,7 +49,10 @@ run_sql "$INIT_DIR/20-fix-asset-register-and-mapping.sql"  "Vehicle → asset sy
 run_sql "$INIT_DIR/21-fix-simulation-tables-and-trail-links.sql" "Airport boundaries + trail UUID links"
 run_sql "$INIT_DIR/22-normalize-and-enrich-seed-data.sql"  "Category normalize / dwell heatmap / turnaround enrich"
 
-echo "Step 4/4: Refreshing materialized views..."
+echo "Step 4/5: Refreshing stale turnaround/camera-health timestamps..."
+run_sql "$SCRIPT_DIR/refresh-demo-timestamps.sql"           "Shift turnaround/camera timestamps to now"
+
+echo "Step 5/5: Refreshing materialized views..."
 docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" << 'SQL'
 DO $$
 BEGIN

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { 
-    Plane, 
-    Truck, 
-    Package, 
-    Flame, 
+import {
+    Plane,
+    Truck,
+    Package,
+    Flame,
     Filter,
     ChevronDown,
     AlertTriangle,
-    Eye
+    Eye,
+    Sun,
+    Moon
 } from 'lucide-react';
 
 interface LayerState {
@@ -27,6 +29,8 @@ interface MapToolbarProps {
     onOpenFilters?: () => void;
     alertCount?: number;
     showHeatmapToggle?: boolean;
+    mapTheme?: 'dark' | 'light';
+    onMapThemeToggle?: () => void;
 }
 
 /**
@@ -40,7 +44,9 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
     onHeatmapModeChange,
     onOpenFilters,
     alertCount = 0,
-    showHeatmapToggle = true
+    showHeatmapToggle = true,
+    mapTheme,
+    onMapThemeToggle
 }) => {
     const [showHeatmapOptions, setShowHeatmapOptions] = useState(false);
 
@@ -163,6 +169,18 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
                     >
                         <Filter className="w-4 h-4" />
                         <span className="text-xs font-medium hidden sm:inline">Filters</span>
+                    </button>
+                )}
+
+                {/* Map Theme Toggle */}
+                {onMapThemeToggle && (
+                    <button
+                        onClick={onMapThemeToggle}
+                        className="px-3 py-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all duration-200 flex items-center gap-2"
+                        title={mapTheme === 'dark' ? 'Switch to light map' : 'Switch to dark map'}
+                    >
+                        {mapTheme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                        <span className="text-xs font-medium hidden sm:inline">{mapTheme === 'dark' ? 'Dark' : 'Light'}</span>
                     </button>
                 )}
             </div>

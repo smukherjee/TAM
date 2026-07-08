@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Map, Activity, BarChart3, ChevronLeft, ChevronRight, LogOut, Network, Package, ChevronDown, ChevronUp, Flame, AlertOctagon, AlertTriangle, Route } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isOpen, setIsOpen] = useState(true);
     const [assetMenuOpen, setAssetMenuOpen] = useState(false);
     const [securityMenuOpen, setSecurityMenuOpen] = useState(false);
     const { user, logout } = useAuth();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     // Logic for role-based access
     const role = user?.role ? user.role.trim().toUpperCase() : '';
@@ -20,12 +23,12 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const showSecurityReports = role === 'ADMIN' || role === 'GH';
 
     return (
-        <div className="flex h-screen bg-gray-900 text-white overflow-hidden font-sans">
+        <div className={`flex h-screen overflow-hidden font-sans ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
             {/* Sidebar */}
-            <div className={`relative bg-gray-800 border-r border-gray-700 flex flex-col shadow-2xl z-20 transition-all duration-300 ease-in-out ${isOpen ? 'w-64' : 'w-20'}`}>
+            <div className={`relative flex flex-col shadow-2xl z-20 transition-all duration-300 ease-in-out ${isOpen ? 'w-64' : 'w-20'} ${isDark ? 'bg-gray-800 border-r border-gray-700' : 'bg-gray-50 border-r border-gray-200'}`}>
 
                 {/* Header */}
-                <div className="p-4 border-b border-gray-700 flex items-center justify-between bg-gray-900 h-20 overflow-hidden">
+                <div className={`p-4 flex items-center justify-between h-20 overflow-hidden border-b ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'}`}>
                     <div className="flex items-center space-x-3">
                         <img
                             src="/assets/turnwise-logo.svg"
@@ -39,7 +42,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {/* Toggle Button */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`absolute top-8 -right-3 z-30 bg-blue-600 text-white p-1 rounded-full shadow-lg border-2 border-gray-900 hover:bg-blue-700 transition-transform duration-200 focus:outline-none`}
+                    className={`absolute top-8 -right-3 z-30 bg-blue-600 text-white p-1 rounded-full shadow-lg border-2 hover:bg-blue-700 transition-transform duration-200 focus:outline-none ${isDark ? 'border-gray-900' : 'border-white'}`}
                 >
                     {isOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                 </button>
@@ -55,7 +58,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         <>
                             <div
                                 onClick={() => setAssetMenuOpen(!assetMenuOpen)}
-                                className="flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-gray-700 text-gray-300 hover:text-white group mb-1"
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer group mb-1 ${isDark ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-200 text-gray-600 hover:text-gray-900'}`}
                             >
                                 <div className="flex items-center space-x-3">
                                     <Package size={20} className="shrink-0" />
@@ -66,7 +69,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 )}
                             </div>
                             {assetMenuOpen && isOpen && (
-                                <div className="ml-6 space-y-1 border-l-2 border-gray-700 pl-3 mb-2">
+                                <div className={`ml-6 space-y-1 border-l-2 pl-3 mb-2 ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
                                     <SubNavItem to="/assets/list" label="Assets" />
                                     <SubNavItem to="/assets/kits" label="Kits" />
                                     <SubNavItem to="/assets/categories" label="Categories" />
@@ -81,7 +84,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     
                     {/* Airside Operations Section - Hotspot Analysis only (Assets integrated into Live Map) */}
                     {showAirsideOps && (
-                        <div className={`mt-4 pt-4 border-t border-gray-700`}>
+                        <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                             <div className={`text-xs font-semibold text-gray-500 uppercase tracking-wilder mb-2 px-2 transition-all duration-300 ${isOpen ? 'opacity-100 h-auto' : 'opacity-0 h-0 hidden'}`}>
                                 Airside Operations
                             </div>
@@ -91,13 +94,13 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     
                     {/* Security Reports Section */}
                     {showSecurityReports && (
-                        <div className={`mt-4 pt-4 border-t border-gray-700`}>
+                        <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                             <div className={`text-xs font-semibold text-gray-500 uppercase tracking-wilder mb-2 px-2 transition-all duration-300 ${isOpen ? 'opacity-100 h-auto' : 'opacity-0 h-0 hidden'}`}>
                                 Security Reports
                             </div>
                             <div
                                 onClick={() => setSecurityMenuOpen(!securityMenuOpen)}
-                                className="flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-gray-700 text-gray-300 hover:text-white group mb-1"
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer group mb-1 ${isDark ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-200 text-gray-600 hover:text-gray-900'}`}
                             >
                                 <div className="flex items-center space-x-3">
                                     <AlertOctagon size={20} className="shrink-0 text-red-400" />
@@ -108,7 +111,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 )}
                             </div>
                             {(securityMenuOpen || !isOpen) && isOpen && (
-                                <div className="ml-6 space-y-1 border-l-2 border-gray-700 pl-3 mb-2">
+                                <div className={`ml-6 space-y-1 border-l-2 pl-3 mb-2 ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
                                     <SubNavItem to="/tracking/violations" label="Zone Violations" icon={<AlertOctagon size={14} className="text-red-400" />} />
                                     <SubNavItem to="/tracking/discrepancies" label="Discrepancies" icon={<AlertTriangle size={14} className="text-orange-400" />} />
                                     <SubNavItem to="/tracking/trail" label="Movement Trail" icon={<Route size={14} className="text-blue-400" />} />
@@ -126,7 +129,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     
                     {showPipeline && <NavItem to="/pipeline" icon={<Network size={20} />} label="Observability" isOpen={isOpen} />}
                     {role === 'ADMIN' && (
-                        <div className={`mt-6 pt-6 border-t border-gray-700 ${isOpen ? 'block' : 'hidden md:block'}`}>
+                        <div className={`mt-6 pt-6 border-t ${isOpen ? 'block' : 'hidden md:block'} ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                             <div className={`text-xs font-semibold text-gray-500 uppercase tracking-wilder mb-2 px-2 transition-all duration-300 ${isOpen ? 'opacity-100 h-auto' : 'opacity-0 h-0 hidden'}`}>
                                 Admin
                             </div>
@@ -136,11 +139,11 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </nav>
 
                 {/* Footer / User Info */}
-                <div className="p-4 bg-gray-900 border-t border-gray-700">
+                <div className={`p-4 border-t ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
                     <div className={`flex items-center ${isOpen ? 'justify-between' : 'justify-center'} mb-4 transition-all duration-200`}>
                         {isOpen ? (
                             <div className="overflow-hidden">
-                                <p className="text-sm font-medium text-white truncate">{user?.username}</p>
+                                <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.username}</p>
                                 <p className="text-xs text-gray-500 truncate">{user?.role} • {user?.icaoCode}</p>
                                 <div className="text-[10px] text-gray-500 mt-1">
                                     Role: "{role}"<br />
@@ -164,25 +167,31 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
 };
 
-const NavItem = ({ to, icon, label, isOpen }: { to: string; icon: React.ReactNode; label: string; isOpen: boolean }) => (
-    <NavLink
-        to={to}
-        className={({ isActive }: { isActive: boolean }) =>
-            `flex items-center ${isOpen ? 'justify-start space-x-3 px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 ${isActive
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-gray-400 hover:bg-gray-700 hover:text-white'
-            }`
-        }
-        title={!isOpen ? label : ''}
-    >
-        <div className="shrink-0">{icon}</div>
-        <span className={`font-medium transition-all duration-200 whitespace-nowrap overflow-hidden ${isOpen ? 'w-auto opacity-100 ml-3' : 'w-0 opacity-0 ml-0'}`}>
-            {label}
-        </span>
-    </NavLink>
-);
+const NavItem = ({ to, icon, label, isOpen }: { to: string; icon: React.ReactNode; label: string; isOpen: boolean }) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    return (
+        <NavLink
+            to={to}
+            className={({ isActive }: { isActive: boolean }) =>
+                `flex items-center ${isOpen ? 'justify-start space-x-3 px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 ${isActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                    : isDark ? 'text-gray-400 hover:bg-gray-700 hover:text-white' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-900'
+                }`
+            }
+            title={!isOpen ? label : ''}
+        >
+            <div className="shrink-0">{icon}</div>
+            <span className={`font-medium transition-all duration-200 whitespace-nowrap overflow-hidden ${isOpen ? 'w-auto opacity-100 ml-3' : 'w-0 opacity-0 ml-0'}`}>
+                {label}
+            </span>
+        </NavLink>
+    );
+};
 
 const SubNavItem: React.FC<{ to: string; label: string; icon?: React.ReactNode }> = ({ to, label, icon }) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     return (
         <NavLink
             to={to}
@@ -190,7 +199,7 @@ const SubNavItem: React.FC<{ to: string; label: string; icon?: React.ReactNode }
                 `flex items-center px-3 py-2 rounded-md transition-all duration-200 text-sm ${
                     isActive
                         ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                        : isDark ? 'text-gray-400 hover:bg-gray-700 hover:text-white' : 'text-gray-500 hover:bg-gray-200 hover:text-gray-900'
                 }`
             }
         >

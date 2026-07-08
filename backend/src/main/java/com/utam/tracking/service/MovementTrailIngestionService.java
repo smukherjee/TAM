@@ -228,6 +228,8 @@ public class MovementTrailIngestionService {
                 .zoneType(zoneResult.getZoneType())
                 .violationType("UNAUTHORIZED_ENTRY")
                 .entryLocation(location)
+                .entryLatitude(location.getY())
+                .entryLongitude(location.getX())
                 .severity(determineSeverity(zoneResult.getZoneType()))
                 .timestamp(timestamp)
                 .tenantCode(tenantCode)

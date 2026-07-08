@@ -334,7 +334,8 @@ is_already_provisioned() {
 
   missing_dash=$(list_dashboards | jq -r '
     [.result[]?.slug] as $have |
-    ["tam_ops_full","tam_safety","tam_turnaround","tam_assets","tam_pipeline","tam_predictive"]
+    ["tam_ops_full","tam_safety","tam_turnaround","tam_assets","tam_pipeline","tam_predictive",
+     "tam_turnaround_advanced","tam_compliance_plus","tam_gha_airline","tam_infra_health"]
     | map(select(. as $slug | ($have | index($slug)) | not))
     | join(",")
   ')
@@ -349,7 +350,16 @@ is_already_provisioned() {
       "v_alerts_summary_type_hour","v_repeat_offenders_assets","v_throughput_ops_volume_today",
       "v_pipeline_health_events_per_minute","v_activity_heatmap_latest","v_violation_heatmap_latest",
       "v_stand_conflicts","pred_turnaround_risk","pred_congestion","pred_zone_breach",
-      "pred_asset_violation_risk","forecast_violations_hourly"
+      "pred_asset_violation_risk","forecast_violations_hourly",
+      "v_turnaround_milestone_efficiency","v_turnaround_concurrency_ratio",
+      "v_first_wave_departure_readiness","v_delay_root_cause_by_session","v_tobt_volatility",
+      "v_aodb_cv_discrepancy","v_iata_delay_code_attribution","v_era_redzone_encroachment",
+      "v_fod_exposure_window","v_ppe_gse_compliance","v_gha_performance_scorecard",
+      "v_airline_turnaround_profile","v_stand_dead_time_overstay","v_camera_infra_health",
+      "v_ppe_compliance_density_index","v_walkway_safety_audit",
+      "v_lvp_delay_impact","v_asset_certification_status","v_asset_maintenance_log",
+      "v_inventory_stock_status","v_wildlife_hazard_summary","v_mandatory_occurrence_report",
+      "v_emergency_readiness"
     ]
     | map(select(. as $name | ($have | index($name)) | not))
     | join(",")
@@ -362,7 +372,16 @@ is_already_provisioned() {
       "Stand Occupancy","SLA Compliance by Task","Delay Root Causes","Violations by Zone",
       "Breach Dwell Stats","Discrepancy Trends Daily","Asset Utilization Status",
       "Maintenance Downtime","Dwell Proxy by Zone Hourly","Alerts by Type/Hour",
-      "Repeat Offenders","Throughput Today","Pipeline Events/min","Stand Conflicts"
+      "Repeat Offenders","Throughput Today","Pipeline Events/min","Stand Conflicts",
+      "Turnaround Milestone Efficiency","Turnaround Concurrency Ratio","First-Wave Departure Readiness",
+      "Delay Root Cause by Session","TOBT Volatility Index","AODB vs CV Discrepancy",
+      "IATA Delay Code Attribution","ERA Red-Zone Encroachment","FOD Exposure Window",
+      "PPE & GSE Compliance","GHA Performance Scorecard","Airline Turnaround Profile",
+      "Stand Dead-Time & Overstay","Camera Infra Health",
+      "PPE Compliance Density Index","Walkway Safety Audit",
+      "LVP Delay Impact","Asset Certification Status","Asset Maintenance Log",
+      "Inventory Stock Status","Wildlife Hazard Summary","Mandatory Occurrence Reports",
+      "Emergency Drill Readiness"
     ]
     | map(select(. as $name | ($have | index($name)) | not))
     | join(",")
@@ -371,7 +390,8 @@ is_already_provisioned() {
   missing_links=""
   missing_layout=""
   invalid_layout=""
-  for slug in tam_ops_full tam_safety tam_turnaround tam_assets tam_pipeline tam_predictive; do
+  for slug in tam_ops_full tam_safety tam_turnaround tam_assets tam_pipeline tam_predictive \
+              tam_turnaround_advanced tam_compliance_plus tam_gha_airline tam_infra_health; do
     chart_count=$(req -X GET "$SUPERSET_URL/api/v1/dashboard/$slug/charts" | jq -r '.result | length')
     if [ "${chart_count:-0}" -eq 0 ]; then
       if [ -z "$missing_links" ]; then
@@ -457,6 +477,32 @@ DS_PRED_ZONE=$(create_tenant_dataset "pred_zone_breach")
 DS_PRED_ASSET=$(create_tenant_dataset "pred_asset_violation_risk")
 DS_FORE_VIOL=$(create_tenant_dataset "forecast_violations_hourly")
 
+DS_MILESTONE_EFF=$(create_tenant_dataset "v_turnaround_milestone_efficiency")
+DS_CONCUR_RATIO=$(create_tenant_dataset "v_turnaround_concurrency_ratio")
+DS_FIRST_WAVE=$(create_tenant_dataset "v_first_wave_departure_readiness")
+DS_DELAY_ROOT=$(create_tenant_dataset "v_delay_root_cause_by_session")
+DS_TOBT_VOL=$(create_tenant_dataset "v_tobt_volatility")
+DS_AODB_CV=$(create_tenant_dataset "v_aodb_cv_discrepancy")
+DS_IATA_DELAY=$(create_tenant_dataset "v_iata_delay_code_attribution")
+DS_ERA_REDZONE=$(create_tenant_dataset "v_era_redzone_encroachment")
+DS_FOD_WINDOW=$(create_tenant_dataset "v_fod_exposure_window")
+DS_PPE_GSE=$(create_tenant_dataset "v_ppe_gse_compliance")
+DS_GHA_SCORE=$(create_tenant_dataset "v_gha_performance_scorecard")
+DS_AIRLINE_PROFILE=$(create_tenant_dataset "v_airline_turnaround_profile")
+DS_STAND_DEAD=$(create_tenant_dataset "v_stand_dead_time_overstay")
+DS_CAM_HEALTH=$(create_tenant_dataset "v_camera_infra_health")
+
+DS_PPE_DENSITY=$(create_tenant_dataset "v_ppe_compliance_density_index")
+DS_WALKWAY=$(create_tenant_dataset "v_walkway_safety_audit")
+
+DS_LVP=$(create_tenant_dataset "v_lvp_delay_impact")
+DS_CERT=$(create_tenant_dataset "v_asset_certification_status")
+DS_MAINT_LOG=$(create_tenant_dataset "v_asset_maintenance_log")
+DS_INV=$(create_tenant_dataset "v_inventory_stock_status")
+DS_WILDLIFE=$(create_tenant_dataset "v_wildlife_hazard_summary")
+DS_MOR=$(create_tenant_dataset "v_mandatory_occurrence_report")
+DS_DRILL=$(create_tenant_dataset "v_emergency_readiness")
+
 echo "✅ Datasets created. Building charts..."
 
 CH_OPS_F=$(create_table_raw_chart "Ops Overview Daily" "$DS_OPS_OVR" tenant_code day flights vehicles alerts violations)
@@ -496,6 +542,32 @@ CH_PRED_ZONE=$(create_table_raw_chart "Zone Breach Probability" "$DS_PRED_ZONE" 
 CH_PRED_ASSET=$(create_table_raw_chart "Asset Violation Risk" "$DS_PRED_ASSET" tenant_code asset_identifier probability expected_severity as_of created_at)
 CH_FORE_VIOL=$(create_table_raw_chart "Violations Forecast (Hourly)" "$DS_FORE_VIOL" hour tenant_code expected_count lower upper created_at)
 
+CH_MILESTONE_EFF=$(create_table_raw_chart "Turnaround Milestone Efficiency" "$DS_MILESTONE_EFF" tenant_code task_type baseline_target_min actual_avg_min variance_min tasks)
+CH_CONCUR_RATIO=$(create_table_raw_chart "Turnaround Concurrency Ratio" "$DS_CONCUR_RATIO" tenant_code flight_id stand_id sum_task_minutes total_turnaround_minutes concurrency_ratio)
+CH_FIRST_WAVE=$(create_table_raw_chart "First-Wave Departure Readiness" "$DS_FIRST_WAVE" tenant_code day first_wave_flights avg_delay_min on_time_ratio)
+CH_DELAY_ROOT=$(create_table_raw_chart "Delay Root Cause by Session" "$DS_DELAY_ROOT" tenant_code flight_id stand_id std_breach_min lagging_milestone lagging_milestone_delay_min)
+CH_TOBT_VOL=$(create_table_raw_chart "TOBT Volatility Index" "$DS_TOBT_VOL" tenant_code ground_handler avg_tobt_volatility_min unannounced_delay_count sessions)
+CH_AODB_CV=$(create_table_raw_chart "AODB vs CV Discrepancy" "$DS_AODB_CV" tenant_code task_type avg_logging_latency_min timestamp_padding_count tasks)
+CH_IATA_DELAY=$(create_table_raw_chart "IATA Delay Code Attribution" "$DS_IATA_DELAY" tenant_code task_type iata_delay_code delayed_tasks total_delay_min)
+CH_ERA_REDZONE=$(create_table_raw_chart "ERA Red-Zone Encroachment" "$DS_ERA_REDZONE" tenant_code stand_id encroachment_phase severity encroachments)
+CH_FOD_WINDOW=$(create_table_raw_chart "FOD Exposure Window" "$DS_FOD_WINDOW" tenant_code stand_id chocks_off next_chocks_on fod_exposure_window_min unmonitored_breach_detected)
+CH_PPE_GSE=$(create_table_raw_chart "PPE & GSE Compliance" "$DS_PPE_GSE" tenant_code stand_id day personnel_detected ppe_compliant ppe_compliance_pct gse_position_violations events)
+CH_GHA_SCORE=$(create_table_raw_chart "GHA Performance Scorecard" "$DS_GHA_SCORE" tenant_code ground_handler task_type target_baseline_min actual_avg_min sla_compliance_pct tasks)
+CH_AIRLINE_PROFILE=$(create_table_raw_chart "Airline Turnaround Profile" "$DS_AIRLINE_PROFILE" tenant_code airline_code aircraft_type terminal_category avg_turnaround_min sessions)
+CH_STAND_DEAD=$(create_table_raw_chart "Stand Dead-Time & Overstay" "$DS_STAND_DEAD" tenant_code stand_id sessions avg_overstay_min total_dead_time_min)
+CH_CAM_HEALTH=$(create_table_raw_chart "Camera Infra Health" "$DS_CAM_HEALTH" tenant_code camera_id stand_id avg_uptime_pct avg_stream_fps avg_frame_drop_rate avg_edge_latency_ms avg_inference_confidence manual_overrides readings)
+
+CH_PPE_DENSITY=$(create_table_raw_chart "PPE Compliance Density Index" "$DS_PPE_DENSITY" tenant_code ground_handler apron_zone day personnel_detected ppe_compliant compliance_density_pct gse_position_violations checks)
+CH_WALKWAY=$(create_table_raw_chart "Walkway Safety Audit" "$DS_WALKWAY" tenant_code stand_id corridor_zone day checks obstruction_count obstruction_rate_pct pedestrian_excursions)
+
+CH_LVP=$(create_table_raw_chart "LVP Delay Impact" "$DS_LVP" tenant_code category day lvp_events total_lvp_minutes affected_turnarounds avg_delay_min)
+CH_CERT=$(create_table_raw_chart "Asset Certification Status" "$DS_CERT" tenant_code asset_name category cert_type issued_date expiry_date cert_status)
+CH_MAINT_LOG=$(create_table_raw_chart "Asset Maintenance Log" "$DS_MAINT_LOG" tenant_code category maintenance_type reason events avg_downtime_hours total_downtime_hours)
+CH_INV=$(create_table_raw_chart "Inventory Stock Status" "$DS_INV" tenant_code item_name category unit quantity_on_hand reorder_level stock_status last_restocked_at)
+CH_WILDLIFE=$(create_table_raw_chart "Wildlife Hazard Summary" "$DS_WILDLIFE" tenant_code species zone month events strikes sightings dispersal_actions high_severity)
+CH_MOR=$(create_table_raw_chart "Mandatory Occurrence Reports" "$DS_MOR" tenant_code occurrence_category severity status month occurrences open_occurrences submitted_to_regulator)
+CH_DRILL=$(create_table_raw_chart "Emergency Drill Readiness" "$DS_DRILL" tenant_code drill_type drills_scheduled drills_conducted compliance_pct avg_response_time_sec last_conducted next_due)
+
 # Ensure chart query_context is synced to the tenant-scoped dataset.
 sync_raw_table_query_context "$CH_OPS_F" "$DS_OPS_OVR" tenant_code day flights vehicles alerts violations
 
@@ -507,8 +579,12 @@ DASH_TA=$(create_dashboard "TAM Turnaround" "tam_turnaround")
 DASH_ASSET=$(create_dashboard "TAM Assets" "tam_assets")
 DASH_PIPE=$(create_dashboard "TAM Pipeline" "tam_pipeline")
 DASH_PRED=$(create_dashboard "TAM Predictive" "tam_predictive")
+DASH_TA_ADV=$(create_dashboard "TAM Turnaround Advanced" "tam_turnaround_advanced")
+DASH_COMPLY=$(create_dashboard "TAM Apron Compliance" "tam_compliance_plus")
+DASH_GHA=$(create_dashboard "TAM GHA & Airline SLA" "tam_gha_airline")
+DASH_INFRA=$(create_dashboard "TAM Infrastructure Health" "tam_infra_health")
 
-echo "🎉 Provisioned dashboards (IDs): $DASH_OPS, $DASH_SAFE, $DASH_TA, $DASH_ASSET, $DASH_PIPE, $DASH_PRED"
+echo "🎉 Provisioned dashboards (IDs): $DASH_OPS, $DASH_SAFE, $DASH_TA, $DASH_ASSET, $DASH_PIPE, $DASH_PRED, $DASH_TA_ADV, $DASH_COMPLY, $DASH_GHA, $DASH_INFRA"
 
 attach_to_dashboard() {
   local DASH_ID=$1; shift
@@ -568,15 +644,23 @@ attach_to_dashboard() {
 }
 
 attach_to_dashboard "$DASH_OPS" "TAM Ops Overview" "$DS_OPS_OVR" "$CH_OPS_F" "$CH_FLT_HR" "$CH_VEH_SUM" "$CH_THRPT" "$CH_LINE_FLT"
-attach_to_dashboard "$DASH_SAFE" "TAM Safety & Security" "$DS_ALERTS" "$CH_VIOL_ZONE" "$CH_BREACH" "$CH_DISCREP" "$CH_OFFEND" "$CH_DECK_VIOL" "$CH_LINE_ALERTS"
-attach_to_dashboard "$DASH_TA" "TAM Turnaround" "$DS_STAND_OCC" "$CH_STAND_OCC" "$CH_SLA" "$CH_DELAY" "$CH_STAND_CONFLICT"
-attach_to_dashboard "$DASH_ASSET" "TAM Assets" "$DS_UTIL" "$CH_UTIL" "$CH_MAINT" "$CH_DWELL" "$CH_DECK_ACT"
+attach_to_dashboard "$DASH_SAFE" "TAM Safety & Security" "$DS_ALERTS" "$CH_VIOL_ZONE" "$CH_BREACH" "$CH_DISCREP" "$CH_OFFEND" "$CH_DECK_VIOL" "$CH_LINE_ALERTS" "$CH_MOR" "$CH_DRILL"
+attach_to_dashboard "$DASH_TA" "TAM Turnaround" "$DS_STAND_OCC" "$CH_STAND_OCC" "$CH_SLA" "$CH_DELAY" "$CH_STAND_CONFLICT" "$CH_LVP"
+attach_to_dashboard "$DASH_ASSET" "TAM Assets" "$DS_UTIL" "$CH_UTIL" "$CH_MAINT" "$CH_DWELL" "$CH_DECK_ACT" "$CH_CERT" "$CH_MAINT_LOG" "$CH_INV"
 attach_to_dashboard "$DASH_PIPE" "TAM Pipeline" "$DS_PIPE" "$CH_PIPE"
 attach_to_dashboard "$DASH_PRED" "TAM Predictive" "$DS_FORE_VIOL" "$CH_PRED_TA" "$CH_PRED_CONG" "$CH_PRED_ZONE" "$CH_PRED_ASSET" "$CH_FORE_VIOL"
+attach_to_dashboard "$DASH_TA_ADV" "TAM Turnaround Advanced" "$DS_MILESTONE_EFF" "$CH_MILESTONE_EFF" "$CH_CONCUR_RATIO" "$CH_FIRST_WAVE" "$CH_TOBT_VOL" "$CH_DELAY_ROOT" "$CH_STAND_DEAD"
+attach_to_dashboard "$DASH_COMPLY" "TAM Apron Compliance" "$DS_ERA_REDZONE" "$CH_ERA_REDZONE" "$CH_FOD_WINDOW" "$CH_PPE_GSE" "$CH_PPE_DENSITY" "$CH_WALKWAY" "$CH_WILDLIFE"
+attach_to_dashboard "$DASH_GHA" "TAM GHA & Airline SLA" "$DS_GHA_SCORE" "$CH_GHA_SCORE" "$CH_AIRLINE_PROFILE" "$CH_IATA_DELAY" "$CH_AODB_CV"
+attach_to_dashboard "$DASH_INFRA" "TAM Infrastructure Health" "$DS_CAM_HEALTH" "$CH_CAM_HEALTH"
 
 add_chart_to_dashboard "$DASH_OPS" "$CH_OPS_F" "$CH_FLT_HR" "$CH_VEH_SUM" "$CH_THRPT" "$CH_LINE_FLT"
-add_chart_to_dashboard "$DASH_SAFE" "$CH_VIOL_ZONE" "$CH_BREACH" "$CH_DISCREP" "$CH_OFFEND" "$CH_DECK_VIOL" "$CH_LINE_ALERTS"
-add_chart_to_dashboard "$DASH_TA" "$CH_STAND_OCC" "$CH_SLA" "$CH_DELAY" "$CH_STAND_CONFLICT"
-add_chart_to_dashboard "$DASH_ASSET" "$CH_UTIL" "$CH_MAINT" "$CH_DWELL" "$CH_DECK_ACT"
+add_chart_to_dashboard "$DASH_SAFE" "$CH_VIOL_ZONE" "$CH_BREACH" "$CH_DISCREP" "$CH_OFFEND" "$CH_DECK_VIOL" "$CH_LINE_ALERTS" "$CH_MOR" "$CH_DRILL"
+add_chart_to_dashboard "$DASH_TA" "$CH_STAND_OCC" "$CH_SLA" "$CH_DELAY" "$CH_STAND_CONFLICT" "$CH_LVP"
+add_chart_to_dashboard "$DASH_ASSET" "$CH_UTIL" "$CH_MAINT" "$CH_DWELL" "$CH_DECK_ACT" "$CH_CERT" "$CH_MAINT_LOG" "$CH_INV"
 add_chart_to_dashboard "$DASH_PIPE" "$CH_PIPE"
 add_chart_to_dashboard "$DASH_PRED" "$CH_PRED_TA" "$CH_PRED_CONG" "$CH_PRED_ZONE" "$CH_PRED_ASSET" "$CH_FORE_VIOL"
+add_chart_to_dashboard "$DASH_TA_ADV" "$CH_MILESTONE_EFF" "$CH_CONCUR_RATIO" "$CH_FIRST_WAVE" "$CH_TOBT_VOL" "$CH_DELAY_ROOT" "$CH_STAND_DEAD"
+add_chart_to_dashboard "$DASH_COMPLY" "$CH_ERA_REDZONE" "$CH_FOD_WINDOW" "$CH_PPE_GSE" "$CH_PPE_DENSITY" "$CH_WALKWAY" "$CH_WILDLIFE"
+add_chart_to_dashboard "$DASH_GHA" "$CH_GHA_SCORE" "$CH_AIRLINE_PROFILE" "$CH_IATA_DELAY" "$CH_AODB_CV"
+add_chart_to_dashboard "$DASH_INFRA" "$CH_CAM_HEALTH"

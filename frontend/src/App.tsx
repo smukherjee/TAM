@@ -17,6 +17,7 @@ import TagsListPage from './pages/TagsListPage';
 import LocationsListPage from './pages/LocationsListPage';
 import HotspotAnalysisPage from './pages/HotspotAnalysisPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Lazy-loaded Security Report Pages
 const RestrictedZoneReportPage = lazy(() => import('./pages/RestrictedZoneReportPage'));
@@ -216,7 +217,9 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <AppRoutes />
+          <ThemeProvider>
+            <AppRoutes />
+          </ThemeProvider>
         </AuthProvider>
       </Router>
     </QueryClientProvider>

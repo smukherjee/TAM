@@ -56,6 +56,8 @@ const chartCategories: Record<string, ChartCategory> = {
       { id: 'repeat_offenders', sliceId: 14, name: 'Repeat Offenders', type: 'table', description: 'Assets with frequent violations' },
       { id: 'alerts_by_type_line', sliceId: 23, name: 'Alerts by Type (Trend)', type: 'line', description: 'Alert frequency over time' },
       { id: 'violation_heatmap', sliceId: 21, name: 'Violation Heatmap', type: 'map', description: 'Geographic violation density' },
+      { id: 'mandatory_occurrence_reports', sliceId: 50, name: 'Mandatory Occurrence Reports', type: 'table', description: 'Regulator-facing MOR packaging from HIGH/CRITICAL safety events' },
+      { id: 'emergency_drill_readiness', sliceId: 51, name: 'Emergency Drill Readiness', type: 'table', description: 'Full-scale/partial exercise and RFFS drill compliance' },
     ]
   },
   turnaround: {
@@ -69,6 +71,7 @@ const chartCategories: Record<string, ChartCategory> = {
       { id: 'sla_compliance', sliceId: 5, name: 'SLA Compliance by Task', type: 'table', description: 'On-time task completion rates' },
       { id: 'delay_root_causes', sliceId: 6, name: 'Delay Root Causes', type: 'bar', description: 'Primary causes of turnaround delays' },
       { id: 'stand_conflicts', sliceId: 19, name: 'Stand Conflicts', type: 'table', description: 'Overlapping stand assignments' },
+      { id: 'lvp_delay_impact', sliceId: 45, name: 'LVP Delay Impact', type: 'table', description: 'Low-visibility/winter ops delay impact on turnarounds' },
     ]
   },
   assets: {
@@ -82,6 +85,9 @@ const chartCategories: Record<string, ChartCategory> = {
       { id: 'maintenance_downtime', sliceId: 11, name: 'Maintenance Downtime', type: 'table', description: 'Assets under maintenance' },
       { id: 'dwell_proxy_hourly', sliceId: 12, name: 'Dwell by Zone Hourly', type: 'table', description: 'Asset dwell time patterns' },
       { id: 'activity_heatmap', sliceId: 20, name: 'Activity Heatmap', type: 'map', description: 'Geographic activity density' },
+      { id: 'asset_certification_status', sliceId: 46, name: 'Asset Certification Status', type: 'table', description: 'Vehicle/GSE permit and fitness certificate expiry' },
+      { id: 'asset_maintenance_log', sliceId: 47, name: 'Asset Maintenance Log', type: 'table', description: 'Historical GSE/vehicle downtime by reason' },
+      { id: 'inventory_stock_status', sliceId: 48, name: 'Inventory Stock Status', type: 'table', description: 'GSE consumables and PPE stock levels vs reorder threshold' },
     ]
   },
   predictive: {
@@ -117,6 +123,59 @@ const chartCategories: Record<string, ChartCategory> = {
     charts: [
       { id: 'activity_heatmap_table', sliceId: 17, name: 'Activity Heatmap (Data)', type: 'table', description: 'Raw heatmap grid data' },
       { id: 'violation_heatmap_table', sliceId: 18, name: 'Violation Heatmap (Data)', type: 'table', description: 'Violation location data' },
+    ]
+  },
+  turnaroundAdvanced: {
+    name: 'Turnaround Advanced',
+    icon: <Gauge className="w-4 h-4" />,
+    description: 'Milestone efficiency, concurrency, TOBT volatility, and delay attribution',
+    color: 'green',
+    supersetDashboard: 'tam_turnaround_advanced',
+    charts: [
+      { id: 'turnaround_milestone_efficiency', sliceId: 29, name: 'Turnaround Milestone Efficiency', type: 'table', description: 'Actual vs baseline duration per milestone' },
+      { id: 'turnaround_concurrency_ratio', sliceId: 30, name: 'Turnaround Concurrency Ratio', type: 'table', description: 'Parallel vs sequential milestone handling' },
+      { id: 'first_wave_departure_readiness', sliceId: 31, name: 'First-Wave Departure Readiness', type: 'table', description: 'Early-morning TOBT on-time performance' },
+      { id: 'delay_root_cause_by_session', sliceId: 32, name: 'Delay Root Cause by Session', type: 'table', description: 'Milestone that drove each STD breach' },
+      { id: 'tobt_volatility', sliceId: 33, name: 'TOBT Volatility Index', type: 'table', description: 'AOBT vs TOBT volatility by ground handler' },
+      { id: 'stand_dead_time_overstay', sliceId: 41, name: 'Stand Dead-Time & Overstay', type: 'table', description: 'Stand overstay and unused dead-stand time' },
+    ]
+  },
+  compliancePlus: {
+    name: 'Apron Compliance',
+    icon: <AlertTriangle className="w-4 h-4" />,
+    description: 'Red-zone encroachment, FOD exposure, and PPE/GSE compliance',
+    color: 'red',
+    supersetDashboard: 'tam_compliance_plus',
+    charts: [
+      { id: 'era_redzone_encroachment', sliceId: 36, name: 'ERA Red-Zone Encroachment', type: 'table', description: 'Pre-arrival/post-departure red-zone infringements' },
+      { id: 'fod_exposure_window', sliceId: 37, name: 'FOD Exposure Window', type: 'table', description: 'Unmonitored gap between stand occupations' },
+      { id: 'ppe_gse_compliance', sliceId: 38, name: 'PPE & GSE Compliance', type: 'table', description: 'PPE compliance rate and GSE positioning violations' },
+      { id: 'ppe_compliance_density_index', sliceId: 43, name: 'PPE Compliance Density Index', type: 'table', description: 'PPE compliance density by ground handler and apron zone' },
+      { id: 'walkway_safety_audit', sliceId: 44, name: 'Walkway Safety Audit', type: 'table', description: 'Boarding-corridor obstructions and pedestrian excursions' },
+      { id: 'wildlife_hazard_summary', sliceId: 49, name: 'Wildlife Hazard Summary', type: 'table', description: 'Monthly wildlife strikes, sightings, and dispersal actions by species/zone' },
+    ]
+  },
+  ghaAirline: {
+    name: 'GHA & Airline SLA',
+    icon: <Truck className="w-4 h-4" />,
+    description: 'Ground handler scorecards, airline profiles, and delay/AODB audits',
+    color: 'purple',
+    supersetDashboard: 'tam_gha_airline',
+    charts: [
+      { id: 'gha_performance_scorecard', sliceId: 39, name: 'GHA Performance Scorecard', type: 'table', description: 'Ground handler SLA compliance by milestone' },
+      { id: 'airline_turnaround_profile', sliceId: 40, name: 'Airline Turnaround Profile', type: 'table', description: 'Avg turnaround by airline, aircraft type and terminal' },
+      { id: 'iata_delay_code_attribution', sliceId: 35, name: 'IATA Delay Code Attribution', type: 'table', description: 'Delayed tasks mapped to IATA delay codes' },
+      { id: 'aodb_cv_discrepancy', sliceId: 34, name: 'AODB vs CV Discrepancy', type: 'table', description: 'Manual AODB log timing vs computer-vision actuals' },
+    ]
+  },
+  infraHealth: {
+    name: 'Infrastructure Health',
+    icon: <Server className="w-4 h-4" />,
+    description: 'Apron camera and edge-node health, latency, and CV confidence',
+    color: 'cyan',
+    supersetDashboard: 'tam_infra_health',
+    charts: [
+      { id: 'camera_infra_health', sliceId: 42, name: 'Camera Infra Health', type: 'table', description: 'Camera uptime, stream quality, latency and inference confidence' },
     ]
   }
 };
@@ -170,6 +229,12 @@ const grafanaDashboards = {
     url: 'http://localhost:3001/d/tam-stand-utilization/stand-utilization-planning?orgId=1&refresh=1m&kiosk',
     icon: <Building className="w-4 h-4" />,
     description: 'Stand occupancy and planning'
+  },
+  occ: {
+    name: 'OCC Duty Manager Console',
+    url: 'http://localhost:3001/d/tam-occ-console/occ-duty-manager-console?orgId=1&refresh=30s&kiosk',
+    icon: <Shield className="w-4 h-4" />,
+    description: 'KPI ribbon, apron safety map and system health for the Duty Manager'
   }
 };
 

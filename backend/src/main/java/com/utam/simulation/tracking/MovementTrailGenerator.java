@@ -4,6 +4,7 @@ import com.utam.asset.service.VehicleAssetMapService;
 import com.utam.simulation.config.SimulationConfig;
 import com.utam.simulation.flight.FlightDataGenerator;
 import com.utam.simulation.flight.FlightPositionDTO;
+import com.utam.simulation.security.BoundaryValidator;
 import com.utam.simulation.vehicle.SimVehicleRepository;
 import com.utam.simulation.vehicle.Vehicle;
 import com.utam.simulation.vehicle.VehicleDataGenerator;
@@ -37,6 +38,7 @@ public class MovementTrailGenerator {
     private final com.utam.tracking.service.MovementTrailIngestionService ingestionService;
     private final SimVehicleRepository simVehicleRepository;
     private final VehicleAssetMapService vehicleAssetMapService;
+    private final BoundaryValidator boundaryValidator;
 
     // Position history with rolling window (default 5 minutes)
     private final Map<String, Deque<TrailPoint>> vehicleTrails = new ConcurrentHashMap<>();
@@ -54,7 +56,8 @@ public class MovementTrailGenerator {
                                   MeterRegistry meterRegistry,
                                   com.utam.tracking.service.MovementTrailIngestionService ingestionService,
                                   SimVehicleRepository simVehicleRepository,
-                                  VehicleAssetMapService vehicleAssetMapService) {
+                                  VehicleAssetMapService vehicleAssetMapService,
+                                  BoundaryValidator boundaryValidator) {
         this.config = config;
         this.vehicleDataGenerator = vehicleDataGenerator;
         this.flightDataGenerator = flightDataGenerator;
@@ -62,6 +65,7 @@ public class MovementTrailGenerator {
         this.ingestionService = ingestionService;
         this.simVehicleRepository = simVehicleRepository;
         this.vehicleAssetMapService = vehicleAssetMapService;
+        this.boundaryValidator = boundaryValidator;
     }
 
     @PostConstruct
@@ -301,6 +305,15 @@ public class MovementTrailGenerator {
                     heading += (random.nextDouble() - 0.5) * 10; // Gradual heading change
                     vLat += Math.cos(Math.toRadians(heading)) * moveDegrees;
                     vLon += Math.sin(Math.toRadians(heading)) * moveDegrees;
+
+                    // Unclamped, the biased walk drifts arbitrarily far from the airport over
+                    // many days/samples (persistent heading = net displacement, not just jitter).
+                    // Clamp every sample, same as live simulation (VehicleDataGenerator), so the
+                    // final historical position - which becomes the asset's stored current_location -
+                    // always lands within the airport boundary.
+                    BoundaryValidator.ClampedPosition clamped = boundaryValidator.clampToBoundary(tenantCode, vLat, vLon);
+                    vLat = clamped.latitude();
+                    vLon = clamped.longitude();
 
                     // Small speed variation
                     speed = Math.max(5.0, Math.min(60.0, speed + (random.nextDouble() - 0.5) * 2.0));

@@ -11,6 +11,7 @@ import CompactLegend from '../components/Map/CompactLegend';
 import EnhancedAlertList from '../components/EnhancedAlertList';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { webSocketService } from '../services/WebSocketService';
 import { Vehicle } from '../services/vehicleService';
 import { AssetLocation, AssetLocationResponse, AssetFilters } from '../types/assetTracking';
@@ -60,6 +61,7 @@ const UnifiedMapPage: React.FC = () => {
     // Filters and UI state
     const [assetFilters, setAssetFilters] = useState<AssetFilters>({});
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+    const { theme: mapTheme, toggleTheme: toggleMapTheme } = useTheme();
 
     const getCenter = (): [number, number] => {
         if (tenantCode === 'VABB') return [19.0896, 72.8656];
@@ -112,7 +114,6 @@ const UnifiedMapPage: React.FC = () => {
             );
             return response.data;
         },
-        enabled: layers.assets,
         refetchInterval: 5000,
         staleTime: 5000
     });
@@ -123,6 +124,16 @@ const UnifiedMapPage: React.FC = () => {
             setAssets(assetData.assets);
         }
     }, [assetData]);
+
+    // Vehicles are the same physical entities as filtered assets (assets.asset_id ===
+    // vehicle.vehicle_no, see vehicle_asset_map). Gate the vehicle layer by the already
+    // filtered+scoped asset list so category/status/ground-handler filters actually
+    // restrict the map instead of only affecting the asset markers. Query above always
+    // runs (not gated on layers.assets) so this stays correct even with the Assets layer off.
+    const visibleVehicles = useMemo(() => {
+        const visibleIds = new Set(assets.map(a => a.assetIdentifier));
+        return vehicles.filter(v => visibleIds.has(v.vehicle_no));
+    }, [vehicles, assets]);
 
     // WebSocket subscriptions
     useEffect(() => {
@@ -223,6 +234,8 @@ const UnifiedMapPage: React.FC = () => {
                 onOpenFilters={() => setIsFilterDrawerOpen(true)}
                 alertCount={enhancedAlerts.length}
                 showHeatmapToggle={false}
+                mapTheme={mapTheme}
+                onMapThemeToggle={toggleMapTheme}
             />
 
             {/* Filter Drawer */}
@@ -239,14 +252,14 @@ const UnifiedMapPage: React.FC = () => {
             />
 
             {/* Main Map */}
-            <MapComponent center={getCenter()} zoom={14} theme="dark">
+            <MapComponent center={getCenter()} zoom={14} theme={mapTheme}>
                 {/* Zone Boundaries */}
                 {layers.zones && <ZoneBoundariesLayer />}
                 
                 {/* Entity Layers */}
                 {layers.flights && <FlightLayer />}
-                {layers.vehicles && vehicles && Array.isArray(vehicles) && vehicles.length > 0 && (
-                    <VehicleLayer vehicles={vehicles} />
+                {layers.vehicles && visibleVehicles.length > 0 && (
+                    <VehicleLayer vehicles={visibleVehicles} />
                 )}
                 {layers.assets && assets && Array.isArray(assets) && assets.length > 0 && (
                     <AssetMarkersLayer assets={assets} />
